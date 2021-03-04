@@ -8,6 +8,7 @@ import           Data.Array.ST
 import           Data.Array.Unsafe
 import           Data.Foldable
 
+import           ArrayBased
 import           List
 
 data MArrayList e = MArrayList !Int (Array Int e)
@@ -51,23 +52,25 @@ instance List MArrayList where
   
 
 --------------------------------------------------------------------------------
--- MArrayList Functions
+-- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-physicalSize :: MArrayList e -> Int
-physicalSize (MArrayList _ arr)
-  = 1 + snd (bounds arr)
+instance ArrayBased MArrayList where
+  physicalSize :: MArrayList a -> Int
+  physicalSize (MArrayList _ arr)
+    = 1 + snd (bounds arr)
 
-newMArrayListWithSize :: Foldable f => Int -> f a -> MArrayList a
-newMArrayListWithSize s fl
-  = MArrayList l (array (0, s' - 1) $ zip [0..] $toList fl)
-  where
-    l  = length fl
-    s' = max s l
+  newWithSize :: Foldable f => Int -> f a -> MArrayList a
+  newWithSize s fl
+    = MArrayList l (array (0, s' - 1) $ zip [0..] $toList fl)
+    where
+      l  = length fl
+      s' = max s l
 
-resize :: Int -> MArrayList e -> MArrayList e
-resize s mal
-  = newMArrayListWithSize s (take (length mal) (toList mal))
+  resize :: Int -> MArrayList a -> MArrayList a
+  resize s mal
+    = newWithSize s (take (length mal) (toList mal))
+
 
 --------------------------------------------------------------------------------
 -- Helper Functions
@@ -80,6 +83,11 @@ addST index e lastElement arrST = do
     v <- readArray arrST i
     writeArray arrST (i + 1) v
   writeArray arrST index e
+
+
+--------------------------------------------------------------------------------
+-- Playground
+--------------------------------------------------------------------------------
 
 main :: IO ()
 main = do
