@@ -31,9 +31,9 @@ instance Foldable MArrayList where
 instance List MArrayList where
   add :: forall a. Int -> a -> MArrayList a -> MArrayList a
   add index e mal@(MArrayList l arr)
-    | index > l             = error "Index out of bound!"
-    | l == physicalSize mal = add index e (resize l' mal)
-    | otherwise             = MArrayList (l + 1) $ runST $ do
+    | index > l || index < 0 = error "Index out of bound!"
+    | l == physicalSize mal  = add index e (resize l' mal)
+    | otherwise              = MArrayList (l + 1) $ runST $ do
       arrST <- unsafeThaw arr :: ST s (STArray s Int a)
       addST index e (l - 1) arrST
       unsafeFreeze arrST
@@ -91,8 +91,8 @@ addST index e lastElement arrST = do
 
 main :: IO ()
 main = do
-  let arrayList = newList [1..10000000] :: MArrayList Int
-  print $ length arrayList
-  let arrayList' = add 0 0 arrayList
-  print $ length arrayList'
-  print $ length arrayList
+  let arrayList = newList [1..10] :: MArrayList Int
+  print $ arrayList
+  let arrayList' = push 11 arrayList
+  print $ arrayList'
+  print $ arrayList
