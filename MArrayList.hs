@@ -1,98 +1,95 @@
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+
+module MArrayList where
 
 import           Control.Monad
 import           Control.Monad.ST
 import           Data.Array
 import           Data.Array.ST
-import           Data.Array.Unsafe
 import           Data.Foldable
 
 import           ArrayBased
+import           ArrayList
 import           List
 
-data MArrayList e = MArrayList !Int (Array Int e)
+data MArrayList s e = MArrayList !Int (STArray s Int e)
 
-instance Show a => Show (MArrayList a) where
-  show (MArrayList l arr)
-    = "MArrayList: " ++ show (take l $ toList arr)
 
-instance Foldable MArrayList where
-  foldr f b (MArrayList _ arr)
-    = foldr f b arr
-  length (MArrayList l _)
-    = l
+--------------------------------------------------------------------------------
+-- Freeze & Thaw
+--------------------------------------------------------------------------------
+
+arrayListThaw :: ArrayList a -> ST s (MArrayList s a)
+arrayListThaw (ArrayList l arr) = do
+  arrST <- thaw arr
+  return $ MArrayList l arrST
+
+arrayListFreeze :: MArrayList s a -> ST s (ArrayList a)
+arrayListFreeze (MArrayList l arrST) = do
+  arr <- freeze arrST
+  return $ ArrayList l arr
 
 
 --------------------------------------------------------------------------------
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance List MArrayList where
-  add :: forall a. Int -> a -> MArrayList a -> MArrayList a
-  add index e mal@(MArrayList l arr)
-    | index > l || index < 0 = error "Index out of bound!"
-    | l == physicalSize mal  = add index e (resize l' mal)
-    | otherwise              = MArrayList (l + 1) $ runST $ do
-      arrST <- unsafeThaw arr :: ST s (STArray s Int a)
-      addST index e (l - 1) arrST
-      unsafeFreeze arrST
-    where
-      l' = (3 * l) `div` 2
-  
-  size :: MArrayList a -> Int
-  size (MArrayList l _) 
-    = l
+instance MList MArrayList where
+  mAdd :: Int -> e -> MArrayList s e -> ST s (MArrayList s e)
+  mAdd index e mal = do
+    ls <- mSize mal
+    ps <- mPhysicalSize mal
+    if index < 0 || index > ls
+      then return $ error "Index out of bound!"
+      else if ls == ps
+        then do
+          resized <- mResize ((3 * ls) `div` 2) mal
+          mAdd index e resized
+        else do
+          let MArrayList _ arrST = mal
+          addST index e (ls - 1) arrST
+          return $ MArrayList (ls + 1) arrST
 
-  newList :: Foldable f => f a -> MArrayList a
-  newList fl
-    = MArrayList l (array (0, l - 1) $ zip [0..] $ toList fl)
-    where
-      l = length fl
-  
+  mSize :: MArrayList s e -> ST s Int
+  mSize (MArrayList l _)
+    = return l
+
+  newMList :: Foldable f => f e -> ST s (MArrayList s e)
+  newMList = arrayListThaw . newList
+
 
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance ArrayBased MArrayList where
-  physicalSize :: MArrayList a -> Int
-  physicalSize (MArrayList _ arr)
-    = 1 + snd (bounds arr)
+instance MArrayBased MArrayList where
+  mNewWithSize  :: Foldable f => Int -> f e -> ST s (MArrayList s e)
+  mNewWithSize = (arrayListThaw .) . newWithSize
 
-  newWithSize :: Foldable f => Int -> f a -> MArrayList a
-  newWithSize s fl
-    = MArrayList l (array (0, s' - 1) $ zip [0..] $toList fl)
-    where
-      l  = length fl
-      s' = max s l
+  mPhysicalSize :: MArrayList s e -> ST s Int
+  mPhysicalSize (MArrayList l arrST) = do
+    (_, sup) <- getBounds arrST
+    return $ sup + 1
 
-  resize :: Int -> MArrayList a -> MArrayList a
-  resize s mal
-    = newWithSize s (take (length mal) (toList mal))
-
-
---------------------------------------------------------------------------------
--- Helper Functions
---------------------------------------------------------------------------------
-
--- Pre: The array has at least one vacent space
-addST :: Int -> a -> Int -> STArray s Int a -> ST s ()
-addST index e lastElement arrST = do
-  forM_ [lastElement, (lastElement - 1)..index] $ \i -> do
-    v <- readArray arrST i
-    writeArray arrST (i + 1) v
-  writeArray arrST index e
+  mResize :: Int -> MArrayList s e -> ST s (MArrayList s e)
+  mResize s (MArrayList l arrST) = do
+    (_, sup) <- getBounds arrST
+    let s' = max s (sup + 1)
+    resST <- newArray_ (0, s' - 1)
+    forM_ [0..(l - 1)] $ \i -> do
+      v <- readArray arrST i
+      writeArray resST i v
+    return $ MArrayList l resST
 
 
 --------------------------------------------------------------------------------
 -- Playground
 --------------------------------------------------------------------------------
 
-main :: IO ()
-main = do
-  let arrayList = newList [1..10] :: MArrayList Int
-  print $ arrayList
-  let arrayList' = push 11 arrayList
-  print $ arrayList'
-  print $ arrayList
+foom :: IO ()
+foom = do
+  let al = runST $ do
+      mal <- newMList [10, 20, 30]
+      mal <- mAppend 10 mal
+      arrayListFreeze mal
+  print al
