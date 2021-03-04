@@ -83,6 +83,19 @@ instance MArrayBased MArrayList where
 
 
 --------------------------------------------------------------------------------
+-- Helper Functions
+--------------------------------------------------------------------------------
+
+-- Pre: The array has at least one vacent space
+addST :: Int -> a -> Int -> STArray s Int a -> ST s ()
+addST index e lastElement arrST = do
+  forM_ [lastElement, (lastElement - 1)..index] $ \i -> do
+    v <- readArray arrST i
+    writeArray arrST (i + 1) v
+  writeArray arrST index e
+
+
+--------------------------------------------------------------------------------
 -- Playground
 --------------------------------------------------------------------------------
 

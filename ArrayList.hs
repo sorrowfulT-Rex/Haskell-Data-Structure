@@ -4,9 +4,7 @@
 module ArrayList where
 
 import           Control.Monad
-import           Control.Monad.ST
 import           Data.Array
-import           Data.Array.ST
 import           Data.Foldable
 
 import           ArrayBased
@@ -34,12 +32,14 @@ instance List ArrayList where
   add index e mal@(ArrayList l arr)
     | index > l || index < 0 = error "Index out of bound!"
     | l == physicalSize mal  = add index e (resize l' mal)
-    | otherwise              = ArrayList (l + 1) $ runST $ do
-      arrST <- thaw arr :: ST s (STArray s Int a)
-      addST index e (l - 1) arrST
-      freeze arrST
+    | otherwise 
+      = ArrayList (l + 1) $ accumArray worker undefined (0, l) $ join zip [0..l]
     where
       l' = (3 * l) `div` 2
+      worker _ i
+        | i < index = arr ! i
+        | i > index = arr ! (i - 1)
+        | otherwise = e
   
   size :: ArrayList a -> Int
   size (ArrayList l _) 
@@ -74,19 +74,6 @@ instance ArrayBased ArrayList where
 
 
 --------------------------------------------------------------------------------
--- Helper Functions
---------------------------------------------------------------------------------
-
--- Pre: The array has at least one vacent space
-addST :: Int -> a -> Int -> STArray s Int a -> ST s ()
-addST index e lastElement arrST = do
-  forM_ [lastElement, (lastElement - 1)..index] $ \i -> do
-    v <- readArray arrST i
-    writeArray arrST (i + 1) v
-  writeArray arrST index e
-
-
---------------------------------------------------------------------------------
 -- Playground
 --------------------------------------------------------------------------------
 
@@ -94,6 +81,6 @@ foo :: IO ()
 foo = do
   let arrayList = newList [1..10] :: ArrayList Int
   print $ arrayList
-  let arrayList' = push 11 arrayList
+  let arrayList' = append 11 arrayList
   print $ arrayList'
   print $ arrayList
