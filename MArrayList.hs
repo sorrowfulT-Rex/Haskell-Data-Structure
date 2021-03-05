@@ -9,7 +9,7 @@ import           Control.Monad
 import           Control.Monad.ST
 import           Data.Array
 import           Data.Array.ST
-import           Data.Array.Unsafe
+import           Data.Array.Unsafe (unsafeThaw, unsafeFreeze)
 import           Data.Bits
 import           Data.Foldable
 import           Data.STRef
@@ -202,13 +202,12 @@ instance Show D where
 
 foom :: IO ()
 foom = do
-  let output = runST $ do
-      mal  <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
-      mAppend 50 mal
-      mAdd 3 40 mal
-      b1   <- mIsElem 10 mal
-      b2   <- mIsElem 12 mal
-      mSet mal 2 114514
-      l    <- mToList mal
-      return [D b1, D b2, D l]
-  print output
+  print $ runST $ do
+    mal <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
+    mAppend 50 mal
+    mAdd 3 40 mal
+    b1  <- mIsElem 10 mal
+    b2  <- mIsElem 12 mal
+    mUpdate mal 2 (+ 114484)
+    l   <- mToList mal
+    return [D b1, D b2, D l]

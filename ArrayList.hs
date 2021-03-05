@@ -134,5 +134,5 @@ foo = do
   (_, al') <- return $ remove 6 al
   (_, al') <- return $ popEnd al'
   (_, al') <- return $ pop al'
-  al'      <- return $ set al' 6 114514
+  al'      <- return $ update al' 6 ( +114505)
   print al'

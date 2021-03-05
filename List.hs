@@ -4,9 +4,9 @@
 module List where
 import           Control.Monad
 import           Control.Monad.ST
-import           Control.Monad.ST.Unsafe
+import           Control.Monad.ST.Unsafe (unsafeSTToIO)
 import           Data.Foldable
-import           System.IO.Unsafe
+import           System.IO.Unsafe (unsafePerformIO)
 
 class List l where
   add      :: Int -> e -> l e -> l e
@@ -31,6 +31,9 @@ class List l where
 
   push :: e -> l e -> l e
   push = add 0
+
+  update :: l e -> Int -> (e -> e) -> l e
+  update = ap (ap . ((.) .) . set) ((flip id .) . get)
 
 class MList l where
   mAdd     :: Int -> e -> l s e -> ST s ()
@@ -58,6 +61,11 @@ class MList l where
 
   mPush :: e -> l s e -> ST s ()
   mPush = mAdd 0
+
+  mUpdate :: l s e -> Int -> (e -> e) -> ST s ()
+  mUpdate mal index f = do
+    v <- mGet mal index
+    mSet mal index (f v)
 
 class ListEq l e where
   isElem :: e -> l e -> Bool
