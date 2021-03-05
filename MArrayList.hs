@@ -107,6 +107,15 @@ instance MList MArrayList where
         removeSTUnsafe index (ls - 2) arrST
         return $ Just v
 
+  mSet :: MArrayList s e -> Int -> e -> ST s ()
+  mSet mal@(MArrayList _ arrR) index e = do
+    ls <- mSize mal
+    if index < 0 || index >= ls
+      then return $ outOfBoundError index
+      else do
+        arrST <- readSTRef arrR
+        writeArray arrST index e
+
   mSize :: MArrayList s a -> ST s Int
   mSize (MArrayList lR _)
     = readSTRef lR
@@ -197,8 +206,9 @@ foom = do
       mal  <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
       mAppend 50 mal
       mAdd 3 40 mal
-      mal' <- newMList [10, 20, 30, 50, 40] :: ST s (MArrayList s Int)
       b1   <- mIsElem 10 mal
       b2   <- mIsElem 12 mal
-      return [D (mal == mal'), D b1, D b2]
+      mSet mal 2 114514
+      l    <- mToList mal
+      return [D b1, D b2, D l]
   print output

@@ -72,6 +72,17 @@ instance List ArrayList where
       worker _ i
         | i < index = arr ! i
         | otherwise = arr ! (i + 1)
+
+  set :: ArrayList a -> Int -> a -> ArrayList a
+  set al@(ArrayList l arr) index e
+    | index >= l || index < 0 = outOfBoundError index
+    | otherwise               = ArrayList l 
+        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 1)]
+    where
+      pl = physicalSize al
+      worker _ i
+        | i == index = e
+        | otherwise  = arr ! i
   
   size :: ArrayList a -> Int
   size (ArrayList l _) 
@@ -123,10 +134,5 @@ foo = do
   (_, al') <- return $ remove 6 al
   (_, al') <- return $ popEnd al'
   (_, al') <- return $ pop al'
-  print $ al' `get` 6
-  let la = newList [2, 3, 4, 5, 6, 8, 9] :: ArrayList Int
-  print $ isElem 1 la
-  print $ isElem 2 la
-  al'      <- return $ deepClear al'
+  al'      <- return $ set al' 6 114514
   print al'
-  print $ physicalSize al'

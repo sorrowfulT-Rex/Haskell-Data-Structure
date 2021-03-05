@@ -13,6 +13,7 @@ class List l where
   clear    :: l e -> l e
   get      :: l e -> Int -> e
   remove   :: Int -> l e -> (Maybe e, l e)
+  set      :: l e -> Int -> e -> l e
   size     :: l e -> Int
   newList  :: Foldable f => f e -> l e 
 
@@ -36,6 +37,7 @@ class MList l where
   mClear   :: l s e -> ST s ()
   mGet     :: l s e -> Int -> ST s e
   mRemove  :: Int -> l s e -> ST s (Maybe e)
+  mSet     :: l s e -> Int -> e -> ST s ()
   mSize    :: l s e -> ST s Int
   mToList  :: l s e -> ST s [e]
   newMList :: Foldable f => f e -> ST s (l s e)
@@ -65,7 +67,7 @@ class MListEq l s e where
 
 instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
   al == al' 
-    = l == l' && and (map (\i -> al `get` i == al' `get` i) [0..(l - 1)])
+    = l == l' && and (map (liftM2 (==) (al `get`) (al' `get`)) [0..(l - 1)])
     where
       l  = size al
       l' = size al'
