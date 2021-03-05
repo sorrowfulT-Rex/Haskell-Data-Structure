@@ -1,5 +1,4 @@
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module ArrayList where
 
@@ -23,27 +22,42 @@ instance Foldable ArrayList where
   length (ArrayList l _)
     = l
 
+outOfBoundError :: Int -> a
+outOfBoundError i
+  = error $ "Index " ++ show i ++ " is out of bound!"
+
 
 --------------------------------------------------------------------------------
 -- List Functions
 --------------------------------------------------------------------------------
 
 instance List ArrayList where
-  add :: forall a. Int -> a -> ArrayList a -> ArrayList a
+  add :: Int -> a -> ArrayList a -> ArrayList a
   add index e al@(ArrayList l arr)
-    | index > l || index < 0 = error errMsg
+    | index > l || index < 0 = outOfBoundError index
     | l == pl                = add index e (resize l' al)
     | otherwise 
       = ArrayList (l + 1) 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
     where
-      errMsg = "Index " ++ show index ++ " is out of bound!"
-      pl     = physicalSize al
-      l'     = (3 * l) `div` 2
+      pl = physicalSize al
+      l' = (3 * l) `div` 2
       worker _ i
         | i < index = arr ! i
         | i > index = arr ! (i - 1)
         | otherwise = e
+
+  remove :: Int -> ArrayList a -> (Maybe a, ArrayList a)
+  remove index al@(ArrayList l arr)
+    | index >= l || index < 0 = (Nothing, al)
+    | otherwise
+      = (Just (arr ! index), ArrayList (l - 1) 
+        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
+    where
+      pl = physicalSize al
+      worker _ i
+        | i < index = arr ! i
+        | otherwise = arr ! (i + 1)
   
   size :: ArrayList a -> Int
   size (ArrayList l _) 
@@ -86,6 +100,8 @@ foo :: IO ()
 foo = do
   let arrayList = newList [1..10] :: ArrayList Int
   print $ arrayList
-  let arrayList' = append 11 arrayList
+  (_, arrayList') <- return $ remove 6 arrayList
+  (bruh, arrayList') <- return $ popEnd arrayList'
+  print bruh
+  arrayList' <- return $ pop arrayList'
   print $ arrayList'
-  print $ arrayList
