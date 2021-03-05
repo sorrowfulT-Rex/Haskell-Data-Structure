@@ -10,7 +10,6 @@ import           Control.Monad.ST
 import           Data.Array
 import           Data.Array.ST
 import           Data.Array.Unsafe (unsafeThaw, unsafeFreeze)
-import           Data.Bits
 import           Data.Foldable
 import           Data.STRef
 
@@ -67,7 +66,7 @@ instance MList MArrayList where
       then return $ outOfBoundError index
       else if ls == ps
         then do
-          resized <- mResize (1 + (3 * ls) `div` 2) mal
+          resized <- mResize (expandedSize ls) mal
           let MArrayList rlR resR = resized
           rl      <- readSTRef rlR
           writeSTRef lR rl
@@ -137,6 +136,7 @@ instance Eq a => MListEq MArrayList s a where
             then return True
             else mIsElem' (i + 1) l
 
+
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
@@ -160,6 +160,8 @@ instance MArrayBased MArrayList where
     return $ sup + 1
 
   mResize :: Int -> MArrayList s a -> ST s (MArrayList s a)
+  mResize s _
+    | s < 0 = return arrayLengthOverflowError
   mResize s (MArrayList lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readSTRef lR
@@ -203,7 +205,8 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
+    mal <- newMList [20, 30] :: ST s (MArrayList s Int)
+    mPush 10 mal
     mAppend 50 mal
     mAdd 3 40 mal
     b1  <- mIsElem 10 mal

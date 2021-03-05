@@ -5,8 +5,29 @@ module List where
 import           Control.Monad
 import           Control.Monad.ST
 import           Control.Monad.ST.Unsafe (unsafeSTToIO)
+import           Data.Bits
 import           Data.Foldable
 import           System.IO.Unsafe (unsafePerformIO)
+
+
+--------------------------------------------------------------------------------
+-- Utilities
+--------------------------------------------------------------------------------
+
+outOfBoundError :: Int -> a
+outOfBoundError i
+  = error $ "Index " ++ show i ++ " is out of bound!"
+
+initialSize :: Int -> Int
+initialSize = expandedSize . shiftL 1 . ceiling . logBase 2 . fromIntegral
+
+expandedSize :: Int -> Int
+expandedSize = (1 +) . (`div` 2) . (3 *)
+
+
+--------------------------------------------------------------------------------
+-- List Interface
+--------------------------------------------------------------------------------
 
 class List l where
   add      :: Int -> e -> l e -> l e
@@ -66,6 +87,11 @@ class MList l where
   mUpdate mal index f = do
     v <- mGet mal index
     mSet mal index (f v)
+
+
+--------------------------------------------------------------------------------
+-- List With Eq
+--------------------------------------------------------------------------------
 
 class ListEq l e where
   isElem :: e -> l e -> Bool

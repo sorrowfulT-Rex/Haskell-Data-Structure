@@ -6,7 +6,6 @@ module ArrayList where
 
 import           Control.Monad
 import           Data.Array
-import           Data.Bits
 import           Data.Foldable
 
 import           ArrayBased
@@ -27,10 +26,6 @@ instance Foldable ArrayList where
   toList (ArrayList l arr)
     = take l $ toList arr
 
-outOfBoundError :: Int -> a
-outOfBoundError i
-  = error $ "Index " ++ show i ++ " is out of bound!"
-
 
 --------------------------------------------------------------------------------
 -- List Functions
@@ -46,7 +41,7 @@ instance List ArrayList where
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
     where
       pl = physicalSize al
-      l' = 1 + (3 * l) `div` 2
+      l' = expandedSize l
       worker _ i
         | i < index = arr ! i
         | i > index = arr ! (i - 1)
@@ -93,11 +88,11 @@ instance List ArrayList where
     = ArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
-      l' = shiftL 1 (ceiling $ logBase 2 (fromIntegral $ l + 1))
+      l' = initialSize l
 
 instance Eq a => ListEq ArrayList a where
   isElem :: a -> ArrayList a -> Bool
-  isElem e = foldr (\a b -> b || a == e) False
+  isElem e = foldr (flip (||) . (e ==)) False
 
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
@@ -109,7 +104,8 @@ instance ArrayBased ArrayList where
 
   newWithSize :: Foldable f => Int -> f a -> ArrayList a
   newWithSize s fl
-    = ArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
+    | s < 0     = arrayLengthOverflowError
+    | otherwise = ArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
       s' = max s l
@@ -130,7 +126,7 @@ instance ArrayBased ArrayList where
 foo :: IO ()
 foo = do
   let al = newList [1..10] :: ArrayList Int
-  print $ al
+  print $ physicalSize al
   (_, al') <- return $ remove 6 al
   (_, al') <- return $ popEnd al'
   (_, al') <- return $ pop al'

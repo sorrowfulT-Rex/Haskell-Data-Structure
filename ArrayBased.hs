@@ -7,6 +7,18 @@ import           Data.Foldable
 
 import           List
 
+
+--------------------------------------------------------------------------------
+-- Utilities
+--------------------------------------------------------------------------------
+
+arrayLengthOverflowError :: a
+arrayLengthOverflowError = error $ "Length of array has overflowed!"
+
+--------------------------------------------------------------------------------
+-- ArrayBased Interface
+--------------------------------------------------------------------------------
+
 class ArrayBased a where
   deepClear    :: a e -> a e
   newWithSize  :: Foldable f => Int -> f e -> a e
