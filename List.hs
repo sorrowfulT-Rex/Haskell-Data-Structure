@@ -25,12 +25,12 @@ class List l where
   push = add 0
 
 class MList l where
-  mAdd     :: Int -> e -> l s e -> ST s (l s e)
+  mAdd     :: Int -> e -> l s e -> ST s ()
   mRemove  :: Int -> l s e -> ST s (Maybe e)
   mSize    :: l s e -> ST s Int
   newMList :: Foldable f => f e -> ST s (l s e)
 
-  mAppend :: e -> l s e -> ST s (l s e)
+  mAppend :: e -> l s e -> ST s ()
   mAppend = liftM2 (>>=) mSize . flip . flip mAdd
 
   mIsNull :: l s e -> ST s Bool
@@ -44,5 +44,5 @@ class MList l where
     l <- mSize mal
     mRemove (l - 1) mal
 
-  mPush :: e -> l s e -> ST s (l s e)
+  mPush :: e -> l s e -> ST s ()
   mPush = mAdd 0

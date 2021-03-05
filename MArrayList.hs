@@ -16,7 +16,7 @@ import           ArrayBased
 import           ArrayList
 import           List
 
-data MArrayList s e = MArrayList !(STRef s Int) (STArray s Int e)
+data MArrayList s e = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
 
 --------------------------------------------------------------------------------
@@ -26,13 +26,15 @@ data MArrayList s e = MArrayList !(STRef s Int) (STArray s Int e)
 arrayListThaw :: ArrayList a -> ST s (MArrayList s a)
 arrayListThaw (ArrayList l arr) = do
   arrST <- thaw arr
-  lST   <- newSTRef l
-  return $ MArrayList lST arrST
+  lR    <- newSTRef l
+  arrR  <- newSTRef arrST
+  return $ MArrayList lR arrR
 
 arrayListFreeze :: MArrayList s a -> ST s (ArrayList a)
-arrayListFreeze (MArrayList lST arrST) = do
-  l   <- readSTRef lST
-  arr <- freeze arrST
+arrayListFreeze (MArrayList lR arrR) = do
+  l     <- readSTRef lR
+  arrST <- readSTRef arrR
+  arr   <- freeze arrST
   return $ ArrayList l arr
 
 
@@ -41,21 +43,26 @@ arrayListFreeze (MArrayList lST arrST) = do
 --------------------------------------------------------------------------------
 
 instance MList MArrayList where
-  mAdd :: Int -> e -> MArrayList s e -> ST s (MArrayList s e)
+  mAdd :: Int -> e -> MArrayList s e -> ST s ()
   mAdd index e mal = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
+    let MArrayList lR arrR = mal
     if index < 0 || index > ls
       then return $ outOfBoundError index
       else if ls == ps
         then do
           resized <- mResize ((3 * ls) `div` 2) mal
+          let MArrayList rlR resR = resized
+          rl      <- readSTRef rlR
+          writeSTRef lR rl
+          resST   <- readSTRef resR
+          writeSTRef arrR resST
           mAdd index e resized
         else do
-          let MArrayList lST arrST = mal
-          writeSTRef lST (ls + 1)
+          arrST <- readSTRef arrR
+          writeSTRef lR (ls + 1)
           addSTUnsafe index e (ls - 1) arrST
-          return $ MArrayList lST arrST
 
   mRemove :: Int -> MArrayList s e -> ST s (Maybe e)
   mRemove index mal = do
@@ -64,15 +71,16 @@ instance MList MArrayList where
     if index < 0 || index >= ls
       then return Nothing
       else do
-        let MArrayList lST arrST = mal
-        v <- readArray arrST index
-        writeSTRef lST (ls - 1)
+        let MArrayList lR arrR = mal
+        arrST <- readSTRef arrR
+        v     <- readArray arrST index
+        writeSTRef lR (ls - 1)
         removeSTUnsafe index (ls - 2) arrST
         return $ Just v
 
   mSize :: MArrayList s e -> ST s Int
-  mSize (MArrayList lST _)
-    = readSTRef lST
+  mSize (MArrayList lR _)
+    = readSTRef lR
 
   newMList :: Foldable f => f e -> ST s (MArrayList s e)
   newMList = arrayListThaw . newList
@@ -87,20 +95,23 @@ instance MArrayBased MArrayList where
   mNewWithSize = (arrayListThaw .) . newWithSize
 
   mPhysicalSize :: MArrayList s e -> ST s Int
-  mPhysicalSize (MArrayList _ arrST) = do
+  mPhysicalSize (MArrayList _ arrR) = do
+    arrST    <- readSTRef arrR
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
   mResize :: Int -> MArrayList s e -> ST s (MArrayList s e)
-  mResize s (MArrayList lST arrST) = do
-    l        <- readSTRef lST
+  mResize s (MArrayList lR arrR) = do
+    arrST    <- readSTRef arrR
+    l        <- readSTRef lR
     (_, sup) <- getBounds arrST
     let s' = max s (sup + 1)
-    resST <- newArray_ (0, s' - 1)
+    resST    <- newArray_ (0, s' - 1)
     forM_ [0..(l - 1)] $ \i -> do
       v <- readArray arrST i
       writeArray resST i v
-    return $ MArrayList lST resST
+    resR     <- newSTRef resST
+    return $ MArrayList lR resR
 
 
 --------------------------------------------------------------------------------
@@ -135,9 +146,9 @@ foom = do
   let al = runST $ do
       mal <- newMList [10, 20, 30]
       p1  <- mPhysicalSize mal
-      mal <- mAppend 50 mal
+      mAppend 50 mal
       p2  <- mPhysicalSize mal
-      mal <- mAdd 3 40 mal
+      mAdd 3 40 mal
       p3  <- mPhysicalSize mal
       v1  <- mPop mal
       v2  <- mPopEnd mal
