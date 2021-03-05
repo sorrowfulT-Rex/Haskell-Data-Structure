@@ -6,6 +6,7 @@ import           Data.Foldable
 class List l where
   add     :: Int -> e -> l e -> l e
   clear   :: l e -> l e
+  get     :: l e -> Int -> e
   remove  :: Int -> l e -> (Maybe e, l e)
   size    :: l e -> Int
   newList :: Foldable f => f e -> l e 
@@ -28,6 +29,7 @@ class List l where
 class MList l where
   mAdd     :: Int -> e -> l s e -> ST s ()
   mClear   :: l s e -> ST s ()
+  mGet     :: l s e -> Int -> ST s e
   mRemove  :: Int -> l s e -> ST s (Maybe e)
   mSize    :: l s e -> ST s Int
   mToList  :: l s e -> ST s [e]

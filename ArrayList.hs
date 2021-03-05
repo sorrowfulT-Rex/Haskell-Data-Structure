@@ -54,6 +54,11 @@ instance List ArrayList where
   clear (ArrayList l arr)
     = ArrayList 0 arr
 
+  get :: ArrayList a -> Int -> a
+  get (ArrayList l arr) index
+    | index >= l || index < 0 = outOfBoundError index
+    | otherwise = arr ! index
+
   remove :: Int -> ArrayList a -> (Maybe a, ArrayList a)
   remove index al@(ArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
@@ -115,6 +120,7 @@ foo = do
   print v
   al'      <- return $ pop al'
   print al'
+  print $ (snd al') `get` 6
   al'      <- return $ deepClear (snd al')
   print al'
   print $ physicalSize al'

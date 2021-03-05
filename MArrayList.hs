@@ -58,10 +58,9 @@ arrayListFreezeUnsafe (MArrayList lR arrR) = do
 
 instance MList MArrayList where
   mAdd :: Int -> a -> MArrayList s a -> ST s ()
-  mAdd index e mal = do
+  mAdd index e mal@(MArrayList lR arrR) = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
-    let MArrayList lR arrR = mal
     if index < 0 || index > ls
       then return $ outOfBoundError index
       else if ls == ps
@@ -81,19 +80,27 @@ instance MList MArrayList where
   mClear :: MArrayList s a -> ST s ()
   mClear (MArrayList lR arrR) = writeSTRef lR 0
 
+  mGet :: MArrayList s a -> Int -> ST s a
+  mGet mal@(MArrayList lR arrR) index = do
+    l <- mSize mal
+    if index >= l || index < 0
+      then return $ outOfBoundError index
+      else do
+        arrST <- readSTRef arrR
+        readArray arrST index
+
   mToList :: MArrayList s a -> ST s [a]
   mToList mal = do
     al <- arrayListFreeze mal
     return $ toList al
 
   mRemove :: Int -> MArrayList s a -> ST s (Maybe a)
-  mRemove index mal = do
+  mRemove index mal@(MArrayList lR arrR) = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
     if index < 0 || index >= ls
       then return Nothing
       else do
-        let MArrayList lR arrR = mal
         arrST <- readSTRef arrR
         v     <- readArray arrST index
         writeSTRef lR (ls - 1)
@@ -183,8 +190,9 @@ foom = do
       v1  <- mPop mal
       v2  <- mPopEnd mal
       v3  <- mRemove 1 mal
+      v4  <- mal `mGet` 1
       mDeepClear mal
       p4  <- mPhysicalSize mal
       al  <- mToList mal
-      return [D p1, D p2, D p3, D v1, D v2, D v3, D p4, D al]
+      return [D p1, D p2, D p3, D v1, D v2, D v3, D v4, D p4, D al]
   print output
