@@ -14,13 +14,15 @@ data ArrayList e = ArrayList !Int (Array Int e)
 
 instance Show a => Show (ArrayList a) where
   show (ArrayList l arr)
-    = "ArrayList: " ++ show (take l $ toList arr)
+    = "ArrayList: " ++ show (toList arr)
 
 instance Foldable ArrayList where
   foldr f b (ArrayList _ arr)
     = foldr f b arr
   length (ArrayList l _)
     = l
+  toList (ArrayList l arr)
+    = take l $ toList arr
 
 outOfBoundError :: Int -> a
 outOfBoundError i

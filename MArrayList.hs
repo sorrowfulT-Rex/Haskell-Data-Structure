@@ -43,7 +43,7 @@ arrayListFreeze (MArrayList lR arrR) = do
 --------------------------------------------------------------------------------
 
 instance MList MArrayList where
-  mAdd :: Int -> e -> MArrayList s e -> ST s ()
+  mAdd :: Int -> a -> MArrayList s a -> ST s ()
   mAdd index e mal = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
@@ -64,7 +64,12 @@ instance MList MArrayList where
           writeSTRef lR (ls + 1)
           addSTUnsafe index e (ls - 1) arrST
 
-  mRemove :: Int -> MArrayList s e -> ST s (Maybe e)
+  mToList :: MArrayList s a -> ST s [a]
+  mToList mal = do
+    al <- arrayListFreeze mal
+    return $ toList al
+
+  mRemove :: Int -> MArrayList s a -> ST s (Maybe a)
   mRemove index mal = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
@@ -78,11 +83,11 @@ instance MList MArrayList where
         removeSTUnsafe index (ls - 2) arrST
         return $ Just v
 
-  mSize :: MArrayList s e -> ST s Int
+  mSize :: MArrayList s a -> ST s Int
   mSize (MArrayList lR _)
     = readSTRef lR
 
-  newMList :: Foldable f => f e -> ST s (MArrayList s e)
+  newMList :: Foldable f => f a -> ST s (MArrayList s a)
   newMList = arrayListThaw . newList
 
 
@@ -91,16 +96,16 @@ instance MList MArrayList where
 --------------------------------------------------------------------------------
 
 instance MArrayBased MArrayList where
-  mNewWithSize  :: Foldable f => Int -> f e -> ST s (MArrayList s e)
+  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList s a)
   mNewWithSize = (arrayListThaw .) . newWithSize
 
-  mPhysicalSize :: MArrayList s e -> ST s Int
+  mPhysicalSize :: MArrayList s a -> ST s Int
   mPhysicalSize (MArrayList _ arrR) = do
     arrST    <- readSTRef arrR
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
-  mResize :: Int -> MArrayList s e -> ST s (MArrayList s e)
+  mResize :: Int -> MArrayList s a -> ST s (MArrayList s a)
   mResize s (MArrayList lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readSTRef lR
@@ -143,8 +148,8 @@ instance Show D where
 
 foom :: IO ()
 foom = do
-  let al = runST $ do
-      mal <- newMList [10, 20, 30]
+  let output = runST $ do
+      mal <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
       p1  <- mPhysicalSize mal
       mAppend 50 mal
       p2  <- mPhysicalSize mal
@@ -153,6 +158,6 @@ foom = do
       v1  <- mPop mal
       v2  <- mPopEnd mal
       v3  <- mRemove 1 mal
-      al  <- arrayListFreeze mal
+      al  <- mToList mal
       return [D p1, D p2, D p3, D v1, D v2, D v3, D al]
-  print al
+  print output

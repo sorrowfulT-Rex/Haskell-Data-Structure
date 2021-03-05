@@ -28,6 +28,7 @@ class MList l where
   mAdd     :: Int -> e -> l s e -> ST s ()
   mRemove  :: Int -> l s e -> ST s (Maybe e)
   mSize    :: l s e -> ST s Int
+  mToList  :: l s e -> ST s [e]
   newMList :: Foldable f => f e -> ST s (l s e)
 
   mAppend :: e -> l s e -> ST s ()
