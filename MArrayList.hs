@@ -1,4 +1,6 @@
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE RankNTypes #-}
 
 module MArrayList where
 
@@ -6,6 +8,7 @@ import           Control.Monad
 import           Control.Monad.ST
 import           Data.Array
 import           Data.Array.ST
+import           Data.Bits
 import           Data.Foldable
 
 import           ArrayBased
@@ -40,7 +43,7 @@ instance MList MArrayList where
     ls <- mSize mal
     ps <- mPhysicalSize mal
     if index < 0 || index > ls
-      then return $ error "Index out of bound!"
+      then return (error $ "Index " ++ show index ++ " is out of bound!")
       else if ls == ps
         then do
           resized <- mResize ((3 * ls) `div` 2) mal
@@ -99,10 +102,21 @@ addST index e lastElement arrST = do
 -- Playground
 --------------------------------------------------------------------------------
 
+data D = forall a. Show a => D a
+
+instance Show D where
+  show (D a) = show a
+
 foom :: IO ()
 foom = do
   let al = runST $ do
       mal <- newMList [10, 20, 30]
+      p1  <- mPhysicalSize mal
       mal <- mAppend 10 mal
-      arrayListFreeze mal
+      p2  <- mPhysicalSize mal
+      mal <- mAppend 13 mal
+      p3  <- mPhysicalSize mal
+      mal <- mAdd 2 114514 mal
+      al  <- arrayListFreeze mal
+      return [D p1, D p2, D p3, D al]
   print al

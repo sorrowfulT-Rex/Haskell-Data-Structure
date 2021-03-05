@@ -5,6 +5,7 @@ module ArrayList where
 
 import           Control.Monad
 import           Data.Array
+import           Data.Bits
 import           Data.Foldable
 
 import           ArrayBased
@@ -29,13 +30,16 @@ instance Foldable ArrayList where
 
 instance List ArrayList where
   add :: forall a. Int -> a -> ArrayList a -> ArrayList a
-  add index e mal@(ArrayList l arr)
-    | index > l || index < 0 = error "Index out of bound!"
-    | l == physicalSize mal  = add index e (resize l' mal)
+  add index e al@(ArrayList l arr)
+    | index > l || index < 0 = error errMsg
+    | l == pl                = add index e (resize l' al)
     | otherwise 
-      = ArrayList (l + 1) $ accumArray worker undefined (0, l) $ join zip [0..l]
+      = ArrayList (l + 1) 
+        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
     where
-      l' = (3 * l) `div` 2
+      errMsg = "Index " ++ show index ++ " is out of bound!"
+      pl     = physicalSize al
+      l'     = (3 * l) `div` 2
       worker _ i
         | i < index = arr ! i
         | i > index = arr ! (i - 1)
@@ -47,9 +51,10 @@ instance List ArrayList where
 
   newList :: Foldable f => f a -> ArrayList a
   newList fl
-    = ArrayList l (array (0, l - 1) $ zip [0..] $ toList fl)
+    = ArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
     where
-      l = length fl
+      l  = length fl
+      l' = shiftL 1 (ceiling $ logBase 2 (fromIntegral $ l + 1))
   
 
 --------------------------------------------------------------------------------
