@@ -1,6 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE RankNTypes #-}
 
 module MArrayList where
 
@@ -67,7 +66,7 @@ instance MList MArrayList where
       then return $ outOfBoundError index
       else if ls == ps
         then do
-          resized <- mResize ((3 * ls) `div` 2) mal
+          resized <- mResize (1 + (3 * ls) `div` 2) mal
           let MArrayList rlR resR = resized
           rl      <- readSTRef rlR
           writeSTRef lR rl
@@ -78,6 +77,9 @@ instance MList MArrayList where
           arrST <- readSTRef arrR
           writeSTRef lR (ls + 1)
           addSTUnsafe index e (ls - 1) arrST
+
+  mClear :: MArrayList s a -> ST s ()
+  mClear (MArrayList lR arrR) = writeSTRef lR 0
 
   mToList :: MArrayList s a -> ST s [a]
   mToList mal = do
@@ -111,6 +113,14 @@ instance MList MArrayList where
 --------------------------------------------------------------------------------
 
 instance MArrayBased MArrayList where
+  mDeepClear :: MArrayList s a -> ST s ()
+  mDeepClear (MArrayList lR arrR) = do
+    MArrayList rlR resR <- newMList []
+    rl                  <- readSTRef rlR
+    resST               <- readSTRef resR
+    writeSTRef lR rl
+    writeSTRef arrR resST
+
   mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList s a)
   mNewWithSize = (arrayListThaw .) . newWithSize
 
@@ -173,6 +183,8 @@ foom = do
       v1  <- mPop mal
       v2  <- mPopEnd mal
       v3  <- mRemove 1 mal
+      mDeepClear mal
+      p4  <- mPhysicalSize mal
       al  <- mToList mal
-      return [D p1, D p2, D p3, D v1, D v2, D v3, D al]
+      return [D p1, D p2, D p3, D v1, D v2, D v3, D p4, D al]
   print output
