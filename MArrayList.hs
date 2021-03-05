@@ -8,6 +8,7 @@ import           Control.Monad
 import           Control.Monad.ST
 import           Data.Array
 import           Data.Array.ST
+import           Data.Array.Unsafe
 import           Data.Bits
 import           Data.Foldable
 import           Data.STRef
@@ -35,6 +36,20 @@ arrayListFreeze (MArrayList lR arrR) = do
   l     <- readSTRef lR
   arrST <- readSTRef arrR
   arr   <- freeze arrST
+  return $ ArrayList l arr
+
+arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList s a)
+arrayListThawUnsafe (ArrayList l arr) = do
+  arrST <- unsafeThaw arr
+  lR    <- newSTRef l
+  arrR  <- newSTRef arrST
+  return $ MArrayList lR arrR
+
+arrayListFreezeUnsafe :: MArrayList s a -> ST s (ArrayList a)
+arrayListFreezeUnsafe (MArrayList lR arrR) = do
+  l     <- readSTRef lR
+  arrST <- readSTRef arrR
+  arr   <- unsafeFreeze arrST
   return $ ArrayList l arr
 
 
