@@ -1,5 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module MArrayList where
 
@@ -112,6 +114,19 @@ instance MList MArrayList where
   newMList :: Foldable f => f a -> ST s (MArrayList s a)
   newMList = arrayListThaw . newList
 
+instance Eq a => MListEq MArrayList s a where
+  mIsElem :: a -> MArrayList s a -> ST s Bool
+  mIsElem e mal = do
+    l <- mSize mal
+    mIsElem' 0 l
+    where
+      mIsElem' i l = if i >= l
+        then return False
+        else do
+          v <- mal `mGet` i
+          if v == e
+            then return True
+            else mIsElem' (i + 1) l
 
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
@@ -183,5 +198,7 @@ foom = do
       mAppend 50 mal
       mAdd 3 40 mal
       mal' <- newMList [10, 20, 30, 50, 40] :: ST s (MArrayList s Int)
-      return [D (mal == mal')]
+      b1   <- mIsElem 10 mal
+      b2   <- mIsElem 12 mal
+      return [D (mal == mal'), D b1, D b2]
   print output

@@ -1,4 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module ArrayList where
 
@@ -16,8 +18,8 @@ instance Show a => Show (ArrayList a) where
   show = ("ArrayList: " ++) . show . toList
 
 instance Foldable ArrayList where
-  foldr f b (ArrayList _ arr)
-    = foldr f b $ toList arr
+  foldr f b al
+    = foldr f b $ toList al
 
   length (ArrayList l _)
     = l
@@ -81,7 +83,10 @@ instance List ArrayList where
     where
       l  = length fl
       l' = shiftL 1 (ceiling $ logBase 2 (fromIntegral $ l + 1))
-  
+
+instance Eq a => ListEq ArrayList a where
+  isElem :: a -> ArrayList a -> Bool
+  isElem e = foldr (\a b -> b || a == e) False
 
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
@@ -93,7 +98,7 @@ instance ArrayBased ArrayList where
 
   newWithSize :: Foldable f => Int -> f a -> ArrayList a
   newWithSize s fl
-    = ArrayList l (array (0, s' - 1) $ zip [0..] $toList fl)
+    = ArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
       s' = max s l
@@ -116,13 +121,12 @@ foo = do
   let al = newList [1..10] :: ArrayList Int
   print $ al
   (_, al') <- return $ remove 6 al
-  (v, al') <- return $ popEnd al'
-  print v
-  al'      <- return $ pop al'
-  print al'
-  print $ (snd al') `get` 6
-  let la = newList [2, 3, 4, 5, 6, 8, 9]
-  print $ la == snd al'
-  al'      <- return $ deepClear (snd al')
+  (_, al') <- return $ popEnd al'
+  (_, al') <- return $ pop al'
+  print $ al' `get` 6
+  let la = newList [2, 3, 4, 5, 6, 8, 9] :: ArrayList Int
+  print $ isElem 1 la
+  print $ isElem 2 la
+  al'      <- return $ deepClear al'
   print al'
   print $ physicalSize al'

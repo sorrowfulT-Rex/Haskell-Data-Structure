@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module List where
 import           Control.Monad
@@ -8,12 +9,12 @@ import           Data.Foldable
 import           System.IO.Unsafe
 
 class List l where
-  add     :: Int -> e -> l e -> l e
-  clear   :: l e -> l e
-  get     :: l e -> Int -> e
-  remove  :: Int -> l e -> (Maybe e, l e)
-  size    :: l e -> Int
-  newList :: Foldable f => f e -> l e 
+  add      :: Int -> e -> l e -> l e
+  clear    :: l e -> l e
+  get      :: l e -> Int -> e
+  remove   :: Int -> l e -> (Maybe e, l e)
+  size     :: l e -> Int
+  newList  :: Foldable f => f e -> l e 
 
   append :: e -> l e -> l e 
   append = flip (join (flip . add . size))
@@ -56,14 +57,20 @@ class MList l where
   mPush :: e -> l s e -> ST s ()
   mPush = mAdd 0
 
-instance {-# OVERLAPPABLE #-} (Eq e, List l) => Eq (l e) where
+class ListEq l e where
+  isElem :: e -> l e -> Bool
+
+class MListEq l s e where
+  mIsElem :: e -> l s e -> ST s Bool
+
+instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
   al == al' 
     = l == l' && and (map (\i -> al `get` i == al' `get` i) [0..(l - 1)])
     where
       l  = size al
       l' = size al'
 
-instance {-# OVERLAPPABLE #-} (Eq e, MList l) => Eq (l s e) where
+instance {-# OVERLAPPABLE #-} (Eq a, MList l) => Eq (l s a) where
   mal == mal'
     = unsafePerformIO $ unsafeSTToIO $ do
       l  <- mSize mal
