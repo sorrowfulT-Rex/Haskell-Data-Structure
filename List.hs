@@ -1,7 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module List where
 import           Control.Monad
 import           Control.Monad.ST
+import           Control.Monad.ST.Unsafe
 import           Data.Foldable
+import           System.IO.Unsafe
 
 class List l where
   add     :: Int -> e -> l e -> l e
@@ -51,3 +55,22 @@ class MList l where
 
   mPush :: e -> l s e -> ST s ()
   mPush = mAdd 0
+
+instance {-# OVERLAPPABLE #-} (Eq e, List l) => Eq (l e) where
+  al == al' 
+    = l == l' && and (map (\i -> al `get` i == al' `get` i) [0..(l - 1)])
+    where
+      l  = size al
+      l' = size al'
+
+instance {-# OVERLAPPABLE #-} (Eq e, MList l) => Eq (l s e) where
+  mal == mal'
+    = unsafePerformIO $ unsafeSTToIO $ do
+      l  <- mSize mal
+      l' <- mSize mal'
+      r  <- sequence $ map (\i -> do
+        v  <- mal `mGet` i
+        v' <- mal' `mGet` i
+        return $ v == v'
+        ) [0..(l - 1)]
+      return $ (l == l') && and r

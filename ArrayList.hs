@@ -121,6 +121,8 @@ foo = do
   al'      <- return $ pop al'
   print al'
   print $ (snd al') `get` 6
+  let la = newList [2, 3, 4, 5, 6, 8, 9]
+  print $ la == snd al'
   al'      <- return $ deepClear (snd al')
   print al'
   print $ physicalSize al'

@@ -85,9 +85,7 @@ instance MList MArrayList where
     l <- mSize mal
     if index >= l || index < 0
       then return $ outOfBoundError index
-      else do
-        arrST <- readSTRef arrR
-        readArray arrST index
+      else readSTRef arrR >>= flip readArray index
 
   mToList :: MArrayList s a -> ST s [a]
   mToList mal = do
@@ -181,18 +179,9 @@ instance Show D where
 foom :: IO ()
 foom = do
   let output = runST $ do
-      mal <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
-      p1  <- mPhysicalSize mal
+      mal  <- newMList [10, 20, 30] :: ST s (MArrayList s Int)
       mAppend 50 mal
-      p2  <- mPhysicalSize mal
       mAdd 3 40 mal
-      p3  <- mPhysicalSize mal
-      v1  <- mPop mal
-      v2  <- mPopEnd mal
-      v3  <- mRemove 1 mal
-      v4  <- mal `mGet` 1
-      mDeepClear mal
-      p4  <- mPhysicalSize mal
-      al  <- mToList mal
-      return [D p1, D p2, D p3, D v1, D v2, D v3, D v4, D p4, D al]
+      mal' <- newMList [10, 20, 30, 50, 40] :: ST s (MArrayList s Int)
+      return [D (mal == mal')]
   print output

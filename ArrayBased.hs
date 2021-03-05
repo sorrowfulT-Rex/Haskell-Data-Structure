@@ -1,4 +1,7 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module ArrayBased where 
+
 import           Control.Monad.ST
 import           Data.Foldable
 
