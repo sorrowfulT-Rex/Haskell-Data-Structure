@@ -5,19 +5,20 @@
 
 module MArrayList where
 
-import           Control.Monad
-import           Control.Monad.ST
-import           Data.Array
+import           Control.Monad (forM_, liftM2)
+import           Control.Monad.ST.Lazy (ST(..), runST)
 import           Data.Array.ST
-import           Data.Array.Unsafe (unsafeThaw, unsafeFreeze)
-import           Data.Foldable
-import           Data.Maybe
-import           Data.STRef
+  (STArray(..), freeze, getBounds, newArray_, readArray, thaw, writeArray)
+import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
+import           Data.Foldable (toList)
+import           Data.STRef.Lazy (STRef(..), newSTRef, readSTRef, writeSTRef)
 
-import           ArrayBased
-import           ArrayList
-import           List
-import           MDT
+import           ArrayBased 
+  (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError)
+import           ArrayList (ArrayList(..))
+import           List 
+  (List(..), MList(..), MListEq(..), expandedSize, initialSize, outOfBoundError)
+import           MDT (MDT(..), MDTCons(..))
 
 data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
@@ -125,19 +126,16 @@ instance MList MArrayList where
   newMList = arrayListThaw . newList
 
 instance Eq a => MListEq MArrayList a s where
-  mContains :: MArrayList a s -> a -> ST s Bool
-  mContains = (fmap isJust .) . mIndexOf
-
-  mIndexOf :: MArrayList a s -> a -> ST s (Maybe Int)
-  mIndexOf mal e = mSize mal >>= mIndexof' 0
+  mIndicesOf :: MArrayList a s -> a -> ST s [Int]
+  mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
     where
-      mIndexof' i l 
-        | i >= l = return Nothing
-      mIndexof' i l = do
+      mIndicesOf' i l 
+        | i >= l = return []
+      mIndicesOf' i l = do
         v <- mal `mGet` i
         if v == e
-          then return $ Just i
-          else mIndexof' (i + 1) l
+          then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
+          else mIndicesOf' (i + 1) l
 
 
 --------------------------------------------------------------------------------
@@ -244,18 +242,6 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal  <- new [1..7 :: Int] :: ST s (MArrayList Int s)
-    mal' <- trueCopy mal
-    mAppend 8 mal
-    mAppend 9 mal
-    mAppend 10 mal
-    mAppend 11 mal
-    mAppend 12 mal
-    mAppend 13 mal
-    mAppend 14 mal
-    mAppend 15 mal
-    al   <- arrayListFreeze mal
-    al'  <- arrayListFreeze mal'
-    p1   <- mPhysicalSize mal
-    p2   <- mPhysicalSize mal'
-    return [D al, D al', D p1, D p2]
+    mal  <- new (replicate 1000000 (1::Int)) :: ST s (MArrayList Int s)
+    il   <- mal `mIndicesOf` 1
+    return [D $ (head il)]

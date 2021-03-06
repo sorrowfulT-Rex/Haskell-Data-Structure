@@ -4,13 +4,13 @@
 
 module ArrayList where
 
-import           Control.Monad
-import           Data.Array
-import           Data.Foldable
-import           Data.Maybe
+import           Control.Monad (join)
+import           Data.Array (Array(..), accumArray, array, bounds, (!))
+import           Data.Foldable (toList)
 
-import           ArrayBased
-import           List
+import           ArrayBased (ArrayBased(..), arrayLengthOverflowError)
+import           List 
+  (List(..), ListEq(..), expandedSize, initialSize, outOfBoundError)
 
 data ArrayList e = ArrayList !Int (Array Int e)
 
@@ -56,6 +56,13 @@ instance List ArrayList where
   get (ArrayList l arr) index
     | index >= l || index < 0 = outOfBoundError index
     | otherwise = arr ! index
+  
+  newList :: Foldable f => f a -> ArrayList a
+  newList fl
+    = ArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
+    where
+      l  = length fl
+      l' = initialSize l
 
   remove :: Int -> ArrayList a -> (Maybe a, ArrayList a)
   remove index al@(ArrayList l arr)
@@ -84,26 +91,16 @@ instance List ArrayList where
   size (ArrayList l _) 
     = l
 
-  newList :: Foldable f => f a -> ArrayList a
-  newList fl
-    = ArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
-    where
-      l  = length fl
-      l' = initialSize l
-
 instance Eq a => ListEq ArrayList a where
-  indexOf :: ArrayList a -> a -> Maybe Int
-  indexOf al e
-    = indexOf' 0
+  indicesOf :: ArrayList a -> a -> [Int]
+  indicesOf al e
+    = indicesOf' 0
     where
       l = size al
-      indexOf' i
-        | i >= l          = Nothing
-        | al `get` i == e = Just i
-        | otherwise       = indexOf' (i + 1)
-
-  contains :: ArrayList a -> a -> Bool
-  contains = (isJust .) . indexOf
+      indicesOf' i
+        | i >= l          = []
+        | al `get` i == e = i : indicesOf' (i + 1)
+        | otherwise       = indicesOf' (i + 1)
 
 
 --------------------------------------------------------------------------------
@@ -137,7 +134,6 @@ instance ArrayBased ArrayList where
 
 foo :: IO ()
 foo = do
-  let al = newList [3,1,2,1] :: ArrayList Int
-  print $ physicalSize al
-  print $ al `contains` 4
-  print al
+  let al = newList (2 : replicate 1000000 1) :: ArrayList Int
+  print $ al `indexOf` 2
+  

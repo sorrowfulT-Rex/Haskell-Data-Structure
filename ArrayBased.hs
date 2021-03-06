@@ -2,10 +2,8 @@
 
 module ArrayBased where 
 
-import           Control.Monad.ST
-import           Data.Foldable
-
-import           List
+import           Control.Monad.ST.Lazy (ST(..))
+import           Data.Foldable (toList)
 
 
 --------------------------------------------------------------------------------

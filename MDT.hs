@@ -2,8 +2,7 @@
 
 module MDT where
 
-import           Control.Monad
-import           Control.Monad.ST
+import           Control.Monad.ST.Lazy (ST(..))
 
 class MDT d s where
   copy :: d s -> ST s (d s)

@@ -2,11 +2,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module List where
-import           Control.Monad
-import           Control.Monad.ST
+import           Control.Monad (ap, join, liftM2)
+import           Control.Monad.ST.Lazy (ST(..), runST, lazyToStrictST)
 import           Control.Monad.ST.Unsafe (unsafeSTToIO)
-import           Data.Bits
-import           Data.Foldable
+import           Data.Bits (shiftL)
+import           Data.Foldable (toList)
+import           Data.Maybe (Maybe(..), isJust)
 import           System.IO.Unsafe (unsafePerformIO)
 
 
@@ -33,10 +34,10 @@ class List l where
   add      :: Int -> e -> l e -> l e
   clear    :: l e -> l e
   get      :: l e -> Int -> e
+  newList  :: Foldable f => f e -> l e 
   remove   :: Int -> l e -> (Maybe e, l e)
   set      :: l e -> Int -> e -> l e
   size     :: l e -> Int
-  newList  :: Foldable f => f e -> l e 
 
   append :: e -> l e -> l e 
   append = flip (join (flip . add . size))
@@ -94,12 +95,31 @@ class MList l where
 --------------------------------------------------------------------------------
 
 class List l => ListEq l e where
-  indexOf  :: l e -> e -> Maybe Int
+  indicesOf :: l e -> e -> [Int]
+
+  indexOf :: l e -> e -> Maybe Int
+  indexOf l e
+    | notFound  = Nothing
+    | otherwise = Just $ head indices
+    where
+      notFound = null indices
+      indices  = indicesOf l e
+
   contains :: l e -> e -> Bool
+  contains = (isJust .) . indexOf
 
 class MList l => MListEq l e s where
-  mIndexOf  :: l e s -> e -> ST s (Maybe Int)
+  mIndicesOf :: l e s -> e -> ST s [Int]
+
+  mIndexOf :: l e s -> e -> ST s (Maybe Int)
+  mIndexOf ml e = do
+    indices <- mIndicesOf ml e
+    return $ if null indices
+      then Nothing
+      else Just $ head indices
+
   mContains :: l e s -> e -> ST s Bool
+  mContains = (fmap isJust .) . mIndexOf
 
 instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
   al == al' 
@@ -110,12 +130,9 @@ instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
 
 instance {-# OVERLAPPABLE #-} (Eq a, MList l) => Eq (l a s) where
   mal == mal'
-    = unsafePerformIO $ unsafeSTToIO $ do
+    = unsafePerformIO $ unsafeSTToIO $ lazyToStrictST $ do
       l  <- mSize mal
       l' <- mSize mal'
-      r  <- sequence $ map (\i -> do
-        v  <- mal `mGet` i
-        v' <- mal' `mGet` i
-        return $ v == v'
-        ) [0..(l - 1)]
+      r  <- sequence $ 
+        map (ap (liftM2 (==) . (mal `mGet`)) (mal' `mGet`)) [0..(l - 1)]
       return $ (l == l') && and r
