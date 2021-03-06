@@ -17,6 +17,7 @@ import           Data.STRef
 import           ArrayBased
 import           ArrayList
 import           List
+import           MDT
 
 data MArrayList s e = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
@@ -178,6 +179,22 @@ instance MArrayBased MArrayList where
 
 
 --------------------------------------------------------------------------------
+-- MDT Functions
+--------------------------------------------------------------------------------
+
+instance MDT MArrayList where
+  copy :: MArrayList s a -> ST s (MArrayList s a)
+  copy (MArrayList lR arrR) = do
+    l     <- readSTRef lR
+    arrST <- readSTRef arrR
+    resST <- newArray_ (0, initialSize l - 1)
+    copyArrayUnsafe arrST resST (0, (l - 1))
+    rlR   <- newSTRef l
+    resR  <- newSTRef resST
+    return $ MArrayList rlR resR
+
+
+--------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------
 
@@ -187,6 +204,11 @@ addSTUnsafe index e lastElement arrST = do
     v <- readArray arrST i
     writeArray arrST (i + 1) v
   writeArray arrST index e
+
+copyArrayUnsafe :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
+copyArrayUnsafe arrST resST (inf, sup) = do
+  forM_ (zip [0..] [inf..sup]) $ 
+    \(i, i') -> readArray arrST i >>= writeArray resST i'
 
 removeSTUnsafe :: Int -> Int -> STArray s Int a -> ST s ()
 removeSTUnsafe index lastElement arrST
@@ -207,13 +229,18 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- newMList [20, 30] :: ST s (MArrayList s Int)
-    mPush 10 mal
-    mAppend 50 mal
-    mAdd 3 40 mal
-    b1  <- mContains mal 10
-    b2  <- mContains mal 12
-    mUpdate mal 2 (+ 114484)
-    b3  <- mIndexOf mal 114514
-    l   <- mToList mal
-    return [D b1, D b2, D b3, D l]
+    mal  <- newMList [1..7] :: ST s (MArrayList s Int)
+    mal' <- copy mal
+    mAppend 8 mal
+    mAppend 9 mal
+    mAppend 10 mal
+    mAppend 11 mal
+    mAppend 12 mal
+    mAppend 13 mal
+    mAppend 14 mal
+    mAppend 15 mal
+    al   <- arrayListFreeze mal
+    al'  <- arrayListFreeze mal'
+    p1   <- mPhysicalSize mal
+    p2   <- mPhysicalSize mal'
+    return [D al, D al', D p1, D p2]
