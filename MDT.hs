@@ -1,7 +1,9 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module MDT where
 
 import           Control.Monad
 import           Control.Monad.ST
 
-class MDT d where
-  copy :: d s e -> ST s (d s e)
+class MDT d s where
+  copy :: d s -> ST s (d s)

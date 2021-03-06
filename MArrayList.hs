@@ -19,35 +19,35 @@ import           ArrayList
 import           List
 import           MDT
 
-data MArrayList s e = MArrayList (STRef s Int) (STRef s (STArray s Int e))
+data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
 
 --------------------------------------------------------------------------------
 -- Freeze & Thaw
 --------------------------------------------------------------------------------
 
-arrayListThaw :: ArrayList a -> ST s (MArrayList s a)
+arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 arrayListThaw (ArrayList l arr) = do
   arrST <- thaw arr
   lR    <- newSTRef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
-arrayListFreeze :: MArrayList s a -> ST s (ArrayList a)
+arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreeze (MArrayList lR arrR) = do
   l     <- readSTRef lR
   arrST <- readSTRef arrR
   arr   <- freeze arrST
   return $ ArrayList l arr
 
-arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList s a)
+arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList a s)
 arrayListThawUnsafe (ArrayList l arr) = do
   arrST <- unsafeThaw arr
   lR    <- newSTRef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
-arrayListFreezeUnsafe :: MArrayList s a -> ST s (ArrayList a)
+arrayListFreezeUnsafe :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreezeUnsafe (MArrayList lR arrR) = do
   l     <- readSTRef lR
   arrST <- readSTRef arrR
@@ -60,7 +60,7 @@ arrayListFreezeUnsafe (MArrayList lR arrR) = do
 --------------------------------------------------------------------------------
 
 instance MList MArrayList where
-  mAdd :: Int -> a -> MArrayList s a -> ST s ()
+  mAdd :: Int -> a -> MArrayList a s -> ST s ()
   mAdd index e mal@(MArrayList lR arrR) = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
@@ -80,22 +80,22 @@ instance MList MArrayList where
           writeSTRef lR (ls + 1)
           addSTUnsafe index e (ls - 1) arrST
 
-  mClear :: MArrayList s a -> ST s ()
+  mClear :: MArrayList a s -> ST s ()
   mClear (MArrayList lR arrR) = writeSTRef lR 0
 
-  mGet :: MArrayList s a -> Int -> ST s a
+  mGet :: MArrayList a s -> Int -> ST s a
   mGet mal@(MArrayList lR arrR) index = do
     l <- mSize mal
     if index >= l || index < 0
       then return $ outOfBoundError index
       else readSTRef arrR >>= flip readArray index
 
-  mToList :: MArrayList s a -> ST s [a]
+  mToList :: MArrayList a s -> ST s [a]
   mToList mal = do
     al <- arrayListFreeze mal
     return $ toList al
 
-  mRemove :: Int -> MArrayList s a -> ST s (Maybe a)
+  mRemove :: Int -> MArrayList a s -> ST s (Maybe a)
   mRemove index mal@(MArrayList lR arrR) = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
@@ -108,7 +108,7 @@ instance MList MArrayList where
         removeSTUnsafe index (ls - 2) arrST
         return $ Just v
 
-  mSet :: MArrayList s e -> Int -> e -> ST s ()
+  mSet :: MArrayList a s -> Int -> a -> ST s ()
   mSet mal@(MArrayList _ arrR) index e = do
     ls <- mSize mal
     if index < 0 || index >= ls
@@ -117,18 +117,18 @@ instance MList MArrayList where
         arrST <- readSTRef arrR
         writeArray arrST index e
 
-  mSize :: MArrayList s a -> ST s Int
+  mSize :: MArrayList a s -> ST s Int
   mSize (MArrayList lR _)
     = readSTRef lR
 
-  newMList :: Foldable f => f a -> ST s (MArrayList s a)
+  newMList :: Foldable f => f a -> ST s (MArrayList a s)
   newMList = arrayListThaw . newList
 
-instance Eq a => MListEq MArrayList s a where
-  mContains :: MArrayList s a -> a -> ST s Bool
+instance Eq a => MListEq MArrayList a s where
+  mContains :: MArrayList a s -> a -> ST s Bool
   mContains = (fmap isJust .) . mIndexOf
 
-  mIndexOf :: MArrayList s a -> a -> ST s (Maybe Int)
+  mIndexOf :: MArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = mSize mal >>= mIndexof' 0
     where
       mIndexof' i l 
@@ -145,7 +145,7 @@ instance Eq a => MListEq MArrayList s a where
 --------------------------------------------------------------------------------
 
 instance MArrayBased MArrayList where
-  mDeepClear :: MArrayList s a -> ST s ()
+  mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- newMList []
     rl                  <- readSTRef rlR
@@ -153,16 +153,16 @@ instance MArrayBased MArrayList where
     writeSTRef lR rl
     writeSTRef arrR resST
 
-  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList s a)
+  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
   mNewWithSize = (arrayListThaw .) . newWithSize
 
-  mPhysicalSize :: MArrayList s a -> ST s Int
+  mPhysicalSize :: MArrayList a s -> ST s Int
   mPhysicalSize (MArrayList _ arrR) = do
     arrST    <- readSTRef arrR
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
-  mResize :: Int -> MArrayList s a -> ST s (MArrayList s a)
+  mResize :: Int -> MArrayList a s -> ST s (MArrayList a s)
   mResize s _
     | s < 0 = return arrayLengthOverflowError
   mResize s (MArrayList lR arrR) = do
@@ -177,7 +177,7 @@ instance MArrayBased MArrayList where
     resR     <- newSTRef resST
     return $ MArrayList lR resR
 
-  trueCopy :: MArrayList s a -> ST s (MArrayList s a)
+  trueCopy :: MArrayList a s -> ST s (MArrayList a s)
   trueCopy mal@(MArrayList _ arrR) = do
     ls    <- mSize mal
     ps    <- mPhysicalSize mal
@@ -193,8 +193,8 @@ instance MArrayBased MArrayList where
 -- MDT Functions
 --------------------------------------------------------------------------------
 
-instance MDT MArrayList where
-  copy :: MArrayList s a -> ST s (MArrayList s a)
+instance MDT (MArrayList a) s where
+  copy :: MArrayList a s -> ST s (MArrayList a s)
   copy (MArrayList lR arrR) = do
     l     <- readSTRef lR
     arrST <- readSTRef arrR
@@ -240,7 +240,7 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal  <- mNewWithSize 100 [1..7] :: ST s (MArrayList s Int)
+    mal  <- mNewWithSize 100 [1..7] :: ST s (MArrayList Int s)
     mal' <- trueCopy mal
     mAppend 8 mal
     mAppend 9 mal

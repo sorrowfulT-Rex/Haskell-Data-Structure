@@ -27,8 +27,8 @@ class ArrayBased a where
   resize       :: Int -> a e -> a e
 
 class MArrayBased a where
-  mDeepClear    :: a s e -> ST s ()
-  mNewWithSize  :: Foldable f => Int -> f e -> ST s (a s e)
-  mPhysicalSize :: a s e -> ST s Int
-  mResize       :: Int -> a s e -> ST s (a s e)
-  trueCopy      :: a s e -> ST s (a s e)
+  mDeepClear    :: a e s -> ST s ()
+  mNewWithSize  :: Foldable f => Int -> f e -> ST s (a e s)
+  mPhysicalSize :: a e s -> ST s Int
+  mResize       :: Int -> a e s -> ST s (a e s)
+  trueCopy      :: a e s -> ST s (a e s)
