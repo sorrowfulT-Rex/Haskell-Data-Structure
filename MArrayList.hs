@@ -204,6 +204,10 @@ instance MDT (MArrayList a) s where
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
+instance Foldable f => MDTCons (f a) (MArrayList a) s where
+  new :: f a -> ST s (MArrayList a s)
+  new = newMList
+
 
 --------------------------------------------------------------------------------
 -- Helper Functions
@@ -240,7 +244,7 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal  <- mNewWithSize 100 [1..7] :: ST s (MArrayList Int s)
+    mal  <- new [1..7 :: Int] :: ST s (MArrayList Int s)
     mal' <- trueCopy mal
     mAppend 8 mal
     mAppend 9 mal
