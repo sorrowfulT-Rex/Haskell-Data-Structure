@@ -93,11 +93,11 @@ class MList l where
 -- List With Eq
 --------------------------------------------------------------------------------
 
-class ListEq l e where
+class List l => ListEq l e where
   indexOf  :: l e -> e -> Maybe Int
   contains :: l e -> e -> Bool
 
-class MListEq l e s where
+class MList l => MListEq l e s where
   mIndexOf  :: l e s -> e -> ST s (Maybe Int)
   mContains :: l e s -> e -> ST s Bool
 
