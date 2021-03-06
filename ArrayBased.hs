@@ -31,3 +31,4 @@ class MArrayBased a where
   mNewWithSize  :: Foldable f => Int -> f e -> ST s (a s e)
   mPhysicalSize :: a s e -> ST s Int
   mResize       :: Int -> a s e -> ST s (a s e)
+  trueCopy      :: a s e -> ST s (a s e)

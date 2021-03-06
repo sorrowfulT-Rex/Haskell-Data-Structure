@@ -177,6 +177,17 @@ instance MArrayBased MArrayList where
     resR     <- newSTRef resST
     return $ MArrayList lR resR
 
+  trueCopy :: MArrayList s a -> ST s (MArrayList s a)
+  trueCopy mal@(MArrayList _ arrR) = do
+    ls    <- mSize mal
+    ps    <- mPhysicalSize mal
+    arrST <- readSTRef arrR
+    resST <- newArray_ (0, ps - 1)
+    copyArrayUnsafe arrST resST (0, ls - 1)
+    rlR   <- newSTRef ls
+    resR  <- newSTRef resST
+    return $ MArrayList rlR resR
+
 
 --------------------------------------------------------------------------------
 -- MDT Functions
@@ -188,7 +199,7 @@ instance MDT MArrayList where
     l     <- readSTRef lR
     arrST <- readSTRef arrR
     resST <- newArray_ (0, initialSize l - 1)
-    copyArrayUnsafe arrST resST (0, (l - 1))
+    copyArrayUnsafe arrST resST (0, l - 1)
     rlR   <- newSTRef l
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
@@ -229,8 +240,8 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal  <- newMList [1..7] :: ST s (MArrayList s Int)
-    mal' <- copy mal
+    mal  <- mNewWithSize 100 [1..7] :: ST s (MArrayList s Int)
+    mal' <- trueCopy mal
     mAppend 8 mal
     mAppend 9 mal
     mAppend 10 mal
