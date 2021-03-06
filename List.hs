@@ -15,13 +15,20 @@ import           System.IO.Unsafe (unsafePerformIO)
 -- Utilities
 --------------------------------------------------------------------------------
 
+-- | Utility Function. 
+-- Returns an array out of bound error.
 outOfBoundError :: Int -> a
 outOfBoundError i
   = error $ "Index " ++ show i ++ " is out of bound!"
 
+-- | Utility Function. 
+-- Takes the needed length of an array and returns a larger
+-- number as the physical length, so that some extra space is provided.
 initialSize :: Int -> Int
 initialSize = expandedSize . shiftL 1 . ceiling . logBase 2 . fromIntegral
 
+-- | Utility Function. 
+-- Takes the current length of an array and returns a larger length.
 expandedSize :: Int -> Int
 expandedSize = (1 +) . (`div` 2) . (3 *)
 
@@ -30,60 +37,171 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- List Interface
 --------------------------------------------------------------------------------
 
+-- | 'List' is a type class for immutable sequential data structures, with 
+-- methods including random access, addition, deletion, find index and so on.
+-- It is based on the Java List Interface.  
+-- Minimal implementation requires @add@, @clear@, @get@, @newList@, @remove@,
+-- @set@ and @size@.
+-- Default methods include @append@, @isNull@, @pop@, @popFront@, @push@ and
+-- @update@.
+-- Although it is not part of the class, it is expected for the instance of 
+-- 'List' to implement @toList@ in 'Foldable'.
 class List l where
-  add      :: Int -> e -> l e -> l e
-  clear    :: l e -> l e
-  get      :: l e -> Int -> e
-  newList  :: Foldable f => f e -> l e 
-  remove   :: Int -> l e -> (Maybe e, l e)
-  set      :: l e -> Int -> e -> l e
-  size     :: l e -> Int
+  -- | Adds an element into the list structure.
+  -- Takes an Int as index, an element and a list, returns a list that inserts
+  -- the given element before the index.
+  -- If the index is either larger than the length of the list or less than 0,
+  -- the function returns an error.
+  add :: Int -> e -> l e -> l e
 
+  -- | Returns an empty list.
+  -- Note that it is not guaranteed that any element is physically removed from
+  -- the list structure; the method may simply render all elements inaccessible.
+  clear :: l e -> l e
+
+  -- | Returns the element of the list structure at the given index.
+  -- Returns an error if the index of out of bound.
+  -- It is usally used as an infix operator.
+  get :: l e -> Int -> e
+
+  -- | Returns a new list structure with the elements of a 'Foldable' instance,
+  -- for example, @[a]@.
+  newList :: Foldable f => f e -> l e 
+
+  -- | Removes an element from the list structure.
+  -- Takes an Int as index and a list, returns a tuple containing the removed 
+  -- element and a list that removes the given element at the index.
+  -- If the index is out of bound, returns a typle of @Nothing@ and the original
+  -- list.
+  remove :: Int -> l e -> (Maybe e, l e)
+
+  -- | Takes a list structure, an Int as index and an element, returns a list
+  -- that overwrites the element at the index by the given element.
+  -- If the index is out of bound, the function returns an error.
+  set :: l e -> Int -> e -> l e
+
+  -- | Returns the size (length) of the list structure.
+  size :: l e -> Int
+
+  -- | Default method.
+  -- Insert an element to the end of the list structure.
   append :: e -> l e -> l e 
   append = flip (join (flip . add . size))
 
+  -- | Default method.
+  -- Returns true if and only if the list structure is empty.
   isNull :: l e -> Bool
   isNull = (== 0) . size
 
+  -- | Default method.
+  -- Removes the last element from the list structure.
+  -- Returns a tuple containing the removed element and a list that removes the 
+  -- given element at the index.
+  -- If the list is empty, returns a typle of @Nothing@ and the original list.
   pop :: l e -> (Maybe e, l e)
-  pop = remove 0
+  pop = join (remove . (+ (-1)) . size)
 
-  popEnd :: l e -> (Maybe e, l e)
-  popEnd = join (remove . (+ (-1)) . size)
+  -- | Default method.
+  -- Removes the fisrt element from the list structure.
+  -- Returns a tuple containing the removed element and a list that removes the 
+  -- given element at the index.
+  -- If the list is empty, returns a typle of @Nothing@ and the original list.
+  popFront :: l e -> (Maybe e, l e)
+  popFront = remove 0
 
+  -- | Default method.
+  -- Insert an element to the front of the list structure.
   push :: e -> l e -> l e
   push = add 0
 
+  -- | Default method.
+  -- Takes a list structure, an Int as index, and a function updating an
+  -- element, returns a list that updates the element at the index by the given
+  -- function.
+  -- Returns an error if the index of out of bound.
   update :: l e -> Int -> (e -> e) -> l e
   update = ap (ap . ((.) .) . set) ((flip id .) . get)
 
+-- | 'MList' is a type class for mutable sequential data structures, with 
+-- methods including random access, addition, deletion, find index and so on.
+-- It is based on the Java List Interface.  
+-- Minimal implementation requires @mAdd@, @mClear@, @mGet@, @mRemove@, @mSet@, 
+-- @mSize@, @mToList@ and @newWList@
+-- Default methods include @mAppend@, @mIsNull@, @mPop@, @mPopFront@, @mPush@
+--  and @mUpdate@.
 class MList l where
-  mAdd     :: Int -> e -> l e s -> ST s ()
-  mClear   :: l e s -> ST s ()
-  mGet     :: l e s -> Int -> ST s e
-  mRemove  :: Int -> l e s -> ST s (Maybe e)
-  mSet     :: l e s -> Int -> e -> ST s ()
-  mSize    :: l e s -> ST s Int
-  mToList  :: l e s -> ST s [e]
+  -- | Adds an element into the list structure.
+  -- Takes an Int as index, an element and a list, modifies the list by
+  -- inserting the given element before the index.
+  -- If the index is either larger than the length of the list or less than 0,
+  -- the function returns an error.
+  mAdd :: Int -> e -> l e s -> ST s ()
+
+  -- | Makes the list empty, i.e. remove all elements.
+  -- Note that it is not guaranteed that any element is physically removed from
+  -- the list structure; the method may simply render all elements inaccessible.
+  mClear :: l e s -> ST s ()
+
+  -- | Returns the element of the list structure at the given index.
+  -- Returns an error if the index of out of bound.
+  -- It is usally used as an infix operator.
+  mGet :: l e s -> Int -> ST s e
+
+  -- | Removes an element into the list structure.
+  -- Takes an Int as index and a list, returns the removed element and deletes
+  -- the element from the list.
+  -- If the index is out of bound, returns @Nothing@ and the orignal list is 
+  -- unmodified.
+  mRemove :: Int -> l e s -> ST s (Maybe e)
+
+  -- | Takes a list structure, an Int as index and an element, modifies the list
+  -- by overwriting the element at the index by the given element.
+  -- If the index is out of bound, the function returns an error.
+  mSet :: l e s -> Int -> e -> ST s ()
+
+  -- | Returns the size (length) of the list structure.
+  mSize :: l e s -> ST s Int
+
+  -- | Returns the default list (@[a]@) representation of the list structure.
+  mToList :: l e s -> ST s [e]
   newMList :: Foldable f => f e -> ST s (l e s)
 
+  -- | Default method.
+  -- Insert an element to the end of the list structure.
   mAppend :: e -> l e s -> ST s ()
   mAppend = liftM2 (>>=) mSize . flip . flip mAdd
 
+  -- | Default method.
+  -- Returns true if and only if the list structure is empty.
   mIsNull :: l e s -> ST s Bool
   mIsNull = (>>= return . (== 0)) . mSize
 
+  -- | Default method.
+  -- Removes the last element from the list structure.
+  -- Returns the removed element and deletes the element from the list.
+  -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   mPop :: l e s -> ST s (Maybe e)
-  mPop = mRemove 0
-
-  mPopEnd :: l e s -> ST s (Maybe e)
-  mPopEnd mal = do
+  mPop mal = do
     l <- mSize mal
     mRemove (l - 1) mal
 
+  -- | Default method.
+  -- Removes the first element from the list structure.
+  -- Returns the removed element and deletes the element from the list.
+  -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
+  mPopFront :: l e s -> ST s (Maybe e)
+  mPopFront = mRemove 0
+
+  -- | Default method.
+  -- Insert an element to the front of the list structure.
   mPush :: e -> l e s -> ST s ()
   mPush = mAdd 0
 
+  -- | Default method.
+  -- Takes a list structure, an Int as index, and a function updating an
+  -- element, modifies the list by updating the element at the index by the
+  -- given function.
+  -- Returns an error if the index of out of bound.
   mUpdate :: l e s -> Int -> (e -> e) -> ST s ()
   mUpdate mal index f = do
     v <- mGet mal index
