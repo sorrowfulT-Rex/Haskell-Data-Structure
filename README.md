@@ -12,9 +12,13 @@ It contains `class MDT` providing a single method `copy`, and `class MDTCons` pr
 See the [Haddocks](MDT.hs) for full documentation.  
 
 # [List.hs](List.hs)
-This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, find index *etc.*   
+This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, finding index *etc.*   
 There are two classes, namely `List` and `MList`, for immutable and mutable lists, respectively.  
+There are another two classes `ListEq` and `MListEq` respectively for immutable and mutable lists that contain instances of `Eq`.  
 The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
+Instances of `ListEq` and `MListEq` are automatically instances of `Eq`, where
+two such structures are equal if and only if they have the same size and equal
+elements at each entry.  
 See the [Haddocks](List.hs) for full documentation.  
 
 ### DOCUMENTATION FOR OTHER FILES ON THE WAY...

@@ -38,7 +38,7 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 --------------------------------------------------------------------------------
 
 -- | 'List' is a type class for immutable sequential data structures, with 
--- methods including random access, addition, deletion, find index and so on.
+-- methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.  
 -- Minimal implementation requires @add@, @clear@, @get@, @newList@, @remove@,
 -- @set@ and @size@.
@@ -89,7 +89,7 @@ class List l where
   append = flip (join (flip . add . size))
 
   -- | Default method.
-  -- Returns true if and only if the list structure is empty.
+  -- Returns @True@ if and only if the list structure is empty.
   isNull :: l e -> Bool
   isNull = (== 0) . size
 
@@ -172,7 +172,7 @@ class MList l where
   mAppend = liftM2 (>>=) mSize . flip . flip mAdd
 
   -- | Default method.
-  -- Returns true if and only if the list structure is empty.
+  -- Returns @True@ if and only if the list structure is empty.
   mIsNull :: l e s -> ST s Bool
   mIsNull = (>>= return . (== 0)) . mSize
 
@@ -212,9 +212,22 @@ class MList l where
 -- List With Eq
 --------------------------------------------------------------------------------
 
-class List l => ListEq l e where
+-- | 'ListEq' is a type class providing operations that only make sense to 
+-- immutable list structures containing instances of 'Eq', such as finding index
+--  and checking existence of a given element in the structure.
+-- Minimal implementation requires @indicesOf@.
+-- Default methods include @indexOf@ and @contains@.
+class (List l, Eq e) => ListEq l e where
+  -- | Takes a list structure and an element, returns a list containing all 
+  -- indices that has the element.
+  -- Usually used as an infix function.
   indicesOf :: l e -> e -> [Int]
 
+  -- | Default method.
+  -- Takes a list structure and an element, returns either the index of the
+  -- first occurrence of the element in the list, or @Nothing@ if it is not in
+  -- the list.
+  -- Usually used as an infix function.
   indexOf :: l e -> e -> Maybe Int
   indexOf l e
     | notFound  = Nothing
@@ -223,12 +236,28 @@ class List l => ListEq l e where
       notFound = null indices
       indices  = indicesOf l e
 
+  -- | Default method.
+  -- Takes a list structure and an element, returns @True@ if and only if the
+  -- element is in the list.
   contains :: l e -> e -> Bool
   contains = (isJust .) . indexOf
 
-class MList l => MListEq l e s where
+-- | 'ListEq' is a type class providing operations that only make sense to 
+-- mmutable list structures containing instances of 'Eq', such as finding index
+--  and checking existence of a given element in the structure.
+-- Minimal implementation requires @mIndicesOf@.
+-- Default methods include @mIndexOf@ and @mContains@.
+class (MList l, Eq e) => MListEq l e s where
+  -- | Takes a list structure and an element, returns a list containing all 
+  -- indices that has the element.
+  -- Usually used as an infix function.
   mIndicesOf :: l e s -> e -> ST s [Int]
 
+  -- | Default method.
+  -- Takes a list structure and an element, returns either the index of the
+  -- first occurrence of the element in the list, or @Nothing@ if it is not in
+  -- the list.
+  -- Usually used as an infix function.
   mIndexOf :: l e s -> e -> ST s (Maybe Int)
   mIndexOf ml e = do
     indices <- mIndicesOf ml e
@@ -236,6 +265,9 @@ class MList l => MListEq l e s where
       then Nothing
       else Just $ head indices
 
+  -- | Default method.
+  -- Takes a list structure and an element, returns @True@ if and only if the
+  -- element is in the list.
   mContains :: l e s -> e -> ST s Bool
   mContains = (fmap isJust .) . mIndexOf
 
