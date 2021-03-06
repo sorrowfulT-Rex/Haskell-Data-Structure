@@ -11,6 +11,7 @@ import           Data.Array
 import           Data.Array.ST
 import           Data.Array.Unsafe (unsafeThaw, unsafeFreeze)
 import           Data.Foldable
+import           Data.Maybe
 import           Data.STRef
 
 import           ArrayBased
@@ -123,18 +124,19 @@ instance MList MArrayList where
   newMList = arrayListThaw . newList
 
 instance Eq a => MListEq MArrayList s a where
-  mIsElem :: a -> MArrayList s a -> ST s Bool
-  mIsElem e mal = do
-    l <- mSize mal
-    mIsElem' 0 l
+  mContains :: MArrayList s a -> a -> ST s Bool
+  mContains = (fmap isJust .) . mIndexOf
+
+  mIndexOf :: MArrayList s a -> a -> ST s (Maybe Int)
+  mIndexOf mal e = mSize mal >>= mIndexof' 0
     where
-      mIsElem' i l = if i >= l
-        then return False
-        else do
-          v <- mal `mGet` i
-          if v == e
-            then return True
-            else mIsElem' (i + 1) l
+      mIndexof' i l 
+        | i >= l = return Nothing
+      mIndexof' i l = do
+        v <- mal `mGet` i
+        if v == e
+          then return $ Just i
+          else mIndexof' (i + 1) l
 
 
 --------------------------------------------------------------------------------
@@ -209,8 +211,9 @@ foom = do
     mPush 10 mal
     mAppend 50 mal
     mAdd 3 40 mal
-    b1  <- mIsElem 10 mal
-    b2  <- mIsElem 12 mal
+    b1  <- mContains mal 10
+    b2  <- mContains mal 12
     mUpdate mal 2 (+ 114484)
+    b3  <- mIndexOf mal 114514
     l   <- mToList mal
-    return [D b1, D b2, D l]
+    return [D b1, D b2, D b3, D l]

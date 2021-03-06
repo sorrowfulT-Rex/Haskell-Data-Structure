@@ -7,6 +7,7 @@ module ArrayList where
 import           Control.Monad
 import           Data.Array
 import           Data.Foldable
+import           Data.Maybe
 
 import           ArrayBased
 import           List
@@ -91,8 +92,19 @@ instance List ArrayList where
       l' = initialSize l
 
 instance Eq a => ListEq ArrayList a where
-  isElem :: a -> ArrayList a -> Bool
-  isElem e = foldr (flip (||) . (e ==)) False
+  indexOf :: ArrayList a -> a -> Maybe Int
+  indexOf al e
+    = indexOf' 0
+    where
+      l = size al
+      indexOf' i
+        | i >= l          = Nothing
+        | al `get` i == e = Just i
+        | otherwise       = indexOf' (i + 1)
+
+  contains :: ArrayList a -> a -> Bool
+  contains = (isJust .) . indexOf
+
 
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
@@ -125,10 +137,7 @@ instance ArrayBased ArrayList where
 
 foo :: IO ()
 foo = do
-  let al = newList [1..10] :: ArrayList Int
+  let al = newList [3,1,2,1] :: ArrayList Int
   print $ physicalSize al
-  (_, al') <- return $ remove 6 al
-  (_, al') <- return $ popEnd al'
-  (_, al') <- return $ pop al'
-  al'      <- return $ update al' 6 ( +114505)
-  print al'
+  print $ al `contains` 4
+  print al

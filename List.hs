@@ -94,10 +94,12 @@ class MList l where
 --------------------------------------------------------------------------------
 
 class ListEq l e where
-  isElem :: e -> l e -> Bool
+  indexOf  :: l e -> e -> Maybe Int
+  contains :: l e -> e -> Bool
 
 class MListEq l s e where
-  mIsElem :: e -> l s e -> ST s Bool
+  mIndexOf  :: l s e -> e -> ST s (Maybe Int)
+  mContains :: l s e -> e -> ST s Bool
 
 instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
   al == al' 
