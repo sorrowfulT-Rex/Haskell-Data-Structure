@@ -12,8 +12,8 @@ type MURef s a = STUArray s Int a
 newMURef :: MArray (STUArray s) a (ST s) => a -> ST s (MURef s a)
 newMURef = newArray (0, 0)
 
-modifySTRef :: MArray (STUArray s) a (ST s) => MURef s a -> (a -> a) -> ST s ()
-modifySTRef ptr f = do
+modifyMURef :: MArray (STUArray s) a (ST s) => MURef s a -> (a -> a) -> ST s ()
+modifyMURef ptr f = do
   v <- readMURef ptr
   writeMURef ptr $! f v
 
