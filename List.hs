@@ -7,6 +7,7 @@ import           Control.Monad.ST.Lazy (ST(..), runST, lazyToStrictST)
 import           Control.Monad.ST.Unsafe (unsafeSTToIO)
 import           Data.Bits (shiftL)
 import           Data.Foldable (toList)
+import           Data.List as L (sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 import           System.IO.Unsafe (unsafePerformIO)
 
@@ -44,7 +45,8 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- Minimal implementation requires @add@, @clear@, @delete@, @get@, @indicesOf@,
 -- @newList@, @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
--- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@ and @update@.
+-- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@, @sort@, @sortOn@ and
+-- @update@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
@@ -169,6 +171,17 @@ class Foldable l => List l where
   remove :: Eq e => e -> l e -> (Maybe e, l e)
   remove e l 
     = maybe (Nothing, l) (flip delete l) (indexOf l e)
+
+  -- | Default method.
+  -- Sort the list structure in the default ordering of its elements.
+  sort :: Ord a => l a -> l a
+  sort = newList . L.sort . toList
+
+
+  -- | Default method.
+  -- Sort the list structure by a ordering function.
+  sortOn :: Ord b => (a -> b) -> l a -> l a
+  sortOn = (. toList) . (newList .) . L.sortOn
 
   -- | Default method.
   -- Takes a list structure, an Int as index, and a function updating an
@@ -299,6 +312,10 @@ class MList l where
   mPush :: e -> l e s -> ST s ()
   mPush = mAdd 0
 
+  -- | Default method.
+  -- Removes the first occurrence of an element from the list structure, and
+  -- returns that element while removing the element.
+  -- If the element does not appear in the list, returns @Nothing@.
   mRemove :: Eq e => e -> l e s -> ST s (Maybe e)
   mRemove e ml = do
     index <- ml `mIndexOf` e

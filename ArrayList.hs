@@ -158,8 +158,6 @@ instance ArrayBased ArrayList where
 
 foo :: IO ()
 foo = do
-  al  <- return $ (newList [1, 2, 3, 4] :: ArrayList Int)
-  print (remove 1 al)
-  print (remove 0 al)
-  print (remove 4 al)
+  al  <- return $ (newList [4, 3, 2, 1] :: ArrayList Int)
+  print $ sort al
   
