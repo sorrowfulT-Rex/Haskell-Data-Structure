@@ -58,6 +58,17 @@ instance List ArrayList where
   clear (ArrayList l arr)
     = ArrayList 0 arr
 
+  delete :: Int -> ArrayList a -> (Maybe a, ArrayList a)
+  delete index al@(ArrayList l arr)
+    | index >= l || index < 0 = (Nothing, al)
+    | otherwise               = (Just (arr ! index), ArrayList (l - 1) 
+        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
+    where
+      pl = physicalSize al
+      worker _ i
+        | i < index = arr ! i
+        | otherwise = arr ! (i + 1)
+
   get :: ArrayList a -> Int -> a
   get (ArrayList l arr) index
     | index >= l || index < 0 = outOfBoundError index
@@ -79,17 +90,6 @@ instance List ArrayList where
     where
       l  = length fl
       l' = initialSize l
-
-  remove :: Int -> ArrayList a -> (Maybe a, ArrayList a)
-  remove index al@(ArrayList l arr)
-    | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = (Just (arr ! index), ArrayList (l - 1) 
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
-    where
-      pl = physicalSize al
-      worker _ i
-        | i < index = arr ! i
-        | otherwise = arr ! (i + 1)
 
   set :: ArrayList a -> Int -> a -> ArrayList a
   set al@(ArrayList l arr) index e
@@ -118,6 +118,17 @@ instance List ArrayList where
         ps   = initialSize len'
         worker _ i
           = al `get` (i + inf')
+
+  -- Overwritten default methods
+  lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int
+  lastIndexOf al e
+    = lastIndexOf' (l - 1)
+    where
+      l = size al
+      lastIndexOf' (-1) = Nothing
+      lastIndexOf' i
+        | al `get` i == e = Just i
+        | otherwise       = lastIndexOf' (i - 1)
 
 
 --------------------------------------------------------------------------------

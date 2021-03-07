@@ -41,10 +41,10 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
 -- Instances of 'List' is required to implement 'Foldable'.
--- Minimal implementation requires @add@, @clear@, @get@, @newList@, @remove@,
--- @set@, @size@ and @subList@.
--- Default methods include @append@, @isNull@, @pop@, @popFront@, @push@,
--- @update@.
+-- Minimal implementation requires @add@, @clear@, @delete@, @get@, @indicesOf@,
+-- @newList@, @set@, @size@ and @subList@.
+-- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
+-- @lastIndexOf@, @pop@, @popFront@, @push@, @update@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
@@ -61,26 +61,26 @@ class Foldable l => List l where
   -- the list structure; the method may simply render all elements inaccessible.
   clear :: l e -> l e
 
+  -- | Removes an element from the list structure.
+  -- Takes an Int as index and a list, returns a tuple containing the removed 
+  -- element and a list that removes the given element at the index.
+  -- If the index is out of bound, returns a typle of @Nothing@ and the original
+  -- list.
+  delete :: Int -> l e -> (Maybe e, l e)
+
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
   -- It is usally used as an infix operator.
   get :: l e -> Int -> e
 
   -- | Takes a list structure and an element, returns a list containing all 
-  -- indices that has the element.
+  -- indices that has the element from least to greatest.
   -- Usually used as an infix function.
   indicesOf :: Eq e => l e -> e -> [Int]
 
   -- | Returns a new list structure with the elements of a 'Foldable' instance,
   -- for example, @[a]@.
   newList :: Foldable f => f e -> l e 
-
-  -- | Removes an element from the list structure.
-  -- Takes an Int as index and a list, returns a tuple containing the removed 
-  -- element and a list that removes the given element at the index.
-  -- If the index is out of bound, returns a typle of @Nothing@ and the original
-  -- list.
-  remove :: Int -> l e -> (Maybe e, l e)
 
   -- | Takes a list structure, an Int as index and an element, returns a list
   -- that overwrites the element at the index by the given element.
@@ -124,12 +124,25 @@ class Foldable l => List l where
   isNull = (== 0) . size
 
   -- | Default method.
+  -- Takes a list structure and an element, returns either the index of the
+  -- last occurrence of the element in the list, or @Nothing@ if it is not in
+  -- the list.
+  -- Usually used as an infix function.
+  lastIndexOf :: Eq e => l e -> e -> Maybe Int
+  lastIndexOf l e
+    | notFound  = Nothing
+    | otherwise = Just $ last indices
+    where
+      notFound = null indices
+      indices  = indicesOf l e
+
+  -- | Default method.
   -- Removes the last element from the list structure.
   -- Returns a tuple containing the removed element and a list that removes the 
   -- given element at the index.
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   pop :: l e -> (Maybe e, l e)
-  pop = join (remove . (+ (-1)) . size)
+  pop = join (delete . (+ (-1)) . size)
 
   -- | Default method.
   -- Removes the fisrt element from the list structure.
@@ -137,7 +150,7 @@ class Foldable l => List l where
   -- given element at the index.
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   popFront :: l e -> (Maybe e, l e)
-  popFront = remove 0
+  popFront = delete 0
 
   -- | Default method.
   -- Insert an element to the front of the list structure.
@@ -155,10 +168,10 @@ class Foldable l => List l where
 -- | 'MList' is a type class for mutable sequential data structures, with 
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
--- Minimal implementation requires @mAdd@, @mClear@, @mGet@, @mRemove@, @mSet@, 
--- @mSize@, @mSubList@, @mToList@ and @newWList@.
--- Default methods include @mAppend@, @mIsNull@, @mPop@, @mPopFront@, @mPush@
---  and @mUpdate@.
+-- Minimal implementation requires @mAdd@, @mClear@, @mDelete@, @mGet@, 
+-- @mIndicesOf@, @mSet@, @mSize@, @mSubList@, @mToList@ and @newWList@.
+-- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
+-- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@ and @mUpdate@.
 class MList l where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by
@@ -172,22 +185,22 @@ class MList l where
   -- the list structure; the method may simply render all elements inaccessible.
   mClear :: l e s -> ST s ()
 
+  -- | Removes an element into the list structure.
+  -- Takes an Int as index and a list, returns the removed element and deletes
+  -- the element from the list.
+  -- If the index is out of bound, returns @Nothing@ and the orignal list is 
+  -- unmodified.
+  mDelete :: Int -> l e s -> ST s (Maybe e)
+
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
   -- It is usally used as an infix operator.
   mGet :: l e s -> Int -> ST s e
 
   -- | Takes a list structure and an element, returns a list containing all 
-  -- indices that has the element.
+  -- indices that has the element from least to greatest.
   -- Usually used as an infix function.
   mIndicesOf :: Eq e => l e s -> e -> ST s [Int]
-
-  -- | Removes an element into the list structure.
-  -- Takes an Int as index and a list, returns the removed element and deletes
-  -- the element from the list.
-  -- If the index is out of bound, returns @Nothing@ and the orignal list is 
-  -- unmodified.
-  mRemove :: Int -> l e s -> ST s (Maybe e)
 
   -- | Takes a list structure, an Int as index and an element, modifies the list
   -- by overwriting the element at the index by the given element.
@@ -232,6 +245,18 @@ class MList l where
       else Just $ head indices
 
   -- | Default method.
+  -- Takes a list structure and an element, returns either the index of the
+  -- last occurrence of the element in the list, or @Nothing@ if it is not in
+  -- the list.
+  -- Usually used as an infix function.
+  mLastIndexOf :: Eq e => l e s -> e -> ST s (Maybe Int)
+  mLastIndexOf ml e = do
+    indices <- mIndicesOf ml e
+    return $ if null indices
+      then Nothing
+      else Just $ last indices
+
+  -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.
   mIsNull :: l e s -> ST s Bool
   mIsNull = (>>= return . (== 0)) . mSize
@@ -243,14 +268,14 @@ class MList l where
   mPop :: l e s -> ST s (Maybe e)
   mPop ml = do
     l <- mSize ml
-    mRemove (l - 1) ml
+    mDelete (l - 1) ml
 
   -- | Default method.
   -- Removes the first element from the list structure.
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   mPopFront :: l e s -> ST s (Maybe e)
-  mPopFront = mRemove 0
+  mPopFront = mDelete 0
 
   -- | Default method.
   -- Insert an element to the front of the list structure.

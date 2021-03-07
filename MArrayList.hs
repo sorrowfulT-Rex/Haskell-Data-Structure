@@ -102,8 +102,8 @@ instance MList MArrayList where
           then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
-  mRemove :: Int -> MArrayList a s -> ST s (Maybe a)
-  mRemove index mal@(MArrayList lR arrR) = do
+  mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
+  mDelete index mal@(MArrayList lR arrR) = do
     ls <- mSize mal
     ps <- mPhysicalSize mal
     if index < 0 || index >= ls
@@ -152,6 +152,19 @@ instance MList MArrayList where
 
   newMList :: Foldable f => f a -> ST s (MArrayList a s)
   newMList = arrayListThaw . newList
+
+  -- Overwritten default methods
+  mLastIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
+  mLastIndexOf mal e = do
+     l <- mSize mal
+     mLastIndexOf' (l - 1) l
+    where
+      mLastIndexOf' (-1) _ = return Nothing
+      mLastIndexOf' i l    = do
+        v <- mal `mGet` i
+        if v == e
+          then return $ Just i
+          else mLastIndexOf' (i - 1) l
 
 
 --------------------------------------------------------------------------------
