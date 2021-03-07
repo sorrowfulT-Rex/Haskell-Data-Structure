@@ -23,4 +23,9 @@ This file provides type classes for immutable and mutable data structures in whi
 The classes `ArrayBased` and `MArrayBased` provide methods for re-allocating arrays in the need of larger or smaller length.  
 See the [Haddocks](ArrayBased.hs) for full documentation.  
 
+# [ArrayList.hs](ArrayList.hs)
+`ArrayList` is a data structure implementing the `List` class with an internal array.  
+Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MArrayList.hs) for frequent state updates.
+See the [Haddocks](ArrayList.hs) for full documentation.  
+
 ### DOCUMENTATION FOR OTHER FILES ON THE WAY...
