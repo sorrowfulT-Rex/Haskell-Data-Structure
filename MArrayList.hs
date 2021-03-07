@@ -15,7 +15,8 @@ import           Data.Foldable (toList)
 import           Data.STRef.Lazy (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           ArrayBased 
-  (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError)
+  (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError, unsafeAddST,
+   unsafeCopyArray, unsafeHeapSort, unsafeRemoveST)
 import           ArrayList (ArrayList(..))
 import           List 
   (List(..), MList(..), expandedSize, initialSize, outOfBoundError, maximumOn)
@@ -258,101 +259,6 @@ instance MDT (MArrayList a) s where
 instance Foldable f => MDTCons (f a) (MArrayList a) s where
   new :: f a -> ST s (MArrayList a s)
   new = newMList
-
-
---------------------------------------------------------------------------------
--- Helper Functions
---------------------------------------------------------------------------------
-
--- | Unsafe: Does not check conduct bound check for array.
--- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
--- to be written to, and an @Int@-indexed @STArray@, pushes all elements since
--- the starting index (inclusive) to the last index (exclusive) to the next 
--- slot, opening a vacancy at the starting index, where it puts the given
---  element to this index.
--- Pre: The index bounds are valid.
---
-unsafeAddST :: Int -> a -> Int -> STArray s Int a -> ST s ()
-unsafeAddST index e lastIndexOf arrST = do
-  forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
-    v <- readArray arrST i
-    writeArray arrST (i + 1) v
-  writeArray arrST index e
-
--- | Unsafe: Does not check conduct bound check for array.
--- Takes an @Int@-indexed @STArray@ as the starting array, another
--- @Int@-indexed @STArray@ as the destination, and a tuple of @Int@s as the
--- lower and upper bound (both inclusive) of the range of indices.
--- Copies the elements in the starting array within the range to the
--- destination whose index starts from 0.
--- Pre: The index bounds are valid and the destination array is large enough
--- to hold the number of elements.
---
-unsafeCopyArray :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
-unsafeCopyArray arrST resST (inf, sup) = do
-  forM_ (zip [0..] [inf..sup]) $ 
-    \(i, i') -> readArray arrST i >>= writeArray resST i'
-
--- | Unsafe: Does not check if the array satisfies the pre-condition.
--- TODO...
--- Takes a ordering function and an @Int@-indexed @STArray@, sorts the array.
--- Pre: The array must be @Int@-indexed from 0.
---
-unsafeHeapSort :: Ord b => (a -> b) -> Int -> STArray s Int a -> ST s ()
-unsafeHeapSort f sup arrST
-  = toMaxHeap 0 >> heapSort sup
-  where
-    toMaxHeap i
-      | i > sup = return ()
-      | otherwise 
-        = toMaxHeap lc >> toMaxHeap rc >> fixMaxHeap i sup
-        where
-          lc = 2 * i + 1
-          rc = lc + 1
-    fixMaxHeap i l
-      | lc > l     = return ()
-      | lc < l     = do
-        cv <- readArray arrST i
-        lv <- readArray arrST lc
-        rv <- readArray arrST rc
-        let (mv, mi) = maximumOn (f . fst) [(cv, i), (lv, lc), (rv, rc)]
-        if mi == i
-          then return ()
-          else 
-            writeArray arrST i mv >> writeArray arrST mi cv >> fixMaxHeap mi l
-      | otherwise = do
-        cv <- readArray arrST i
-        lv <- readArray arrST lc
-        let (mv, mi) = maximumOn (f . fst) [(cv, i), (lv, lc)]
-        if mi == i
-          then return ()
-          else 
-            writeArray arrST i mv >> writeArray arrST mi cv >> fixMaxHeap mi l
-      where
-        lc = 2 * i + 1
-        rc = lc + 1
-    heapSort 0 = return ()
-    heapSort i = do
-      v0 <- readArray arrST 0
-      vi <- readArray arrST i
-      writeArray arrST 0 vi
-      writeArray arrST i v0
-      fixMaxHeap 0 (i - 1)
-      heapSort (i - 1)
-
--- | Unsafe: Does not check conduct bound check for array.
--- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
--- to be written to, and an @Int@-indexed @STArray@, pushes all elements since
--- the starting index (exclusive) to the last index (inclusive) to the previous 
--- slot, effectively removing the original element at the starting index.
--- Pre: The index bounds are valid and the last index is less than the physical
--- length of the array minus 1.
---
-unsafeRemoveST :: Int -> Int -> STArray s Int a -> ST s ()
-unsafeRemoveST index lastIndexOf arrST
-  = forM_ [index..lastIndexOf] $ \i -> do
-    v <- readArray arrST (i + 1)
-    writeArray arrST i v
 
 
 --------------------------------------------------------------------------------
