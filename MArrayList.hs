@@ -53,8 +53,8 @@ arrayListFreeze (MArrayList lR arrR) = do
 -- copying.
 -- The original immutable list should not be used ever since.
 --
-arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList a s)
-arrayListThawUnsafe (ArrayList l arr) = do
+unsafeArrayListThaw :: ArrayList a -> ST s (MArrayList a s)
+unsafeArrayListThaw (ArrayList l arr) = do
   arrST <- unsafeThaw arr
   lR    <- newSTRef l
   arrR  <- newSTRef arrST
@@ -65,8 +65,8 @@ arrayListThawUnsafe (ArrayList l arr) = do
 -- copying.
 -- The original mutable list should not be used ever since.
 --
-arrayListFreezeUnsafe :: MArrayList a s -> ST s (ArrayList a)
-arrayListFreezeUnsafe (MArrayList lR arrR) = do
+unsafeArrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
+unsafeArrayListFreeze (MArrayList lR arrR) = do
   l     <- readSTRef lR
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
@@ -96,7 +96,7 @@ instance MList MArrayList where
         else do
           arrST <- readSTRef arrR
           writeSTRef lR (ls + 1)
-          addSTUnsafe index e (ls - 1) arrST
+          unsafeAddST index e (ls - 1) arrST
 
   mClear :: MArrayList a s -> ST s ()
   mClear (MArrayList lR arrR) = writeSTRef lR 0
@@ -129,7 +129,7 @@ instance MList MArrayList where
         arrST <- readSTRef arrR
         v     <- readArray arrST index
         writeSTRef lR (ls - 1)
-        removeSTUnsafe index (ls - 2) arrST
+        unsafeRemoveST index (ls - 2) arrST
         return $ Just v
 
   mSet :: MArrayList a s -> Int -> a -> ST s ()
@@ -227,7 +227,7 @@ instance MArrayBased MArrayList where
     ps    <- mPhysicalSize mal
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
-    copyArrayUnsafe arrST resST (0, ls - 1)
+    unsafeCopyArray arrST resST (0, ls - 1)
     rlR   <- newSTRef ls
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
@@ -243,7 +243,7 @@ instance MDT (MArrayList a) s where
     l     <- readSTRef lR
     arrST <- readSTRef arrR
     resST <- newArray_ (0, initialSize l - 1)
-    copyArrayUnsafe arrST resST (0, l - 1)
+    unsafeCopyArray arrST resST (0, l - 1)
     rlR   <- newSTRef l
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
@@ -265,8 +265,8 @@ instance Foldable f => MDTCons (f a) (MArrayList a) s where
 --  element to this index.
 -- Pre: The index bounds are valid.
 --
-addSTUnsafe :: Int -> a -> Int -> STArray s Int a -> ST s ()
-addSTUnsafe index e lastIndexOf arrST = do
+unsafeAddST :: Int -> a -> Int -> STArray s Int a -> ST s ()
+unsafeAddST index e lastIndexOf arrST = do
   forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
     v <- readArray arrST i
     writeArray arrST (i + 1) v
@@ -281,8 +281,8 @@ addSTUnsafe index e lastIndexOf arrST = do
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
 --
-copyArrayUnsafe :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
-copyArrayUnsafe arrST resST (inf, sup) = do
+unsafeCopyArray :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
+unsafeCopyArray arrST resST (inf, sup) = do
   forM_ (zip [0..] [inf..sup]) $ 
     \(i, i') -> readArray arrST i >>= writeArray resST i'
 
@@ -292,8 +292,8 @@ copyArrayUnsafe arrST resST (inf, sup) = do
 -- bound (exclusive) and an @Int@-indexed @STArray@, sorts the array.
 -- Pre: The index bounds are valid and the array must be @Int@-indexed from 0.
 --
-heapSortUnsafe :: Ord b => (a -> b) -> Int -> Int -> STArray s Int a -> ST s ()
-heapSortUnsafe = undefined 
+unsafeHeapSort :: Ord b => (a -> b) -> Int -> Int -> STArray s Int a -> ST s ()
+unsafeHeapSort = undefined 
 
 -- | Unsafe: Does not check conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
@@ -303,8 +303,8 @@ heapSortUnsafe = undefined
 -- Pre: The index bounds are valid and the last index is less than the physical
 -- length of the array minus 1.
 --
-removeSTUnsafe :: Int -> Int -> STArray s Int a -> ST s ()
-removeSTUnsafe index lastIndexOf arrST
+unsafeRemoveST :: Int -> Int -> STArray s Int a -> ST s ()
+unsafeRemoveST index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)
     writeArray arrST i v
