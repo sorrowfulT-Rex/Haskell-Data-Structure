@@ -37,16 +37,18 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- List Interface
 --------------------------------------------------------------------------------
 
--- | 'List' is a type class for immutable sequential data structures, with 
--- methods including random access, addition, deletion and so on.
--- It is based on the Java List Interface.  
+-- | 'List' is a type class for immutable sequential (list) data structures, 
+-- with methods including random access, addition, deletion and so on.
+-- It is based on the Java List Interface.
+-- Instances of 'List' is required to implement 'Foldable'.
 -- Minimal implementation requires @add@, @clear@, @get@, @newList@, @remove@,
 -- @set@ and @size@.
 -- Default methods include @append@, @isNull@, @pop@, @popFront@, @push@ and
 -- @update@.
--- Although it is not part of the class, it is expected for the instance of 
--- 'List' to implement @toList@ in 'Foldable'.
-class List l where
+-- For functional operations, one can either create an 'Monad' instance, or
+-- "stream" the list structure with @toList@, apply the functions, then 
+-- "collect" it back with "@newList@".
+class Foldable l => List l where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, returns a list that inserts
   -- the given element before the index.
@@ -63,6 +65,11 @@ class List l where
   -- Returns an error if the index of out of bound.
   -- It is usally used as an infix operator.
   get :: l e -> Int -> e
+
+  -- | Takes a list structure and an element, returns a list containing all 
+  -- indices that has the element.
+  -- Usually used as an infix function.
+  indicesOf :: Eq e => l e -> e -> [Int]
 
   -- | Returns a new list structure with the elements of a 'Foldable' instance,
   -- for example, @[a]@.
@@ -87,6 +94,25 @@ class List l where
   -- Insert an element to the end of the list structure.
   append :: e -> l e -> l e 
   append = flip (join (flip . add . size))
+
+  -- | Default method.
+  -- Takes a list structure and an element, returns @True@ if and only if the
+  -- element is in the list.
+  contains :: Eq e => l e -> e -> Bool
+  contains = (isJust .) . indexOf
+
+  -- | Default method.
+  -- Takes a list structure and an element, returns either the index of the
+  -- first occurrence of the element in the list, or @Nothing@ if it is not in
+  -- the list.
+  -- Usually used as an infix function.
+  indexOf :: Eq e => l e -> e -> Maybe Int
+  indexOf l e
+    | notFound  = Nothing
+    | otherwise = Just $ head indices
+    where
+      notFound = null indices
+      indices  = indicesOf l e
 
   -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.
@@ -147,6 +173,11 @@ class MList l where
   -- It is usally used as an infix operator.
   mGet :: l e s -> Int -> ST s e
 
+  -- | Takes a list structure and an element, returns a list containing all 
+  -- indices that has the element.
+  -- Usually used as an infix function.
+  mIndicesOf :: Eq e => l e s -> e -> ST s [Int]
+
   -- | Removes an element into the list structure.
   -- Takes an Int as index and a list, returns the removed element and deletes
   -- the element from the list.
@@ -170,6 +201,24 @@ class MList l where
   -- Insert an element to the end of the list structure.
   mAppend :: e -> l e s -> ST s ()
   mAppend = liftM2 (>>=) mSize . flip . flip mAdd
+
+  -- | Default method.
+  -- Takes a list structure and an element, returns @True@ if and only if the
+  -- element is in the list.
+  mContains :: Eq e => l e s -> e -> ST s Bool
+  mContains = (fmap isJust .) . mIndexOf
+
+  -- | Default method.
+  -- Takes a list structure and an element, returns either the index of the
+  -- first occurrence of the element in the list, or @Nothing@ if it is not in
+  -- the list.
+  -- Usually used as an infix function.
+  mIndexOf :: Eq e => l e s -> e -> ST s (Maybe Int)
+  mIndexOf ml e = do
+    indices <- mIndicesOf ml e
+    return $ if null indices
+      then Nothing
+      else Just $ head indices
 
   -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.
@@ -207,69 +256,6 @@ class MList l where
     v <- mGet mal index
     mSet mal index (f v)
 
-
---------------------------------------------------------------------------------
--- List With Eq
---------------------------------------------------------------------------------
-
--- | 'ListEq' is a type class providing operations that only make sense to 
--- immutable list structures containing instances of 'Eq', such as finding index
---  and checking existence of a given element in the structure.
--- Minimal implementation requires @indicesOf@.
--- Default methods include @indexOf@ and @contains@.
-class (List l, Eq e) => ListEq l e where
-  -- | Takes a list structure and an element, returns a list containing all 
-  -- indices that has the element.
-  -- Usually used as an infix function.
-  indicesOf :: l e -> e -> [Int]
-
-  -- | Default method.
-  -- Takes a list structure and an element, returns either the index of the
-  -- first occurrence of the element in the list, or @Nothing@ if it is not in
-  -- the list.
-  -- Usually used as an infix function.
-  indexOf :: l e -> e -> Maybe Int
-  indexOf l e
-    | notFound  = Nothing
-    | otherwise = Just $ head indices
-    where
-      notFound = null indices
-      indices  = indicesOf l e
-
-  -- | Default method.
-  -- Takes a list structure and an element, returns @True@ if and only if the
-  -- element is in the list.
-  contains :: l e -> e -> Bool
-  contains = (isJust .) . indexOf
-
--- | 'ListEq' is a type class providing operations that only make sense to 
--- mmutable list structures containing instances of 'Eq', such as finding index
---  and checking existence of a given element in the structure.
--- Minimal implementation requires @mIndicesOf@.
--- Default methods include @mIndexOf@ and @mContains@.
-class (MList l, Eq e) => MListEq l e s where
-  -- | Takes a list structure and an element, returns a list containing all 
-  -- indices that has the element.
-  -- Usually used as an infix function.
-  mIndicesOf :: l e s -> e -> ST s [Int]
-
-  -- | Default method.
-  -- Takes a list structure and an element, returns either the index of the
-  -- first occurrence of the element in the list, or @Nothing@ if it is not in
-  -- the list.
-  -- Usually used as an infix function.
-  mIndexOf :: l e s -> e -> ST s (Maybe Int)
-  mIndexOf ml e = do
-    indices <- mIndicesOf ml e
-    return $ if null indices
-      then Nothing
-      else Just $ head indices
-
-  -- | Default method.
-  -- Takes a list structure and an element, returns @True@ if and only if the
-  -- element is in the list.
-  mContains :: l e s -> e -> ST s Bool
-  mContains = (fmap isJust .) . mIndexOf
 
 instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
   al == al' 

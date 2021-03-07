@@ -17,7 +17,7 @@ import           ArrayBased
   (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError)
 import           ArrayList (ArrayList(..))
 import           List 
-  (List(..), MList(..), MListEq(..), expandedSize, initialSize, outOfBoundError)
+  (List(..), MList(..), expandedSize, initialSize, outOfBoundError)
 import           MDT (MDT(..), MDTCons(..))
 
 data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
@@ -91,6 +91,17 @@ instance MList MArrayList where
       then return $ outOfBoundError index
       else readSTRef arrR >>= flip readArray index
 
+  mIndicesOf :: Eq a => MArrayList a s -> a -> ST s [Int]
+  mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
+    where
+      mIndicesOf' i l 
+        | i >= l = return []
+      mIndicesOf' i l = do
+        v <- mal `mGet` i
+        if v == e
+          then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
+          else mIndicesOf' (i + 1) l
+
   mToList :: MArrayList a s -> ST s [a]
   mToList mal = do
     al <- arrayListFreeze mal
@@ -124,18 +135,6 @@ instance MList MArrayList where
 
   newMList :: Foldable f => f a -> ST s (MArrayList a s)
   newMList = arrayListThaw . newList
-
-instance Eq a => MListEq MArrayList a s where
-  mIndicesOf :: MArrayList a s -> a -> ST s [Int]
-  mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
-    where
-      mIndicesOf' i l 
-        | i >= l = return []
-      mIndicesOf' i l = do
-        v <- mal `mGet` i
-        if v == e
-          then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
-          else mIndicesOf' (i + 1) l
 
 
 --------------------------------------------------------------------------------

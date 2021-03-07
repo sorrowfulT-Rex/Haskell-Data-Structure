@@ -10,9 +10,9 @@ import           Data.Foldable (toList)
 
 import           ArrayBased (ArrayBased(..), arrayLengthOverflowError)
 import           List 
-  (List(..), ListEq(..), expandedSize, initialSize, outOfBoundError)
+  (List(..), expandedSize, initialSize, outOfBoundError)
 
-data ArrayList e = ArrayList !Int (Array Int e)
+data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 
 instance Show a => Show (ArrayList a) where
   show = ("ArrayList: " ++) . show . toList
@@ -55,7 +55,17 @@ instance List ArrayList where
   get :: ArrayList a -> Int -> a
   get (ArrayList l arr) index
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise = arr ! index
+    | otherwise               = arr ! index
+
+  indicesOf :: Eq a => ArrayList a -> a -> [Int]
+  indicesOf al e
+    = indicesOf' 0
+    where
+      l = size al
+      indicesOf' i
+        | i >= l          = []
+        | al `get` i == e = i : indicesOf' (i + 1)
+        | otherwise       = indicesOf' (i + 1)
   
   newList :: Foldable f => f a -> ArrayList a
   newList fl
@@ -91,17 +101,6 @@ instance List ArrayList where
   size (ArrayList l _) 
     = l
 
-instance Eq a => ListEq ArrayList a where
-  indicesOf :: ArrayList a -> a -> [Int]
-  indicesOf al e
-    = indicesOf' 0
-    where
-      l = size al
-      indicesOf' i
-        | i >= l          = []
-        | al `get` i == e = i : indicesOf' (i + 1)
-        | otherwise       = indicesOf' (i + 1)
-
 
 --------------------------------------------------------------------------------
 -- ArrayBased Functions
@@ -123,10 +122,6 @@ instance ArrayBased ArrayList where
   physicalSize (ArrayList _ arr)
     = snd (bounds arr) + 1
 
-  resize :: Int -> ArrayList a -> ArrayList a
-  resize s mal
-    = newWithSize s (take (length mal) (toList mal))
-
 
 --------------------------------------------------------------------------------
 -- Playground
@@ -134,6 +129,8 @@ instance ArrayBased ArrayList where
 
 foo :: IO ()
 foo = do
-  let al = newList (2 : replicate 1000000 1) :: ArrayList Int
-  print $ al `indexOf` 2
+  let al = newList [] :: ArrayList Int
+  al' <- return $ append 3 al
+  al' <- return $ append 4 al'
+  print al'
   
