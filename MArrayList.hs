@@ -48,7 +48,7 @@ arrayListFreeze (MArrayList lR arrR) = do
 -- | Unsafe Function.
 -- Makes a mutable @MArrayList@ from an immutable @ArrayList@, perhaps without
 -- copying.
--- The original immutable list should not be used.
+-- The original immutable list should not be used ever since.
 arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList a s)
 arrayListThawUnsafe (ArrayList l arr) = do
   arrST <- unsafeThaw arr
@@ -59,7 +59,7 @@ arrayListThawUnsafe (ArrayList l arr) = do
 -- | Unsafe Function.
 -- Makes an immutable @ArrayList@ from a mutable @MArrayList@, perhaps without
 -- copying.
--- The original mutable list should not be used.
+-- The original mutable list should not be used ever since.
 arrayListFreezeUnsafe :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreezeUnsafe (MArrayList lR arrR) = do
   l     <- readSTRef lR

@@ -26,10 +26,10 @@ See the [Haddocks](ArrayBased.hs) for full documentation.
 # [ArrayList.hs](ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
 Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MArrayList.hs) for frequent state updates.
-See the [Haddocks](ArrayList.hs) for full documentation. 
+See the [Haddocks](ArrayList.hs) for full documentation.  
 
 # [MArrayList.hs](MArrayList.hs)
 `MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
-See the [Haddocks](MArrayList.hs) for full documentation. 
+See the [Haddocks](MArrayList.hs) for full documentation.  
 
 ### DOCUMENTATION FOR OTHER FILES ON THE WAY...

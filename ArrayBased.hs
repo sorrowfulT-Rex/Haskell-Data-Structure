@@ -71,6 +71,6 @@ class MArrayBased a where
   -- it has at least the length specified by the argument.
   mResize :: Int -> a e s -> ST s (a e s)
 
-  -- | Create a new mutable data structure from the given immutable data 
+  -- | Create a new mutable data structure from the given mutable data 
   -- structure, retaining the physical size.
   trueCopy :: a e s -> ST s (a e s)
