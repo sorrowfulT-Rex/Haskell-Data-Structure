@@ -2,14 +2,14 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module ArrayList where
+module MMZKDS.ArrayList where
 
 import           Control.Monad (join)
 import           Data.Array (Array(..), accumArray, array, bounds, (!))
 import           Data.Foldable (toList)
 
-import           ArrayBased (ArrayBased(..), arrayLengthOverflowError)
-import           List 
+import           MMZKDS.ArrayBased (ArrayBased(..), arrayLengthOverflowError)
+import           MMZKDS.List 
   (List(..), expandedSize, initialSize, outOfBoundError)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an

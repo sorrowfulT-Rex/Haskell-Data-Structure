@@ -1,14 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module ArrayBased where 
+module MMZKDS.ArrayBased where 
 
 import           Control.Monad (forM_)
 import           Control.Monad.ST.Lazy (ST(..))
 import           Data.Array.ST (STArray(..), readArray, writeArray)
 import           Data.Foldable (toList)
 
-import           List (maximumOn)
+import           MMZKDS.List (maximumOn)
 
 
 --------------------------------------------------------------------------------

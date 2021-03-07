@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MDT where
+module MMZKDS.MDT where
 
 import           Control.Monad.ST.Lazy (ST(..))
 

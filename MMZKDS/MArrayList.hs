@@ -4,7 +4,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MArrayList where
+module MMZKDS.MArrayList where
 
 import           Control.Monad (forM_, liftM2)
 import           Control.Monad.ST.Lazy (ST(..), runST)
@@ -14,13 +14,13 @@ import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Foldable (toList)
 import           Data.STRef.Lazy (STRef(..), newSTRef, readSTRef, writeSTRef)
 
-import           ArrayBased 
+import           MMZKDS.ArrayBased 
   (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError, unsafeAddST,
    unsafeCopyArray, unsafeHeapSort, unsafeRemoveST)
-import           ArrayList (ArrayList(..))
-import           List 
+import           MMZKDS.ArrayList (ArrayList(..))
+import           MMZKDS.List 
   (List(..), MList(..), expandedSize, initialSize, outOfBoundError, maximumOn)
-import           MDT (MDT(..), MDTCons(..))
+import           MMZKDS.MDT (MDT(..), MDTCons(..))
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.

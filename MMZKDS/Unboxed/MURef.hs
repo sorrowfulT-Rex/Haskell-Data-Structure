@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Unboxed.MURef where
+module MMZKDS.Unboxed.MURef where
 
 import           Control.Monad.ST
 import           Data.Array.Base

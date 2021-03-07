@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module List where
+module MMZKDS.List where
 import           Control.Monad (ap, join, liftM2)
 import           Control.Monad.ST.Lazy (ST(..), lazyToStrictST)
 import           Control.Monad.ST.Unsafe (unsafeSTToIO)
