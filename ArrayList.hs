@@ -12,7 +12,7 @@ import           ArrayBased (ArrayBased(..), arrayLengthOverflowError)
 import           List 
   (List(..), expandedSize, initialSize, outOfBoundError)
 
--- | 'ArrayList' is a data structure implementing the 'List' class with an
+-- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
 -- All operations that requires mutation on the ArrayList (exept @clear@ and
 -- @deepClear@) requires generating a new ArrayList, which is very costly 

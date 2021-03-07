@@ -20,6 +20,8 @@ import           List
   (List(..), MList(..), expandedSize, initialSize, outOfBoundError)
 import           MDT (MDT(..), MDTCons(..))
 
+-- | @MArrayList@ is a data structure implementing the 'MList' class with an
+-- internal @STArray@.
 data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
 
@@ -27,6 +29,7 @@ data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 -- Freeze & Thaw
 --------------------------------------------------------------------------------
 
+-- | Makes a mutable @MArrayList@ from an immutable @ArrayList@ by copying. 
 arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 arrayListThaw (ArrayList l arr) = do
   arrST <- thaw arr
@@ -34,6 +37,7 @@ arrayListThaw (ArrayList l arr) = do
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
+-- | Makes a immutable @ArrayList@ from a mutable @MArrayList@ by copying. 
 arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreeze (MArrayList lR arrR) = do
   l     <- readSTRef lR
@@ -41,6 +45,10 @@ arrayListFreeze (MArrayList lR arrR) = do
   arr   <- freeze arrST
   return $ ArrayList l arr
 
+-- | Unsafe Function.
+-- Makes a mutable @MArrayList@ from an immutable @ArrayList@, perhaps without
+-- copying.
+-- The original immutable list should not be used.
 arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList a s)
 arrayListThawUnsafe (ArrayList l arr) = do
   arrST <- unsafeThaw arr
@@ -48,6 +56,10 @@ arrayListThawUnsafe (ArrayList l arr) = do
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
+-- | Unsafe Function.
+-- Makes an immutable @ArrayList@ from a mutable @MArrayList@, perhaps without
+-- copying.
+-- The original mutable list should not be used.
 arrayListFreezeUnsafe :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreezeUnsafe (MArrayList lR arrR) = do
   l     <- readSTRef lR
