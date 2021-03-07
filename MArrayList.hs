@@ -271,9 +271,8 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- new [1..100] :: ST s (MArrayList Integer s)
-    mal <- mSubList 20 50 mal
+    mal <- new [1..10] :: ST s (MArrayList Integer s)
+    v1  <- mRemove 7 mal
+    v2  <- mRemove 13 mal
     al  <- arrayListFreeze mal
-    ls  <- mSize mal
-    ps  <- mPhysicalSize mal
-    return [D al, D ls, D ps]
+    return [D v1, D v2, D al]

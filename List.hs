@@ -7,7 +7,7 @@ import           Control.Monad.ST.Lazy (ST(..), runST, lazyToStrictST)
 import           Control.Monad.ST.Unsafe (unsafeSTToIO)
 import           Data.Bits (shiftL)
 import           Data.Foldable (toList)
-import           Data.Maybe (Maybe(..), isJust)
+import           Data.Maybe (Maybe(..), isJust, maybe)
 import           System.IO.Unsafe (unsafePerformIO)
 
 
@@ -44,10 +44,14 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- Minimal implementation requires @add@, @clear@, @delete@, @get@, @indicesOf@,
 -- @newList@, @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
--- @lastIndexOf@, @pop@, @popFront@, @push@, @update@.
+-- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@ and @update@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
+-- For methods that involves indices or elements, if the method changes the size
+-- of the list (e.g. @add@ or @pop@), the list is the last argument; if the
+-- method does not change the size (e.g. @get@ or @set@), the list is the first
+-- argument.
 class Foldable l => List l where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, returns a list that inserts
@@ -158,6 +162,15 @@ class Foldable l => List l where
   push = add 0
 
   -- | Default method.
+  -- Removes the first occurrence of an element from the list structure, and
+  -- returns a tuple of that element and the list without that element.
+  -- If the element does not appear in the list, returns a tuple of @Nothing@
+  -- and the original list.
+  remove :: Eq e => e -> l e -> (Maybe e, l e)
+  remove e l 
+    = maybe (Nothing, l) (flip delete l) (indexOf l e)
+
+  -- | Default method.
   -- Takes a list structure, an Int as index, and a function updating an
   -- element, returns a list that updates the element at the index by the given
   -- function.
@@ -171,7 +184,11 @@ class Foldable l => List l where
 -- Minimal implementation requires @mAdd@, @mClear@, @mDelete@, @mGet@, 
 -- @mIndicesOf@, @mSet@, @mSize@, @mSubList@, @mToList@ and @newWList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
--- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@ and @mUpdate@.
+-- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@, @mRemove@ and @mUpdate@.
+-- For methods that involves indices or elements, if the method changes the size
+-- of the list (e.g. @mAdd@ or @mPop@), the list is the last argument; if the
+-- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
+-- first argument.
 class MList l where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by
@@ -281,6 +298,11 @@ class MList l where
   -- Insert an element to the front of the list structure.
   mPush :: e -> l e s -> ST s ()
   mPush = mAdd 0
+
+  mRemove :: Eq e => e -> l e s -> ST s (Maybe e)
+  mRemove e ml = do
+    index <- ml `mIndexOf` e
+    maybe (return Nothing) (flip mDelete ml) index
 
   -- | Default method.
   -- Takes a list structure, an Int as index, and a function updating an

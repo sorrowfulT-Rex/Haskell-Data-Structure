@@ -158,11 +158,8 @@ instance ArrayBased ArrayList where
 
 foo :: IO ()
 foo = do
-  let al = newList [1,2] :: ArrayList Int
-  al' <- return $ append 3 al
-  al' <- return $ append 4 al'
-  let la = subList (-1) 2 al'
-  print la
-  print $ size la
-  print $ physicalSize la
+  al  <- return $ (newList [1, 2, 3, 4] :: ArrayList Int)
+  print (remove 1 al)
+  print (remove 0 al)
+  print (remove 4 al)
   
