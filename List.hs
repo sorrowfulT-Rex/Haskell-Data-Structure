@@ -56,7 +56,7 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- argument.
 class Foldable l => List l where
   -- | Adds an element into the list structure.
-  -- Takes an Int as index, an element and a list, returns a list that inserts
+  -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
@@ -68,7 +68,7 @@ class Foldable l => List l where
   clear :: l e -> l e
 
   -- | Removes an element from the list structure.
-  -- Takes an Int as index and a list, returns a tuple containing the removed 
+  -- Takes an @Int@ as index and a list, returns a tuple containing the removed 
   -- element and a list that removes the given element at the index.
   -- If the index is out of bound, returns a typle of @Nothing@ and the original
   -- list.
@@ -88,7 +88,7 @@ class Foldable l => List l where
   -- for example, @[a]@.
   newList :: Foldable f => f e -> l e 
 
-  -- | Takes a list structure, an Int as index and an element, returns a list
+  -- | Takes a list structure, an @Int@ as index and an element, returns a list
   -- that overwrites the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
   set :: l e -> Int -> e -> l e
@@ -174,13 +174,12 @@ class Foldable l => List l where
 
   -- | Default method.
   -- Sort the list structure in the default ordering of its elements.
-  sort :: Ord a => l a -> l a
+  sort :: Ord e => l e -> l e
   sort = newList . L.sort . toList
-
 
   -- | Default method.
   -- Sort the list structure by a ordering function.
-  sortOn :: Ord b => (a -> b) -> l a -> l a
+  sortOn :: Ord o => (e -> o) -> l e -> l e
   sortOn = (. toList) . (newList .) . L.sortOn
 
   -- | Default method.
@@ -195,9 +194,11 @@ class Foldable l => List l where
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- Minimal implementation requires @mAdd@, @mClear@, @mDelete@, @mGet@, 
--- @mIndicesOf@, @mSet@, @mSize@, @mSubList@, @mToList@ and @newWList@.
+-- @mIndicesOf@, @mSet@, @mSize@, @mSortOn@, @mSubList@, @mToList@ and 
+-- @newWList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
--- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@, @mRemove@ and @mUpdate@.
+-- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@ and 
+-- @mUpdate@.
 -- For methods that involves indices or elements, if the method changes the size
 -- of the list (e.g. @mAdd@ or @mPop@), the list is the last argument; if the
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
@@ -216,7 +217,7 @@ class MList l where
   mClear :: l e s -> ST s ()
 
   -- | Removes an element into the list structure.
-  -- Takes an Int as index and a list, returns the removed element and deletes
+  -- Takes an @Int@ as index and a list, returns the removed element and deletes
   -- the element from the list.
   -- If the index is out of bound, returns @Nothing@ and the orignal list is 
   -- unmodified.
@@ -232,13 +233,20 @@ class MList l where
   -- Usually used as an infix function.
   mIndicesOf :: Eq e => l e s -> e -> ST s [Int]
 
-  -- | Takes a list structure, an Int as index and an element, modifies the list
+  -- | Takes a list structure, an @Int@ as index and an element, modifies the list
   -- by overwriting the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
   mSet :: l e s -> Int -> e -> ST s ()
 
   -- | Returns the size (length) of the list structure.
   mSize :: l e s -> ST s Int
+
+  -- | Sort the list structure in the default ordering of its elements.
+  mSort :: Ord e => l e s -> ST s ()
+  mSort = mSortOn id
+
+  -- | Sort the list structure by a ordering function.
+  mSortOn :: Ord o => (e -> o) -> l e s -> ST s ()
 
   -- | Returns a sub-list of the list structure from the first argument 
   -- (inclusive) to the second argument (exclusive).
@@ -322,7 +330,7 @@ class MList l where
     maybe (return Nothing) (flip mDelete ml) index
 
   -- | Default method.
-  -- Takes a list structure, an Int as index, and a function updating an
+  -- Takes a list structure, an @Int@ as index, and a function updating an
   -- element, modifies the list by updating the element at the index by the
   -- given function.
   -- Returns an error if the index of out of bound.

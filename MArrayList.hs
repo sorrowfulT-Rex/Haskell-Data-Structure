@@ -240,21 +240,51 @@ instance Foldable f => MDTCons (f a) (MArrayList a) s where
 -- Helper Functions
 --------------------------------------------------------------------------------
 
+-- | Unsafe: Does not check conduct bound check for array.
+-- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
+-- to be written to, and an @Int@-indexed @STArray@, pushes all elements since
+-- the starting index (inclusive) to the last index (exclusive) to the next 
+-- slot, opening a vacancy at the starting index, where it puts the given
+--  element to this index.
+-- Pre: The index bounds are valid.
 addSTUnsafe :: Int -> a -> Int -> STArray s Int a -> ST s ()
-addSTUnsafe index e lastElement arrST = do
-  forM_ [lastElement, (lastElement - 1)..index] $ \i -> do
+addSTUnsafe index e lastIndexOf arrST = do
+  forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
     v <- readArray arrST i
     writeArray arrST (i + 1) v
   writeArray arrST index e
 
+-- | Unsafe: Does not check conduct bound check for array.
+-- Takes an @Int@-indexed @STArray@ as the starting array, another
+-- @Int@-indexed @STArray@ as the destination, and a tuple of @Int@s as the
+-- lower and upper bound (both inclusive) of the range of indices.
+-- Copies the elements in the starting array within the range to the
+-- destination whose index starts from 0.
+-- Pre: The index bounds are valid and the destination array is large enough
+-- to hold the number of elements.
 copyArrayUnsafe :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
 copyArrayUnsafe arrST resST (inf, sup) = do
   forM_ (zip [0..] [inf..sup]) $ 
     \(i, i') -> readArray arrST i >>= writeArray resST i'
 
+-- | Unsafe: Does not check conduct bound check for array.
+-- TODO...
+-- Takes a ordering function, a index lower bound (inclusive), an index upper
+-- bound (exclusive) and an @Int@-indexed @STArray@, sorts the array.
+-- Pre: The index bounds are valid and the array must be @Int@-indexed from 0.
+heapSortUnsafe :: Ord b => (a -> b) -> Int -> Int -> STArray s Int a -> ST s ()
+heapSortUnsafe = undefined 
+
+-- | Unsafe: Does not check conduct bound check for array.
+-- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
+-- to be written to, and an @Int@-indexed @STArray@, pushes all elements since
+-- the starting index (exclusive) to the last index (inclusive) to the previous 
+-- slot, effectively removing the original element at the starting index.
+-- Pre: The index bounds are valid and the last index is less than the physical
+-- length of the array minus 1.
 removeSTUnsafe :: Int -> Int -> STArray s Int a -> ST s ()
-removeSTUnsafe index lastElement arrST
-  = forM_ [index..lastElement] $ \i -> do
+removeSTUnsafe index lastIndexOf arrST
+  = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)
     writeArray arrST i v
 

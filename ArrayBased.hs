@@ -12,7 +12,7 @@ import           Data.Foldable (toList)
 
 -- | Utility Function. 
 -- Returns an error indicating the length of the array has exceeds the limit.
--- For arrays indexed on Int, however, this is not going to happen in practice
+-- For arrays indexed on @Int@, however, this is not going to happen in practice
 -- since it requires more than 1024 PiB memory.
 arrayLengthOverflowError :: a
 arrayLengthOverflowError = error "Length of array has overflowed!"
@@ -32,7 +32,7 @@ class Foldable a => ArrayBased a where
   -- are physically removed from the structure.
   deepClear :: a e -> a e
 
-  -- | Takes an Int as length and an instance of 'Foldable', creates a new 
+  -- | Takes an @Int@ as length and an instance of 'Foldable', creates a new 
   -- structure containing the elements in the 'Foldable' and the representing
   -- array has at least the length specified by the argument.
   newWithSize  :: Foldable f => Int -> f e -> a e
@@ -58,7 +58,7 @@ class MArrayBased a where
   -- removed from the structure.
   mDeepClear :: a e s -> ST s ()
 
-  -- | Takes an Int as length and an instance of 'Foldable', creates a new 
+  -- | Takes an @Int@ as length and an instance of 'Foldable', creates a new 
   -- structure containing the elements in the 'Foldable' and the representing
   -- array has at least the length specified by the argument.
   newMWithSize :: Foldable f => Int -> f e -> ST s (a e s)
@@ -67,7 +67,7 @@ class MArrayBased a where
   -- of the representing array.
   mPhysicalSize :: a e s -> ST s Int
 
-  -- | Takes an Int as length and a structure, modifies the structure such that
+  -- | Takes an @Int@ as length and a structure, modifies the structure such that
   -- it has at least the length specified by the argument.
   mResize :: Int -> a e s -> ST s (a e s)
 
