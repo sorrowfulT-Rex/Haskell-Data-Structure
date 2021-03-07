@@ -12,7 +12,7 @@ It contains `class MDT` providing a single method `copy`, and `class MDTCons` pr
 See the [Haddocks](MDT.hs) for full documentation.  
 
 # [List.hs](List.hs)
-This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, finding index *etc.*   
+This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, finding indices *etc.*   
 There are two classes, namely `List` and `MList`, for immutable and mutable lists, respectively.  
 The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
 Instances of `List` and `MList` are automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
@@ -26,6 +26,10 @@ See the [Haddocks](ArrayBased.hs) for full documentation.
 # [ArrayList.hs](ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
 Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MArrayList.hs) for frequent state updates.
-See the [Haddocks](ArrayList.hs) for full documentation.  
+See the [Haddocks](ArrayList.hs) for full documentation. 
+
+# [MArrayList.hs](MArrayList.hs)
+`MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
+See the [Haddocks](MArrayList.hs) for full documentation. 
 
 ### DOCUMENTATION FOR OTHER FILES ON THE WAY...
