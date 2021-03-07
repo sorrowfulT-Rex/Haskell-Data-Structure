@@ -42,8 +42,8 @@ expandedSize = (1 +) . (`div` 2) . (3 *)
 -- It is based on the Java List Interface.
 -- Instances of 'List' is required to implement 'Foldable'.
 -- Minimal implementation requires @add@, @clear@, @get@, @newList@, @remove@,
--- @set@ and @size@.
--- Default methods include @append@, @isNull@, @pop@, @popFront@, @push@ and
+-- @set@, @size@ and @subList@.
+-- Default methods include @append@, @isNull@, @pop@, @popFront@, @push@,
 -- @update@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
@@ -89,6 +89,10 @@ class Foldable l => List l where
 
   -- | Returns the size (length) of the list structure.
   size :: l e -> Int
+
+  -- | Returns a sub-list of the list structure from the first argument 
+  -- (inclusive) to the second argument (exclusive).
+  subList :: Int -> Int -> l e -> l e
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
@@ -152,7 +156,7 @@ class Foldable l => List l where
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- Minimal implementation requires @mAdd@, @mClear@, @mGet@, @mRemove@, @mSet@, 
--- @mSize@, @mToList@ and @newWList@
+-- @mSize@, @mSubList@, @mToList@ and @newWList@.
 -- Default methods include @mAppend@, @mIsNull@, @mPop@, @mPopFront@, @mPush@
 --  and @mUpdate@.
 class MList l where
@@ -193,8 +197,15 @@ class MList l where
   -- | Returns the size (length) of the list structure.
   mSize :: l e s -> ST s Int
 
+  -- | Returns a sub-list of the list structure from the first argument 
+  -- (inclusive) to the second argument (exclusive).
+  mSubList :: Int -> Int -> l e s -> ST s (l e s)
+
   -- | Returns the default list (@[a]@) representation of the list structure.
   mToList :: l e s -> ST s [e]
+
+  -- | Returns a new list structure with the elements of a 'Foldable' instance,
+  -- for example, @[a]@.
   newMList :: Foldable f => f e -> ST s (l e s)
 
   -- | Default method.
@@ -230,9 +241,9 @@ class MList l where
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   mPop :: l e s -> ST s (Maybe e)
-  mPop mal = do
-    l <- mSize mal
-    mRemove (l - 1) mal
+  mPop ml = do
+    l <- mSize ml
+    mRemove (l - 1) ml
 
   -- | Default method.
   -- Removes the first element from the list structure.
@@ -252,23 +263,23 @@ class MList l where
   -- given function.
   -- Returns an error if the index of out of bound.
   mUpdate :: l e s -> Int -> (e -> e) -> ST s ()
-  mUpdate mal index f = do
-    v <- mGet mal index
-    mSet mal index (f v)
+  mUpdate ml index f = do
+    v <- mGet ml index
+    mSet ml index (f v)
 
 
 instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
-  al == al' 
-    = l == l' && and (map (liftM2 (==) (al `get`) (al' `get`)) [0..(l - 1)])
+  l == l' 
+    = ls == ls' && and (map (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)])
     where
-      l  = size al
-      l' = size al'
+      ls  = size l
+      ls' = size l'
 
 instance {-# OVERLAPPABLE #-} (Eq a, MList l) => Eq (l a s) where
-  mal == mal'
+  ml == ml'
     = unsafePerformIO $ unsafeSTToIO $ lazyToStrictST $ do
-      l  <- mSize mal
-      l' <- mSize mal'
-      r  <- sequence $ 
-        map (ap (liftM2 (==) . (mal `mGet`)) (mal' `mGet`)) [0..(l - 1)]
-      return $ (l == l') && and r
+      ls  <- mSize ml
+      ls' <- mSize ml'
+      r   <- sequence $ 
+        map (ap (liftM2 (==) . (ml `mGet`)) (ml' `mGet`)) [0..(ls - 1)]
+      return $ (ls == ls') && and r

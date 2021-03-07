@@ -83,8 +83,7 @@ instance List ArrayList where
   remove :: Int -> ArrayList a -> (Maybe a, ArrayList a)
   remove index al@(ArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise
-      = (Just (arr ! index), ArrayList (l - 1) 
+    | otherwise               = (Just (arr ! index), ArrayList (l - 1) 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
     where
       pl = physicalSize al
@@ -106,6 +105,19 @@ instance List ArrayList where
   size :: ArrayList a -> Int
   size (ArrayList l _) 
     = l
+
+  subList :: Int -> Int -> ArrayList a -> ArrayList a
+  subList inf sup al
+    | sup' <= inf' = deepClear al
+    | otherwise    = ArrayList len'
+        $ accumArray worker undefined (0, ps - 1) $ join zip [0..(len' - 1)]
+      where
+        inf' = max inf 0
+        sup' = min sup (size al)
+        len' = sup' - inf'
+        ps   = initialSize len'
+        worker _ i
+          = al `get` (i + inf')
 
 
 --------------------------------------------------------------------------------
@@ -135,8 +147,11 @@ instance ArrayBased ArrayList where
 
 foo :: IO ()
 foo = do
-  let al = newList [] :: ArrayList Int
+  let al = newList [1,2] :: ArrayList Int
   al' <- return $ append 3 al
   al' <- return $ append 4 al'
-  print al'
+  let la = subList (-1) 2 al'
+  print la
+  print $ size la
+  print $ physicalSize la
   

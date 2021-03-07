@@ -102,11 +102,6 @@ instance MList MArrayList where
           then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
-  mToList :: MArrayList a s -> ST s [a]
-  mToList mal = do
-    al <- arrayListFreeze mal
-    return $ toList al
-
   mRemove :: Int -> MArrayList a s -> ST s (Maybe a)
   mRemove index mal@(MArrayList lR arrR) = do
     ls <- mSize mal
@@ -133,6 +128,28 @@ instance MList MArrayList where
   mSize (MArrayList lR _)
     = readSTRef lR
 
+  mSubList :: Int -> Int -> MArrayList a s -> ST s (MArrayList a s)
+  mSubList inf sup mal = do
+    ls <- mSize mal
+    let inf' = max inf 0
+    let sup' = min sup ls
+    let len' = sup' - inf'
+    let ps   = initialSize len'
+    if sup' <= inf
+      then newMList []
+      else do
+        resST <- newArray_ (0, ps - 1)
+        forM_ [0..(len' - 1)] 
+          $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
+        lR <- newSTRef len'
+        resR <- newSTRef resST
+        return $ MArrayList lR resR
+
+  mToList :: MArrayList a s -> ST s [a]
+  mToList mal = do
+    al <- arrayListFreeze mal
+    return $ toList al
+
   newMList :: Foldable f => f a -> ST s (MArrayList a s)
   newMList = arrayListThaw . newList
 
@@ -150,8 +167,8 @@ instance MArrayBased MArrayList where
     writeSTRef lR rl
     writeSTRef arrR resST
 
-  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
-  mNewWithSize = (arrayListThaw .) . newWithSize
+  newMWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
+  newMWithSize = (arrayListThaw .) . newWithSize
 
   mPhysicalSize :: MArrayList a s -> ST s Int
   mPhysicalSize (MArrayList _ arrR) = do
@@ -241,6 +258,9 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal  <- new (replicate 1000000 (1::Int)) :: ST s (MArrayList Int s)
-    il   <- mal `mIndicesOf` 1
-    return [D $ (head il)]
+    mal <- new [1..100] :: ST s (MArrayList Integer s)
+    mal <- mSubList 20 50 mal
+    al  <- arrayListFreeze mal
+    ls  <- mSize mal
+    ps  <- mPhysicalSize mal
+    return [D al, D ls, D ps]
