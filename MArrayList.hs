@@ -22,6 +22,7 @@ import           MDT (MDT(..), MDTCons(..))
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.
+--
 data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
 
@@ -30,6 +31,7 @@ data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 --------------------------------------------------------------------------------
 
 -- | Makes a mutable @MArrayList@ from an immutable @ArrayList@ by copying. 
+--
 arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 arrayListThaw (ArrayList l arr) = do
   arrST <- thaw arr
@@ -38,6 +40,7 @@ arrayListThaw (ArrayList l arr) = do
   return $ MArrayList lR arrR
 
 -- | Makes a immutable @ArrayList@ from a mutable @MArrayList@ by copying. 
+--
 arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreeze (MArrayList lR arrR) = do
   l     <- readSTRef lR
@@ -49,6 +52,7 @@ arrayListFreeze (MArrayList lR arrR) = do
 -- Makes a mutable @MArrayList@ from an immutable @ArrayList@, perhaps without
 -- copying.
 -- The original immutable list should not be used ever since.
+--
 arrayListThawUnsafe :: ArrayList a -> ST s (MArrayList a s)
 arrayListThawUnsafe (ArrayList l arr) = do
   arrST <- unsafeThaw arr
@@ -60,6 +64,7 @@ arrayListThawUnsafe (ArrayList l arr) = do
 -- Makes an immutable @ArrayList@ from a mutable @MArrayList@, perhaps without
 -- copying.
 -- The original mutable list should not be used ever since.
+--
 arrayListFreezeUnsafe :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreezeUnsafe (MArrayList lR arrR) = do
   l     <- readSTRef lR
@@ -259,6 +264,7 @@ instance Foldable f => MDTCons (f a) (MArrayList a) s where
 -- slot, opening a vacancy at the starting index, where it puts the given
 --  element to this index.
 -- Pre: The index bounds are valid.
+--
 addSTUnsafe :: Int -> a -> Int -> STArray s Int a -> ST s ()
 addSTUnsafe index e lastIndexOf arrST = do
   forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
@@ -274,6 +280,7 @@ addSTUnsafe index e lastIndexOf arrST = do
 -- destination whose index starts from 0.
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
+--
 copyArrayUnsafe :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
 copyArrayUnsafe arrST resST (inf, sup) = do
   forM_ (zip [0..] [inf..sup]) $ 
@@ -284,6 +291,7 @@ copyArrayUnsafe arrST resST (inf, sup) = do
 -- Takes a ordering function, a index lower bound (inclusive), an index upper
 -- bound (exclusive) and an @Int@-indexed @STArray@, sorts the array.
 -- Pre: The index bounds are valid and the array must be @Int@-indexed from 0.
+--
 heapSortUnsafe :: Ord b => (a -> b) -> Int -> Int -> STArray s Int a -> ST s ()
 heapSortUnsafe = undefined 
 
@@ -294,6 +302,7 @@ heapSortUnsafe = undefined
 -- slot, effectively removing the original element at the starting index.
 -- Pre: The index bounds are valid and the last index is less than the physical
 -- length of the array minus 1.
+--
 removeSTUnsafe :: Int -> Int -> STArray s Int a -> ST s ()
 removeSTUnsafe index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
