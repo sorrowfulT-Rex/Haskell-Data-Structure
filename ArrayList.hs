@@ -12,6 +12,12 @@ import           ArrayBased (ArrayBased(..), arrayLengthOverflowError)
 import           List 
   (List(..), expandedSize, initialSize, outOfBoundError)
 
+-- | 'ArrayList' is a data structure implementing the 'List' class with an
+-- internal array.
+-- All operations that requires mutation on the ArrayList (exept @clear@ and
+-- @deepClear@) requires generating a new ArrayList, which is very costly 
+-- (always O(n)). Therefore it is recommended to use the mutable version
+-- 'MArrayList' for frequent state updates.
 data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 
 instance Show a => Show (ArrayList a) where
