@@ -7,12 +7,12 @@
 module MMZKDS.MArrayList where
 
 import           Control.Monad (forM_, liftM2)
-import           Control.Monad.ST.Lazy (ST(..), runST)
+import           Control.Monad.ST (ST(..), runST)
 import           Data.Array.ST
   (STArray(..), freeze, getBounds, newArray_, readArray, thaw, writeArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Foldable (toList)
-import           Data.STRef.Lazy (STRef(..), newSTRef, readSTRef, writeSTRef)
+import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased 
   (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError, unsafeAddST,

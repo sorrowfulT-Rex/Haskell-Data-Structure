@@ -3,7 +3,7 @@
 
 module MMZKDS.List where
 import           Control.Monad (ap, join, liftM2)
-import           Control.Monad.ST.Lazy (ST(..), lazyToStrictST)
+import           Control.Monad.ST (ST(..))
 import           Control.Monad.ST.Unsafe (unsafeSTToIO)
 import           Data.Bits (shiftL)
 import           Data.Foldable (toList)
@@ -42,7 +42,7 @@ maximumOn f l
 
 
 --------------------------------------------------------------------------------
--- List Interface
+-- List Type Class
 --------------------------------------------------------------------------------
 
 -- | 'List' is a type class for immutable sequential (list) data structures, 
@@ -402,7 +402,7 @@ instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
 
 instance {-# OVERLAPPABLE #-} (Eq a, MList l) => Eq (l a s) where
   ml == ml'
-    = unsafePerformIO $ unsafeSTToIO $ lazyToStrictST $ do
+    = unsafePerformIO $ unsafeSTToIO $ do
       ls  <- mSize ml
       ls' <- mSize ml'
       r   <- sequence $ 

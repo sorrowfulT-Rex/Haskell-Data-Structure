@@ -4,8 +4,8 @@
 module MMZKDS.ArrayBased where 
 
 import           Control.Monad (forM_)
-import           Control.Monad.ST.Lazy (ST(..))
-import           Data.Array.ST (STArray(..), readArray, writeArray)
+import           Control.Monad.ST (ST(..))
+import           Data.Array.ST (MArray(..), STArray(..), readArray, writeArray)
 import           Data.Foldable (toList)
 
 import           MMZKDS.List (maximumOn)
@@ -31,7 +31,12 @@ arrayLengthOverflowError = error "Length of array has overflowed!"
 --  element to this index.
 -- Pre: The index bounds are valid.
 --
-unsafeAddST :: Int -> a -> Int -> STArray s Int a -> ST s ()
+unsafeAddST :: (Monad m, MArray (STArray s) a m) 
+            => Int 
+            -> a 
+            -> Int 
+            -> STArray s Int a 
+            -> m ()
 unsafeAddST index e lastIndexOf arrST = do
   forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
     v <- readArray arrST i
@@ -47,7 +52,11 @@ unsafeAddST index e lastIndexOf arrST = do
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
 --
-unsafeCopyArray :: STArray s Int a -> STArray s Int a -> (Int, Int) -> ST s ()
+unsafeCopyArray :: (Monad m, MArray (STArray s) a m)
+                => STArray s Int a 
+                -> STArray s Int a 
+                -> (Int, Int) 
+                -> m ()
 unsafeCopyArray arrST resST (inf, sup) = do
   forM_ (zip [0..] [inf..sup]) $ 
     \(i, i') -> readArray arrST i >>= writeArray resST i'
@@ -57,7 +66,11 @@ unsafeCopyArray arrST resST (inf, sup) = do
 -- Takes a ordering function and an @Int@-indexed @STArray@, sorts the array.
 -- Pre: The array must be @Int@-indexed from 0.
 --
-unsafeHeapSort :: Ord b => (a -> b) -> Int -> STArray s Int a -> ST s ()
+unsafeHeapSort :: (Monad m, Ord b, MArray (STArray s) a m) 
+               => (a -> b) 
+               -> Int 
+               -> STArray s Int a 
+               -> m ()
 unsafeHeapSort f sup arrST
   = toMaxHeap 0 >> heapSort sup
   where
@@ -107,7 +120,10 @@ unsafeHeapSort f sup arrST
 -- Pre: The index bounds are valid and the last index is less than the physical
 -- length of the array minus 1.
 --
-unsafeRemoveST :: Int -> Int -> STArray s Int a -> ST s ()
+unsafeRemoveST :: (Monad m, MArray (STArray s) a m) 
+               => Int 
+               -> Int 
+               -> STArray s Int a -> m ()
 unsafeRemoveST index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)
@@ -115,7 +131,7 @@ unsafeRemoveST index lastIndexOf arrST
 
 
 --------------------------------------------------------------------------------
--- ArrayBased Interface
+-- ArrayBased Type Class
 --------------------------------------------------------------------------------
 
 -- | 'ArrayBased' is a type class for immutable array-based data structure.

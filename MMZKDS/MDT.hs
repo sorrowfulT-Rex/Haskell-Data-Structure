@@ -2,10 +2,10 @@
 
 module MMZKDS.MDT where
 
-import           Control.Monad.ST.Lazy (ST(..))
+import           Control.Monad.ST (ST(..))
 
 -- | The 'MDT' class is a type class for mutable data structures living in the 
--- lazy ST monad.
+-- (strict) ST monad.
 -- It provides a single @copy@ method.
 --
 class MDT d s where
@@ -17,7 +17,7 @@ class MDT d s where
   --
   copy :: d s -> ST s (d s)
 
--- | The 'MDTCons" class defines how to initialise the mutable data structure
+-- | The 'MDTCons' class defines how to initialise the mutable data structure
 -- from a potentially different immutable data structure.
 -- It provides a single @new@ method.
 -- For example, assume there is a mutable data structure by the name of 
