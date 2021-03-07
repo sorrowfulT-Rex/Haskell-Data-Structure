@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -17,7 +18,7 @@ import           ArrayBased
   (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError)
 import           ArrayList (ArrayList(..))
 import           List 
-  (List(..), MList(..), expandedSize, initialSize, outOfBoundError)
+  (List(..), MList(..), expandedSize, initialSize, outOfBoundError, maximumOn)
 import           MDT (MDT(..), MDTCons(..))
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
@@ -144,6 +145,12 @@ instance MList MArrayList where
   mSize :: MArrayList a s -> ST s Int
   mSize (MArrayList lR _)
     = readSTRef lR
+
+  mSortOn :: Ord b => (a -> b) -> MArrayList a s -> ST s ()
+  mSortOn f mal@(MArrayList _ arrR) = do
+    arrST <- readSTRef arrR 
+    l     <- mSize mal
+    unsafeHeapSort f (l - 1) arrST
 
   mSubList :: Int -> Int -> MArrayList a s -> ST s (MArrayList a s)
   mSubList inf sup mal = do
@@ -286,14 +293,52 @@ unsafeCopyArray arrST resST (inf, sup) = do
   forM_ (zip [0..] [inf..sup]) $ 
     \(i, i') -> readArray arrST i >>= writeArray resST i'
 
--- | Unsafe: Does not check conduct bound check for array.
+-- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- TODO...
--- Takes a ordering function, a index lower bound (inclusive), an index upper
--- bound (exclusive) and an @Int@-indexed @STArray@, sorts the array.
--- Pre: The index bounds are valid and the array must be @Int@-indexed from 0.
+-- Takes a ordering function and an @Int@-indexed @STArray@, sorts the array.
+-- Pre: The array must be @Int@-indexed from 0.
 --
-unsafeHeapSort :: Ord b => (a -> b) -> Int -> Int -> STArray s Int a -> ST s ()
-unsafeHeapSort = undefined 
+unsafeHeapSort :: Ord b => (a -> b) -> Int -> STArray s Int a -> ST s ()
+unsafeHeapSort f sup arrST
+  = toMaxHeap 0 >> heapSort sup
+  where
+    toMaxHeap i
+      | i > sup = return ()
+      | otherwise 
+        = toMaxHeap lc >> toMaxHeap rc >> fixMaxHeap i sup
+        where
+          lc = 2 * i + 1
+          rc = lc + 1
+    fixMaxHeap i l
+      | lc > l     = return ()
+      | lc < l     = do
+        cv <- readArray arrST i
+        lv <- readArray arrST lc
+        rv <- readArray arrST rc
+        let (mv, mi) = maximumOn (f . fst) [(cv, i), (lv, lc), (rv, rc)]
+        if mi == i
+          then return ()
+          else 
+            writeArray arrST i mv >> writeArray arrST mi cv >> fixMaxHeap mi l
+      | otherwise = do
+        cv <- readArray arrST i
+        lv <- readArray arrST lc
+        let (mv, mi) = maximumOn (f . fst) [(cv, i), (lv, lc)]
+        if mi == i
+          then return ()
+          else 
+            writeArray arrST i mv >> writeArray arrST mi cv >> fixMaxHeap mi l
+      where
+        lc = 2 * i + 1
+        rc = lc + 1
+    heapSort 0 = return ()
+    heapSort i = do
+      v0 <- readArray arrST 0
+      vi <- readArray arrST i
+      writeArray arrST 0 vi
+      writeArray arrST i v0
+      fixMaxHeap 0 (i - 1)
+      heapSort (i - 1)
 
 -- | Unsafe: Does not check conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
@@ -322,8 +367,7 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- new [1..10] :: ST s (MArrayList Integer s)
-    v1  <- mRemove 7 mal
-    v2  <- mRemove 13 mal
+    mal <- new [10000,9999..1] :: ST s (MArrayList Integer s)
+    mSort mal
     al  <- arrayListFreeze mal
-    return [D v1, D v2, D al]
+    return [D al]
