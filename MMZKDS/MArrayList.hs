@@ -147,6 +147,7 @@ instance MList MArrayList where
   mSize (MArrayList lR _)
     = readSTRef lR
 
+  {-# INLINE mSortOn #-}
   mSortOn :: Ord b => (a -> b) -> MArrayList a s -> ST s ()
   mSortOn f mal@(MArrayList _ arrR) = do
     arrST <- readSTRef arrR 

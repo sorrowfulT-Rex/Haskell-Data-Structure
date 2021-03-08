@@ -378,6 +378,7 @@ class MList l where
   -- | Default method.
   -- Sort the list structure in the default ordering of its elements.
   --
+  {-# INLINE mSort #-}
   mSort :: Ord e => l e s -> ST s ()
   mSort = mSortOn id
 

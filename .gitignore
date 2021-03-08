@@ -24,3 +24,5 @@ cabal.project.local~
 
 # Silly Mac
 .DS_Store
+Playground.hs
+Playground

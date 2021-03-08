@@ -66,6 +66,7 @@ unsafeCopyArray arrST resST (inf, sup) = do
 -- Takes a ordering function and an @Int@-indexed @STArray@, sorts the array.
 -- Pre: The array must be @Int@-indexed from 0.
 --
+{-# INLINE unsafeHeapSort #-}
 unsafeHeapSort :: (Monad m, Ord b, MArray (STArray s) a m) 
                => (a -> b) 
                -> Int 
