@@ -116,11 +116,11 @@ randRangeST = (return .) . randomR
 -- Pre: The array must be @Int@-indexed from 0.
 --
 {-# INLINE unsafeQuickSort #-}
-unsafeQuickSort :: (Ord b) 
+unsafeQuickSort :: (Ord b, MArray r a (ST s)) 
                => (a -> b) 
                -> Int
                -> Int 
-               -> STArray s Int a 
+               -> r Int a 
                -> ST s ()
 unsafeQuickSort f inf sup arrST
   = unsafeGenST >>= worker inf sup 
@@ -146,11 +146,10 @@ unsafeQuickSort f inf sup arrST
                     writeArray arrST (i + 1) vj
                     writeArray arrST (j - 1) vi
                     shuffleAround i (j - 1) pv
-        (p, gen) <- getPivot
-        pi       <- shuffleAround inf sup $! f p
-        vp       <- readArray arrST pi
-        writeArray arrST inf vp
-        writeArray arrST pi p
+        (vp, gen) <- getPivot
+        pi       <- shuffleAround inf sup $! f vp
+        readArray arrST pi >>= writeArray arrST inf
+        writeArray arrST pi vp
         worker inf pi gen
         worker (pi + 1) sup gen
 
