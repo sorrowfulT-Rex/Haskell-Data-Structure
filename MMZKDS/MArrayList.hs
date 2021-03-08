@@ -18,7 +18,7 @@ import           MMZKDS.ArrayList (ArrayList(..))
 import           MMZKDS.List (List(..), MList(..))
 import           MMZKDS.MDT (MDT(..), MDTCons(..))
 import           MMZKDS.Unsafe 
-  (unsafeAddST, unsafeCopyArray, unsafeHeapSort, unsafeRemoveST)
+  (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
@@ -152,7 +152,7 @@ instance MList MArrayList where
   mSortOn f mal@(MArrayList _ arrR) = do
     arrST <- readSTRef arrR 
     l     <- mSize mal
-    unsafeHeapSort f (l - 1) arrST
+    unsafeQuickSort f 0 l arrST
 
   mSubList :: Int -> Int -> MArrayList a s -> ST s (MArrayList a s)
   mSubList inf sup mal = do
@@ -274,7 +274,7 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- new [10000,9999..1] :: ST s (MArrayList Integer s)
+    mal <- new [100000,99999..1] :: ST s (MArrayList Integer s)
     mSort mal
     al  <- arrayListFreeze mal
     return [D al]

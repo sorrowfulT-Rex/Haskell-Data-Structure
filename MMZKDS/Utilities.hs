@@ -1,6 +1,8 @@
 module MMZKDS.Utilities where
 
+import           Control.Monad.ST (ST(..))
 import           Data.Bits (shiftL)
+
 
 -- | Utility Function. 
 -- Returns an error indicating the length of the array has exceeds the limit.
