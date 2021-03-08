@@ -1,5 +1,4 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -14,13 +13,14 @@ import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Foldable (toList)
 import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.ArrayBased 
-  (ArrayBased(..), MArrayBased(..), arrayLengthOverflowError, unsafeAddST,
-   unsafeCopyArray, unsafeHeapSort, unsafeRemoveST)
+import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
-import           MMZKDS.List 
-  (List(..), MList(..), expandedSize, initialSize, outOfBoundError)
+import           MMZKDS.List (List(..), MList(..))
 import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.Unsafe 
+  (unsafeAddST, unsafeCopyArray, unsafeHeapSort, unsafeRemoveST)
+import           MMZKDS.Utilities
+  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.

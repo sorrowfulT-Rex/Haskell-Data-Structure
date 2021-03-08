@@ -8,9 +8,10 @@ import           Control.Monad (join)
 import           Data.Array (Array(..), accumArray, array, bounds, (!))
 import           Data.Foldable (toList)
 
-import           MMZKDS.ArrayBased (ArrayBased(..), arrayLengthOverflowError)
-import           MMZKDS.List 
-  (List(..), expandedSize, initialSize, outOfBoundError)
+import           MMZKDS.ArrayBased (ArrayBased(..))
+import           MMZKDS.List (List(..))
+import           MMZKDS.Utilities 
+  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
