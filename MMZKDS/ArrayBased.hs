@@ -8,8 +8,6 @@ import           Control.Monad.ST (ST(..))
 import           Data.Array.ST (MArray(..), STArray(..), readArray, writeArray)
 import           Data.Foldable (toList)
 
-import           MMZKDS.List (maximumOn)
-
 
 --------------------------------------------------------------------------------
 -- Utilities
@@ -31,7 +29,7 @@ arrayLengthOverflowError = error "Length of array has overflowed!"
 --  element to this index.
 -- Pre: The index bounds are valid.
 --
-unsafeAddST :: (Monad m, MArray (STArray s) a m) 
+unsafeAddST :: (MArray (STArray s) a m) 
             => Int 
             -> a 
             -> Int 
@@ -52,7 +50,7 @@ unsafeAddST index e lastIndexOf arrST = do
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
 --
-unsafeCopyArray :: (Monad m, MArray (STArray s) a m)
+unsafeCopyArray :: (MArray (STArray s) a m)
                 => STArray s Int a 
                 -> STArray s Int a 
                 -> (Int, Int) 
@@ -62,56 +60,57 @@ unsafeCopyArray arrST resST (inf, sup) = do
     \(i, i') -> readArray arrST i >>= writeArray resST i'
 
 -- | Unsafe: Does not check if the array satisfies the pre-condition.
--- TODO...
--- Takes a ordering function and an @Int@-indexed @STArray@, sorts the array.
+-- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
+-- array, sorts the array.
 -- Pre: The array must be @Int@-indexed from 0.
 --
 {-# INLINE unsafeHeapSort #-}
-unsafeHeapSort :: (Monad m, Ord b, MArray (STArray s) a m) 
+unsafeHeapSort :: (Ord b, MArray (STArray s) a m) 
                => (a -> b) 
                -> Int 
                -> STArray s Int a 
                -> m ()
 unsafeHeapSort f sup arrST
-  = toMaxHeap 0 >> heapSort sup
+  = toMaxHeap 0 >> forM_ [sup, sup - 1..1] heapSort
   where
     toMaxHeap i
-      | i > sup = return ()
+      | lc > sup = return ()
       | otherwise 
-        = toMaxHeap lc >> toMaxHeap rc >> fixMaxHeap i sup
+        = toMaxHeap lc >> toMaxHeap (lc + 1) >> fixMaxHeap i sup
         where
           lc = 2 * i + 1
-          rc = lc + 1
-    fixMaxHeap i l
-      | lc > l     = return ()
-      | lc < l     = do
-        cv <- readArray arrST i
-        lv <- readArray arrST lc
-        rv <- readArray arrST rc
-        let (mv, mi) = maximumOn (f . fst) [(cv, i), (lv, lc), (rv, rc)]
-        if mi == i
-          then return ()
-          else 
-            writeArray arrST i mv >> writeArray arrST mi cv >> fixMaxHeap mi l
-      | otherwise = do
-        cv <- readArray arrST i
-        lv <- readArray arrST lc
-        let (mv, mi) = maximumOn (f . fst) [(cv, i), (lv, lc)]
-        if mi == i
-          then return ()
-          else 
-            writeArray arrST i mv >> writeArray arrST mi cv >> fixMaxHeap mi l
-      where
-        lc = 2 * i + 1
-        rc = lc + 1
-    heapSort 0 = return ()
+    fixMaxHeap i l = do
+      let lc = 2 * i + 1
+      let rc = 2 * i + 2
+      cv <- readArray arrST i
+      let swapper
+            | lc > l   = return (False, undefined, undefined)
+            | rc > l   = do
+              lv <- readArray arrST lc
+              if f cv >= f lv
+                then return (False, undefined, undefined)
+                else return (True, lc, lv)
+            | otherwise = do
+              lv <- readArray arrST lc
+              rv <- readArray arrST rc
+              if f cv >= f lv && f cv >= f rv
+                then return (False, undefined, undefined)
+                else if f lv >= f rv 
+                    then return (True, lc, lv)
+                    else return (True, rc, rv)
+      s <- swapper
+      case s of
+        (False, _, _) -> return ()
+        (True, lo, v) -> do
+          writeArray arrST i v
+          writeArray arrST lo cv
+          fixMaxHeap lo l
     heapSort i = do
       v0 <- readArray arrST 0
       vi <- readArray arrST i
       writeArray arrST 0 vi
       writeArray arrST i v0
       fixMaxHeap 0 (i - 1)
-      heapSort (i - 1)
 
 -- | Unsafe: Does not check conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
@@ -121,7 +120,7 @@ unsafeHeapSort f sup arrST
 -- Pre: The index bounds are valid and the last index is less than the physical
 -- length of the array minus 1.
 --
-unsafeRemoveST :: (Monad m, MArray (STArray s) a m) 
+unsafeRemoveST :: (MArray (STArray s) a m) 
                => Int 
                -> Int 
                -> STArray s Int a -> m ()

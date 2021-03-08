@@ -19,7 +19,7 @@ import           MMZKDS.ArrayBased
    unsafeCopyArray, unsafeHeapSort, unsafeRemoveST)
 import           MMZKDS.ArrayList (ArrayList(..))
 import           MMZKDS.List 
-  (List(..), MList(..), expandedSize, initialSize, outOfBoundError, maximumOn)
+  (List(..), MList(..), expandedSize, initialSize, outOfBoundError)
 import           MMZKDS.MDT (MDT(..), MDTCons(..))
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an

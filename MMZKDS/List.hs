@@ -36,10 +36,6 @@ initialSize = expandedSize . shiftL 1 . ceiling . logBase 2 . fromIntegral
 expandedSize :: Int -> Int
 expandedSize = (1 +) . (`div` 2) . (3 *)
 
-maximumOn :: (Foldable f, Ord b) => (a -> b) -> f a -> a
-maximumOn f l 
-  = maximumBy ((. f) . compare . f) l
-
 
 --------------------------------------------------------------------------------
 -- List Type Class
