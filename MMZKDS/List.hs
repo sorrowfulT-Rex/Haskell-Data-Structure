@@ -3,12 +3,9 @@
 
 module MMZKDS.List where
 import           Control.Monad (ap, join, liftM2)
-import           Control.Monad.ST (ST(..))
-import           Control.Monad.ST.Unsafe (unsafeSTToIO)
 import           Data.Foldable (toList)
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
-import           System.IO.Unsafe (unsafePerformIO)
 
 
 --------------------------------------------------------------------------------
@@ -189,7 +186,8 @@ class Foldable l => List l where
   update :: l e -> Int -> (e -> e) -> l e
   update = ap (ap . ((.) .) . set) ((flip id .) . get)
 
--- | 'MList' is a type class for mutable sequential data structures, with 
+-- | 'MList' is a type class for mutable sequential data structures based on the
+-- @ST@-monad, with 
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- Minimal implementation requires @mAdd@, @mClear@, @mDelete@, @mGet@, 
@@ -203,20 +201,20 @@ class Foldable l => List l where
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
 -- first argument.
 --
-class MList l where
+class Monad (m s) => MList l m s where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by
   -- inserting the given element before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  mAdd :: Int -> e -> l e s -> ST s ()
+  mAdd :: Int -> e -> l e s -> m s ()
 
   -- | Makes the list empty, i.e. remove all elements.
   -- Note that it is not guaranteed that any element is physically removed from
   -- the list structure; the method may simply render all elements inaccessible.
   --
-  mClear :: l e s -> ST s ()
+  mClear :: l e s -> m s ()
 
   -- | Removes an element into the list structure.
   -- Takes an @Int@ as index and a list, returns the removed element and deletes
@@ -224,59 +222,59 @@ class MList l where
   -- If the index is out of bound, returns @Nothing@ and the orignal list is 
   -- unmodified.
   --
-  mDelete :: Int -> l e s -> ST s (Maybe e)
+  mDelete :: Int -> l e s -> m s (Maybe e)
 
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
   -- It is usally used as an infix operator.
   --
-  mGet :: l e s -> Int -> ST s e
+  mGet :: l e s -> Int -> m s e
 
   -- | Takes a list structure and an element, returns a list containing all 
   -- indices that has the element from least to greatest.
   -- Usually used as an infix function.
   --
-  mIndicesOf :: Eq e => l e s -> e -> ST s [Int]
+  mIndicesOf :: Eq e => l e s -> e -> m s [Int]
 
   -- | Takes a list structure, an @Int@ as index and an element, modifies the list
   -- by overwriting the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
   --
-  mSet :: l e s -> Int -> e -> ST s ()
+  mSet :: l e s -> Int -> e -> m s ()
 
   -- | Returns the size (length) of the list structure.
   --
-  mSize :: l e s -> ST s Int
+  mSize :: l e s -> m s Int
 
   -- | Sort the list structure by a ordering function.
   --
-  mSortOn :: Ord o => (e -> o) -> l e s -> ST s ()
+  mSortOn :: Ord o => (e -> o) -> l e s -> m s ()
 
   -- | Returns a sub-list of the list structure from the first argument 
   -- (inclusive) to the second argument (exclusive).
   --
-  mSubList :: Int -> Int -> l e s -> ST s (l e s)
+  mSubList :: Int -> Int -> l e s -> m s (l e s)
 
   -- | Returns the default list (@[a]@) representation of the list structure.
   --
-  mToList :: l e s -> ST s [e]
+  mToList :: l e s -> m s [e]
 
   -- | Returns a new list structure with the elements of a 'Foldable' instance,
   -- for example, @[a]@.
   --
-  newMList :: Foldable f => f e -> ST s (l e s)
+  newMList :: Foldable f => f e -> m s (l e s)
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
   --
-  mAppend :: e -> l e s -> ST s ()
+  mAppend :: e -> l e s -> m s ()
   mAppend = liftM2 (>>=) mSize . flip . flip mAdd
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
   -- element is in the list.
   --
-  mContains :: Eq e => l e s -> e -> ST s Bool
+  mContains :: Eq e => l e s -> e -> m s Bool
   mContains = (fmap isJust .) . mIndexOf
 
   -- | Default method.
@@ -285,7 +283,7 @@ class MList l where
   -- the list.
   -- Usually used as an infix function.
   --
-  mIndexOf :: Eq e => l e s -> e -> ST s (Maybe Int)
+  mIndexOf :: Eq e => l e s -> e -> m s (Maybe Int)
   mIndexOf ml e = do
     indices <- mIndicesOf ml e
     return $ if null indices
@@ -298,7 +296,7 @@ class MList l where
   -- the list.
   -- Usually used as an infix function.
   --
-  mLastIndexOf :: Eq e => l e s -> e -> ST s (Maybe Int)
+  mLastIndexOf :: Eq e => l e s -> e -> m s (Maybe Int)
   mLastIndexOf ml e = do
     indices <- mIndicesOf ml e
     return $ if null indices
@@ -308,7 +306,7 @@ class MList l where
   -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.
   --
-  mIsNull :: l e s -> ST s Bool
+  mIsNull :: l e s -> m s Bool
   mIsNull = (>>= return . (== 0)) . mSize
 
   -- | Default method.
@@ -316,7 +314,7 @@ class MList l where
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   --
-  mPop :: l e s -> ST s (Maybe e)
+  mPop :: l e s -> m s (Maybe e)
   mPop ml = do
     l <- mSize ml
     mDelete (l - 1) ml
@@ -326,13 +324,13 @@ class MList l where
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   --
-  mPopFront :: l e s -> ST s (Maybe e)
+  mPopFront :: l e s -> m s (Maybe e)
   mPopFront = mDelete 0
 
   -- | Default method.
   -- Insert an element to the front of the list structure.
   --
-  mPush :: e -> l e s -> ST s ()
+  mPush :: e -> l e s -> m s ()
   mPush = mAdd 0
 
   -- | Default method.
@@ -340,7 +338,7 @@ class MList l where
   -- returns that element while removing the element.
   -- If the element does not appear in the list, returns @Nothing@.
   --
-  mRemove :: Eq e => e -> l e s -> ST s (Maybe e)
+  mRemove :: Eq e => e -> l e s -> m s (Maybe e)
   mRemove e ml = do
     index <- ml `mIndexOf` e
     maybe (return Nothing) (flip mDelete ml) index
@@ -349,7 +347,7 @@ class MList l where
   -- Sort the list structure in the default ordering of its elements.
   --
   {-# INLINE mSort #-}
-  mSort :: Ord e => l e s -> ST s ()
+  mSort :: Ord e => l e s -> m s ()
   mSort = mSortOn id
 
   -- | Default method.
@@ -358,7 +356,7 @@ class MList l where
   -- given function.
   -- Returns an error if the index of out of bound.
   --
-  mUpdate :: l e s -> Int -> (e -> e) -> ST s ()
+  mUpdate :: l e s -> Int -> (e -> e) -> m s ()
   mUpdate ml index f = do
     v <- mGet ml index
     mSet ml index (f v)
@@ -371,11 +369,11 @@ instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
       ls  = size l
       ls' = size l'
 
-instance {-# OVERLAPPABLE #-} (Eq a, MList l) => Eq (l a s) where
-  ml == ml'
-    = unsafePerformIO $ unsafeSTToIO $ do
-      ls  <- mSize ml
-      ls' <- mSize ml'
-      r   <- sequence $ 
-        map (ap (liftM2 (==) . (ml `mGet`)) (ml' `mGet`)) [0..(ls - 1)]
-      return $ (ls == ls') && and r
+-- instance {-# OVERLAPPABLE #-} (q a, MList l m s) => Eq (l a s) where
+--   ml == ml'
+--     = unsafePerformIO $ unsafeSTToIO $ do
+--       ls  <- mSize ml
+--       ls' <- mSize ml'
+--       r   <- sequence $ 
+--         map (ap (liftM2 (==) . (ml `mGet`)) (ml' `mGet`)) [0..(ls - 1)]
+--       return $ (ls == ls') && and r

@@ -4,8 +4,6 @@
 module MMZKDS.ArrayBased where 
 
 import           Control.Monad (forM_)
-import           Control.Monad.ST (ST(..))
-import           Data.Array.ST (MArray(..), STArray(..), readArray, writeArray)
 import           Data.Foldable (toList)
 
 
@@ -50,29 +48,29 @@ class Foldable a => ArrayBased a where
 -- Minimal implementation requires @mDeepClear@, @newMWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class MArrayBased a where
+class MArrayBased a m s where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.
   --
-  mDeepClear :: a e s -> ST s ()
+  mDeepClear :: a e s -> m s ()
 
   -- | Takes an @Int@ as length and an instance of 'Foldable', creates a new 
   -- structure containing the elements in the 'Foldable' and the representing
   -- array has at least the length specified by the argument.
   -- 
-  newMWithSize :: Foldable f => Int -> f e -> ST s (a e s)
+  newMWithSize :: Foldable f => Int -> f e -> m s (a e s)
 
   -- | Returns the physical size of the structure, in other words, the length
   -- of the representing array.
   -- 
-  mPhysicalSize :: a e s -> ST s Int
+  mPhysicalSize :: a e s -> m s Int
 
   -- | Takes an @Int@ as length and a structure, modifies the structure such that
   -- it has at least the length specified by the argument.
   --
-  mResize :: Int -> a e s -> ST s (a e s)
+  mResize :: Int -> a e s -> m s (a e s)
 
   -- | Create a new mutable data structure from the given mutable data 
   -- structure, retaining the physical size.
   --
-  trueCopy :: a e s -> ST s (a e s)
+  trueCopy :: a e s -> m s (a e s)

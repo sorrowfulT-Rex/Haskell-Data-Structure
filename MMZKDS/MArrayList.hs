@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -79,7 +80,7 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance MList MArrayList where
+instance MList MArrayList ST s where
   mAdd :: Int -> a -> MArrayList a s -> ST s ()
   mAdd index e mal@(MArrayList lR arrR) = do
     ls <- mSize mal
@@ -197,7 +198,7 @@ instance MList MArrayList where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance MArrayBased MArrayList where
+instance MArrayBased MArrayList ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- newMList []

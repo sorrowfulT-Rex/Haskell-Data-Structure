@@ -3,7 +3,7 @@
 module MMZKDS.Unsafe where
 
 import           Control.Monad (forM_)
-import           Control.Monad.ST (ST(..))
+import           Control.Monad.ST (ST(..), runST)
 import           Control.Monad.ST.Unsafe (unsafeIOToST)
 import           Data.Array.ST (MArray(..), STArray(..), readArray, writeArray)
 
@@ -113,15 +113,17 @@ randRangeST = (return .) . randomR
 -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- Takes a ordering function, an index lower bound, an index upper bound, and 
 -- an @Int@-indexed @STArray@, sorts the array with quick-sort.
--- Pre: The array must be @Int@-indexed from 0.
+-- Although the function calls @unsafeGenST@, it is referentially transparent
+-- itself in the sense that it does not leak any mutable data.
+-- Pre: The array must be @Int@-indexed from 0 and the bounds must be valid.
 --
 {-# INLINE unsafeQuickSort #-}
 unsafeQuickSort :: (Ord b, MArray r a (ST s)) 
-               => (a -> b) 
-               -> Int
-               -> Int 
-               -> r Int a 
-               -> ST s ()
+                => (a -> b) 
+                -> Int
+                -> Int 
+                -> r Int a 
+                -> ST s ()
 unsafeQuickSort f inf sup arrST
   = unsafeGenST >>= worker inf sup 
   where
@@ -147,7 +149,7 @@ unsafeQuickSort f inf sup arrST
                     writeArray arrST (j - 1) vi
                     shuffleAround i (j - 1) pv
         (vp, gen) <- getPivot
-        pi       <- shuffleAround inf sup $! f vp
+        pi        <- shuffleAround inf sup $! f vp
         readArray arrST pi >>= writeArray arrST inf
         writeArray arrST pi vp
         worker inf pi gen
