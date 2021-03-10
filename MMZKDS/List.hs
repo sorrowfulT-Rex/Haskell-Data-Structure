@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.List where
 import           Control.Monad (ap, join, liftM2)
@@ -29,7 +30,7 @@ import           Data.Maybe (Maybe(..), isJust, maybe)
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
 -- argument.
 --
-class Foldable l => List l where
+class Foldable l => List l e where
   -- | Adds an element into the list structure.
   -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.
@@ -201,7 +202,7 @@ class Foldable l => List l where
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
 -- first argument.
 --
-class Monad (m s) => MList l m s where
+class Monad (m s) => MList l e m s where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by
   -- inserting the given element before the index.
@@ -362,18 +363,9 @@ class Monad (m s) => MList l m s where
     mSet ml index (f v)
 
 
-instance {-# OVERLAPPABLE #-} (Eq a, List l) => Eq (l a) where
+instance {-# OVERLAPPABLE #-} (Eq a, List l a) => Eq (l a) where
   l == l' 
     = ls == ls' && and (map (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)])
     where
       ls  = size l
       ls' = size l'
-
--- instance {-# OVERLAPPABLE #-} (q a, MList l m s) => Eq (l a s) where
---   ml == ml'
---     = unsafePerformIO $ unsafeSTToIO $ do
---       ls  <- mSize ml
---       ls' <- mSize ml'
---       r   <- sequence $ 
---         map (ap (liftM2 (==) . (ml `mGet`)) (ml' `mGet`)) [0..(ls - 1)]
---       return $ (ls == ls') && and r

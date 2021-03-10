@@ -2,10 +2,10 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MMZKDS.ArrayList where
+module MMZKDS.Unboxed.UArrayList where
 
 import           Control.Monad (join)
-import           Data.Array (Array(..), accumArray, array, bounds, (!))
+import           Data.Array.Unboxed (UArray(..), accumArray, array, bounds, (!))
 import           Data.Foldable (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
@@ -13,26 +13,26 @@ import           MMZKDS.List (List(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
--- | @ArrayList@ is a data structure implementing the 'List' class with an
--- internal array.
--- All operations that requires mutation on the @ArrayList@ (exept @clear@ and
--- @deepClear@) requires generating a new @ArrayList@, which is very costly 
+-- | @UArrayList@ is a data structure implementing the 'List' class with an
+-- internal array storing unboxed values.
+-- All operations that requires mutation on the @UArrayList@ (exept @clear@ and
+-- @deepClear@) requires generating a new @UArrayList@, which is very costly 
 -- (always O(n)). Therefore it is recommended to use the mutable version
 -- 'MArrayList' for frequent state updates.
 --
-data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
+data UArrayList e = UArrayList {-# UNPACK #-} !Int (UArray Int e)
 
-instance Show a => Show (ArrayList a) where
+instance Show a => Show (UArrayList a) where
   show = ("ArrayList: " ++) . show . toList
 
-instance Foldable ArrayList where
+instance Foldable UArrayList where
   foldr f b al
     = foldr f b $ toList al
 
-  length (ArrayList l _)
+  length (UArrayList l _)
     = l
 
-  toList (ArrayList l arr)
+  toList (UArrayList l arr)
     = take l $ toList arr
 
 
@@ -40,13 +40,13 @@ instance Foldable ArrayList where
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance List ArrayList a where
-  add :: Int -> a -> ArrayList a -> ArrayList a
-  add index e al@(ArrayList l arr)
+instance List UArrayList where
+  add :: Int -> a -> UArrayList a -> UArrayList a
+  add index e al@(UArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
     | l == pl                = add index e (resize l' al)
     | otherwise 
-      = ArrayList (l + 1) 
+      = UArrayList (l + 1) 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
     where
       pl = physicalSize al
@@ -56,14 +56,14 @@ instance List ArrayList a where
         | i > index = arr ! (i - 1)
         | otherwise = e
 
-  clear :: ArrayList a -> ArrayList a
-  clear (ArrayList l arr)
-    = ArrayList 0 arr
+  clear :: UArrayList a -> UArrayList a
+  clear (UArrayList l arr)
+    = UArrayList 0 arr
 
-  delete :: Int -> ArrayList a -> (Maybe a, ArrayList a)
-  delete index al@(ArrayList l arr)
+  delete :: Int -> UArrayList a -> (Maybe a, UArrayList a)
+  delete index al@(UArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = (Just (arr ! index), ArrayList (l - 1) 
+    | otherwise               = (Just (arr ! index), UArrayList (l - 1) 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
     where
       pl = physicalSize al
@@ -71,12 +71,12 @@ instance List ArrayList a where
         | i < index = arr ! i
         | otherwise = arr ! (i + 1)
 
-  get :: ArrayList a -> Int -> a
-  get (ArrayList l arr) index
+  get :: UArrayList a -> Int -> a
+  get (UArrayList l arr) index
     | index >= l || index < 0 = outOfBoundError index
     | otherwise               = arr ! index
 
-  indicesOf :: Eq a => ArrayList a -> a -> [Int]
+  indicesOf :: Eq a => UArrayList a -> a -> [Int]
   indicesOf al e
     = indicesOf' 0
     where
@@ -86,17 +86,17 @@ instance List ArrayList a where
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
   
-  newList :: Foldable f => f a -> ArrayList a
+  newList :: Foldable f => f a -> UArrayList a
   newList fl
-    = ArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
+    = UArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
       l' = initialSize l
 
-  set :: ArrayList a -> Int -> a -> ArrayList a
-  set al@(ArrayList l arr) index e
+  set :: UArrayList a -> Int -> a -> UArrayList a
+  set al@(UArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = ArrayList l 
+    | otherwise               = UArrayList l 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 1)]
     where
       pl = physicalSize al
@@ -104,14 +104,14 @@ instance List ArrayList a where
         | i == index = e
         | otherwise  = arr ! i
   
-  size :: ArrayList a -> Int
-  size (ArrayList l _) 
+  size :: UArrayList a -> Int
+  size (UArrayList l _) 
     = l
 
-  subList :: Int -> Int -> ArrayList a -> ArrayList a
+  subList :: Int -> Int -> UArrayList a -> UArrayList a
   subList inf sup al
     | sup' <= inf' = deepClear al
-    | otherwise    = ArrayList len'
+    | otherwise    = UArrayList len'
         $ accumArray worker undefined (0, ps - 1) $ join zip [0..(len' - 1)]
       where
         inf' = max inf 0
@@ -122,7 +122,7 @@ instance List ArrayList a where
           = al `get` (i + inf')
 
   -- Overwritten default methods
-  lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int
+  lastIndexOf :: Eq a => UArrayList a -> a -> Maybe Int
   lastIndexOf al e
     = lastIndexOf' (l - 1)
     where
@@ -137,20 +137,20 @@ instance List ArrayList a where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance ArrayBased ArrayList a where
-  deepClear :: ArrayList a -> ArrayList a
+instance ArrayBased UArrayList where
+  deepClear :: UArrayList a -> UArrayList a
   deepClear = const (newList [])
 
-  newWithSize :: Foldable f => Int -> f a -> ArrayList a
+  newWithSize :: Foldable f => Int -> f a -> UArrayList a
   newWithSize s fl
     | s < 0     = arrayLengthOverflowError
-    | otherwise = ArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
+    | otherwise = UArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
       s' = max s l
 
-  physicalSize :: ArrayList a -> Int
-  physicalSize (ArrayList _ arr)
+  physicalSize :: UArrayList a -> Int
+  physicalSize (UArrayList _ arr)
     = snd (bounds arr) + 1
 
 
@@ -160,6 +160,6 @@ instance ArrayBased ArrayList a where
 
 foo :: IO ()
 foo = do
-  al  <- return $ (newList [4, 3, 2, 1] :: ArrayList Int)
+  al  <- return $ (newList [4, 3, 2, 1] :: UArrayList Int)
   print $ sort al
   

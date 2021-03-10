@@ -80,7 +80,7 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance MList MArrayList ST s where
+instance MList MArrayList e ST s where
   mAdd :: Int -> a -> MArrayList a s -> ST s ()
   mAdd index e mal@(MArrayList lR arrR) = do
     ls <- mSize mal
@@ -212,7 +212,7 @@ instance MList MArrayList ST s where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance MArrayBased MArrayList ST s where
+instance MArrayBased MArrayList e ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- newMList []

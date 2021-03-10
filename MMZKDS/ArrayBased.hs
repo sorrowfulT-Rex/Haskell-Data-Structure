@@ -17,7 +17,7 @@ import           Data.Foldable (toList)
 -- Minimal implementation requires @deepClear@, @newWithSize@ and 
 -- @physicalSize@.
 --
-class Foldable a => ArrayBased a where
+class Foldable a => ArrayBased a e where
   -- | Returns a new structure that is truly empty; in other words, all elements
   -- are physically removed from the structure.
   --
@@ -48,7 +48,7 @@ class Foldable a => ArrayBased a where
 -- Minimal implementation requires @mDeepClear@, @newMWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class MArrayBased a m s where
+class MArrayBased a e m s where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.
   --
