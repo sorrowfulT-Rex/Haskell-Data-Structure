@@ -13,11 +13,10 @@ import           Data.Foldable (toList)
 
 -- | 'ArrayBased' is a type class for immutable array-based data structure.
 -- It provides methods to allocate new arrays for length adjustment.
--- Instances of 'ArrayBased' is required to implement 'Foldable'.
--- Minimal implementation requires @deepClear@, @newWithSize@ and 
--- @physicalSize@.
+-- Minimal implementation requires @deepClear@, @newWithSize@, @physicalSize@
+-- and @resize@.
 --
-class Foldable a => ArrayBased a e where
+class ArrayBased a e where
   -- | Returns a new structure that is truly empty; in other words, all elements
   -- are physically removed from the structure.
   --
@@ -34,12 +33,10 @@ class Foldable a => ArrayBased a e where
   --
   physicalSize :: a e -> Int
 
-  -- | Optional method.
   -- | Takes an Int as length and a structure, returns a structure containing
   -- the same elements but with at least the length specified by the argument.
   --
   resize :: Int -> a e -> a e
-  resize = (. toList) . newWithSize
 
 -- | 'MArrayBased' is a type class for mutable @STArray@-based data structure.
 -- It provides methods to allocate new arrays for length adjustment, and to copy

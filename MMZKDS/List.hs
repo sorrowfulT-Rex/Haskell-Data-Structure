@@ -4,7 +4,6 @@
 
 module MMZKDS.List where
 import           Control.Monad (ap, join, liftM2)
-import           Data.Foldable (toList)
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 
@@ -16,12 +15,11 @@ import           Data.Maybe (Maybe(..), isJust, maybe)
 -- | 'List' is a type class for immutable sequential (list) data structures, 
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
--- Instances of 'List' is required to implement 'Foldable'.
 -- Minimal implementation requires @add@, @clear@, @delete@, @get@, @indicesOf@,
 -- @newList@, @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
--- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@, @sort@, @sortOn@ and
--- @update@.
+-- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@, @sort@, @sortOn@, 
+-- @toList@ and @update@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
@@ -30,7 +28,7 @@ import           Data.Maybe (Maybe(..), isJust, maybe)
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
 -- argument.
 --
-class Foldable l => List l e where
+class List l e where
   -- | Adds an element into the list structure.
   -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.
@@ -84,6 +82,10 @@ class Foldable l => List l e where
   -- (inclusive) to the second argument (exclusive).
   --
   subList :: Int -> Int -> l e -> l e
+
+  -- | Return the list representation of the list structure.
+  toList :: l e -> [e]
+
 
   -- | Default method.
   -- Insert an element to the end of the list structure.

@@ -6,41 +6,41 @@ module MMZKDS.ArrayList where
 
 import           Control.Monad (join)
 import           Data.Array (Array(..), accumArray, array, bounds, (!))
-import           Data.Foldable as F (toList)
+import           Data.Foldable (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
-import           MMZKDS.List as L (List(..))
+import           MMZKDS.List (List(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
--- All operations that requires mutation on the @ArrayList@ (exept @clear@ and
--- @deepClear@) requires generating a new @ArrayList@, which is very costly 
+-- All operations that requires mutation on the ArrayList (exept @clear@ and
+-- @deepClear@) requires generating a new ArrayList, which is very costly 
 -- (always O(n)). Therefore it is recommended to use the mutable version
 -- 'MArrayList' for frequent state updates.
 --
 data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 
 instance Show a => Show (ArrayList a) where
-  show = ("ArrayList: " ++) . show . F.toList
+  show = ("ArrayList: " ++) . show . toList
 
 instance Foldable ArrayList where
   foldr f b al
-    = foldr f b $ F.toList al
+    = foldr f b $ toList al
 
   length (ArrayList l _)
     = l
 
   toList (ArrayList l arr)
-    = take l $ F.toList arr
+    = take l $ toList arr
 
 
 --------------------------------------------------------------------------------
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance List ArrayList a where
+instance List ArrayList where
   add :: Int -> a -> ArrayList a -> ArrayList a
   add index e al@(ArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
@@ -88,7 +88,7 @@ instance List ArrayList a where
   
   newList :: Foldable f => f a -> ArrayList a
   newList fl
-    = ArrayList l (array (0, l' - 1) $ zip [0..] $ F.toList fl)
+    = ArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
       l' = initialSize l
@@ -121,9 +121,6 @@ instance List ArrayList a where
         worker _ i
           = al `get` (i + inf')
 
-  toList :: ArrayList a -> [a]
-  toList = F.toList
-
   -- Overwritten default methods
   lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int
   lastIndexOf al e
@@ -140,14 +137,14 @@ instance List ArrayList a where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance ArrayBased ArrayList a where
+instance ArrayBased ArrayList where
   deepClear :: ArrayList a -> ArrayList a
   deepClear = const (newList [])
 
   newWithSize :: Foldable f => Int -> f a -> ArrayList a
   newWithSize s fl
     | s < 0     = arrayLengthOverflowError
-    | otherwise = ArrayList l (array (0, s' - 1) $ zip [0..] $ F.toList fl)
+    | otherwise = ArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
     where
       l  = length fl
       s' = max s l
@@ -155,9 +152,6 @@ instance ArrayBased ArrayList a where
   physicalSize :: ArrayList a -> Int
   physicalSize (ArrayList _ arr)
     = snd (bounds arr) + 1
-
-  resize :: Int -> ArrayList a -> ArrayList a
-  resize = (. L.toList) . newWithSize
 
 
 --------------------------------------------------------------------------------

@@ -1,15 +1,18 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.Unboxed.UArrayList where
 
 import           Control.Monad (join)
-import           Data.Array.Unboxed (UArray(..), accumArray, array, bounds, (!))
-import           Data.Foldable (toList)
+import           Data.Array.Unboxed 
+  (IArray(..), UArray(..), accumArray, array, bounds, (!))
+import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
-import           MMZKDS.List (List(..))
+import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
@@ -18,29 +21,19 @@ import           MMZKDS.Utilities
 -- All operations that requires mutation on the @UArrayList@ (exept @clear@ and
 -- @deepClear@) requires generating a new @UArrayList@, which is very costly 
 -- (always O(n)). Therefore it is recommended to use the mutable version
--- 'MArrayList' for frequent state updates.
+-- 'MUArrayList' for frequent state updates.
 --
 data UArrayList e = UArrayList {-# UNPACK #-} !Int (UArray Int e)
 
-instance Show a => Show (UArrayList a) where
-  show = ("ArrayList: " ++) . show . toList
-
-instance Foldable UArrayList where
-  foldr f b al
-    = foldr f b $ toList al
-
-  length (UArrayList l _)
-    = l
-
-  toList (UArrayList l arr)
-    = take l $ toList arr
+instance (Show a, IArray UArray a) => Show (UArrayList a) where
+  show = ("ArrayList: " ++) . show . L.toList
 
 
 --------------------------------------------------------------------------------
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance List UArrayList where
+instance IArray UArray a => List UArrayList a where
   add :: Int -> a -> UArrayList a -> UArrayList a
   add index e al@(UArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
@@ -88,7 +81,7 @@ instance List UArrayList where
   
   newList :: Foldable f => f a -> UArrayList a
   newList fl
-    = UArrayList l (array (0, l' - 1) $ zip [0..] $ toList fl)
+    = UArrayList l (array (0, l' - 1) $ zip [0..] $ F.toList fl)
     where
       l  = length fl
       l' = initialSize l
@@ -121,6 +114,16 @@ instance List UArrayList where
         worker _ i
           = al `get` (i + inf')
 
+  toList :: UArrayList a -> [a]
+  toList (UArrayList l arr)
+    = toList' lb
+    where
+      (lb, _) = bounds arr
+      sup     = lb + l
+      toList' i
+        | i == sup  = []
+        | otherwise = (arr ! i) : toList' (i + 1)
+
   -- Overwritten default methods
   lastIndexOf :: Eq a => UArrayList a -> a -> Maybe Int
   lastIndexOf al e
@@ -137,14 +140,14 @@ instance List UArrayList where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance ArrayBased UArrayList where
+instance IArray UArray a => ArrayBased UArrayList a where
   deepClear :: UArrayList a -> UArrayList a
   deepClear = const (newList [])
 
   newWithSize :: Foldable f => Int -> f a -> UArrayList a
   newWithSize s fl
     | s < 0     = arrayLengthOverflowError
-    | otherwise = UArrayList l (array (0, s' - 1) $ zip [0..] $ toList fl)
+    | otherwise = UArrayList l (array (0, s' - 1) $ zip [0..] $ F.toList fl)
     where
       l  = length fl
       s' = max s l
@@ -152,6 +155,9 @@ instance ArrayBased UArrayList where
   physicalSize :: UArrayList a -> Int
   physicalSize (UArrayList _ arr)
     = snd (bounds arr) + 1
+
+  resize :: Int -> UArrayList a -> UArrayList a
+  resize = (. L.toList) . newWithSize
 
 
 --------------------------------------------------------------------------------
@@ -161,5 +167,4 @@ instance ArrayBased UArrayList where
 foo :: IO ()
 foo = do
   al  <- return $ (newList [4, 3, 2, 1] :: UArrayList Int)
-  print $ sort al
-  
+  print $ L.toList $ sort al
