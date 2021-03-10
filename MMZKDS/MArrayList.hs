@@ -181,6 +181,20 @@ instance MList MArrayList ST s where
   newMList = arrayListThaw . newList
 
   -- Overwritten default methods
+  mIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
+  mIndexOf mal e = do
+     l <- mSize mal
+     mIndexOf' 0 l
+    where
+      mIndexOf' i l    
+        | i == l    = return Nothing
+        | otherwise = do
+          v <- mal `mGet` i
+          if v == e
+            then return $ Just i
+            else mIndexOf' (i + 1) l
+
+  -- Overwritten default methods
   mLastIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mal e = do
      l <- mSize mal
