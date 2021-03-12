@@ -11,7 +11,6 @@ import           Control.Monad.ST (ST(..), runST)
 import           Data.Array.ST
   (STArray(..), freeze, getBounds, newArray_, readArray, thaw, writeArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
-import           Data.Foldable (toList)
 import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
@@ -80,7 +79,7 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 -- List Functions
 --------------------------------------------------------------------------------
 
-instance MList MArrayList e ST s where
+instance MList MArrayList a ST s where
   mAdd :: Int -> a -> MArrayList a s -> ST s ()
   mAdd index e mal@(MArrayList lR arrR) = do
     ls <- mSize mal
@@ -213,7 +212,7 @@ instance MList MArrayList e ST s where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance MArrayBased MArrayList e ST s where
+instance MArrayBased MArrayList a ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- newMList []
@@ -290,7 +289,7 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- new [100000,99999..1] :: ST s (MArrayList Integer s)
+    mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
     mSort mal
     al  <- arrayListFreeze mal
     return [D al]

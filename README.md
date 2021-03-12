@@ -3,8 +3,8 @@ This repo serves as a practice of writing both functional and mutable data struc
 
 My aim is to make a wide range of data structures that ideally would satisfy not performance-sensitive purposes. However, since it is a practice code instead of a library, there is no guarantee of correctness and stability. Moreover, efficiency was not an design objective. Therefore, any performance-sensitive task should not be relied on this.  
 
-Now working on: A List type class and Immutable and Mutable ArrayLists; documentations.  
-Next to come: Array-based Heap; Linked-List.  
+Now working on: Array-based Heap; Linked-List.  
+Next to come: AVL; Red-Black Tree.  
 
 # [MMZKDS/MDT.hs](MMZKDS/MDT.hs)
 MDT is short for Mutable Data Structure. This file provides type classes for mutable structures.  
