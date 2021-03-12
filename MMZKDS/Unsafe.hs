@@ -17,11 +17,11 @@ import           System.Random (Random(..), StdGen(..), newStdGen, randomR)
 --  element to this index.
 -- Pre: The index bounds are valid.
 --
-unsafeAddST :: (MArray (STArray s) a m) 
+unsafeAddST :: (MArray r a m) 
             => Int 
             -> a 
             -> Int 
-            -> STArray s Int a 
+            -> r Int a 
             -> m ()
 unsafeAddST index e lastIndexOf arrST = do
   forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
@@ -38,9 +38,9 @@ unsafeAddST index e lastIndexOf arrST = do
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
 --
-unsafeCopyArray :: (MArray (STArray s) a m)
-                => STArray s Int a 
-                -> STArray s Int a 
+unsafeCopyArray :: (MArray r a m)
+                => r Int a 
+                -> r Int a 
                 -> (Int, Int) 
                 -> m ()
 unsafeCopyArray arrST resST (inf, sup) = do
@@ -163,10 +163,10 @@ unsafeQuickSort f inf sup arrST
 -- Pre: The index bounds are valid and the last index is less than the physical
 -- length of the array minus 1.
 --
-unsafeRemoveST :: (MArray (STArray s) a m) 
+unsafeRemoveST :: (MArray r a m) 
                => Int 
                -> Int 
-               -> STArray s Int a -> m ()
+               -> r Int a -> m ()
 unsafeRemoveST index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)

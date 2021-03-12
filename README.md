@@ -32,5 +32,5 @@ See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.
 `MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
 See the [Haddocks](MMZKDS/MArrayList.hs) for full documentation.  
 
-# [UnBoxed](Unboxed/)
+# [MMZKDS/UnBoxed](MMZKDS/Unboxed/)
 Contains the unboxed version of (some of) the data structures.  
