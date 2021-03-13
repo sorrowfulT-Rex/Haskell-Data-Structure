@@ -5,7 +5,7 @@
 
 module MMZKDS.MLinkedList where
 
-import           Control.Monad (forM_)
+import           Control.Monad (forM, forM_)
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Foldable as F (toList)
 import           Data.List (sortOn)
@@ -136,6 +136,12 @@ instance MList MLinkedList a ST s where
     case ui' of
       Nothing -> return ()
       Just i' -> accessNode i' mll
+
+  mSubList :: Int -> Int -> MLinkedList a s -> ST s (MLinkedList a s)
+  mSubList inf sup mll@(MLinkedList _ _ _ cR) = do
+    ls <- mSize mll
+    forM [(max inf 0)..(min sup ls - 1)] 
+      ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= newMList
     
   mToList :: MLinkedList a s -> ST s [a]
   mToList mll = do
@@ -200,8 +206,8 @@ instance MList MLinkedList a ST s where
     i <- readSTRef iR
     l <- readSTRef lR
     r <- mDelete (l - 1) mll
-    if i == l - 1 && isJust r
-      then readSTRef hR >>= writeSTRef cR >> return r
+    if i == l - 1
+      then readSTRef hR >>= writeSTRef cR >> writeSTRef iR (-1) >> return r
       else return r
 
   -- Overwritten default method
@@ -209,8 +215,8 @@ instance MList MLinkedList a ST s where
   mPopFront mll@(MLinkedList _ hR iR cR) = do
     i <- readSTRef iR
     r <- mDelete 0 mll
-    if i == 0 && isJust r
-      then readSTRef hR >>= nextN >>= writeSTRef cR >> return r
+    if i == 0
+      then readSTRef hR >>= writeSTRef cR >> writeSTRef iR (-1) >> return r
       else return r
 
   -- Overwritten default method
@@ -262,7 +268,7 @@ accessNode index (MLinkedList lR hR iR cR) = do
         | not inBound              = readSTRef hR
         | index <= i `div` 2       = front' (1 + index) hR
         | index <= i               = back' (i - index) cR
-        | index <= (i + l) `div` 2 = front' (1 + index - i) cR
+        | index <= (i + l) `div` 2 = front' (index - i) cR
         | otherwise                = back' (l - index) hR
   i   <- readSTRef iR
   nd' <- access' i l
@@ -274,7 +280,7 @@ accessNode index (MLinkedList lR hR iR cR) = do
 emptyMLinkedList :: ST s (MLinkedList e s)
 emptyMLinkedList = do
   lR <- newSTRef 0
-  iR <- newSTRef 0
+  iR <- newSTRef $ -1
   hd <- newHead
   hR <- newSTRef hd
   cR <- newSTRef hd
@@ -344,13 +350,8 @@ nodeElem (MNode _ eR _)
 --------------------------------------------------------------------------------
 
 bar = runST $ do
-  e  <- newMList [1,1,4,5,1,4] :: ST s (MLinkedList Int s)
-  let MLinkedList _ _ iR cR = e
-  accessNode 2 e
-  nd <- readSTRef cR
-  mSort e
-  i  <- readSTRef iR
-  nd <- readSTRef cR
-  a  <- nodeElem nd
+  e  <- newMList [1..10] :: ST s (MLinkedList Int s)
+  let (MLinkedList _ _ _ cR) = e
+  e  <- mSubList 1 10 e
   el <- mToList e
-  return (i, a, el)
+  return el
