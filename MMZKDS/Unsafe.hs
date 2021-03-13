@@ -4,9 +4,10 @@ module MMZKDS.Unsafe where
 
 import           Control.Monad (forM_)
 import           Control.Monad.ST (ST(..), runST)
-import           Control.Monad.ST.Unsafe (unsafeIOToST)
+import           Control.Monad.ST.Unsafe (unsafeIOToST, unsafeSTToIO)
 import           Data.Array.ST (MArray(..), STArray(..), readArray, writeArray)
-
+import           Data.STRef (STRef(..))
+import           System.IO.Unsafe (unsafePerformIO)
 import           System.Random (Random(..), StdGen(..), newStdGen, randomR)
 
 -- | Unsafe: Does not conduct bound check for array.
@@ -51,11 +52,6 @@ unsafeCopyArray arrST resST (inf, sup) = do
 -- Random generator.
 unsafeGenST :: ST s StdGen
 unsafeGenST = unsafeIOToST newStdGen
-
--- | Unsafe Function.
--- Generate random value between a range.
-randRangeST :: (Random a) => (a, a) -> StdGen -> ST s (a, StdGen)
-randRangeST = (return .) . randomR
 
 -- -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- -- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
@@ -131,7 +127,7 @@ unsafeQuickSort f inf sup arrST
       | inf + 1 >= sup = return ()
       | otherwise      = do
         let getPivot = do
-            (r, gen) <- randRangeST (inf, sup - 1) gen
+            (r, gen) <- unsafeRandRangeST (inf, sup - 1) gen
             vi       <- readArray arrST inf
             vp       <- readArray arrST $ (inf + sup) `div` 2
             writeArray arrST inf vp
@@ -155,6 +151,11 @@ unsafeQuickSort f inf sup arrST
         worker inf pi gen
         worker (pi + 1) sup gen
 
+-- | Unsafe Function.
+-- Generate random value between a range.
+unsafeRandRangeST :: (Random a) => (a, a) -> StdGen -> ST s (a, StdGen)
+unsafeRandRangeST = (return .) . randomR
+
 -- | Unsafe: Does not conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
 -- to be written to, and an @Int@-indexed @STArray@, pushes all elements since
@@ -171,3 +172,8 @@ unsafeRemoveST index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)
     writeArray arrST i v
+
+-- | Unsafe: It is safe, but is not recommended to use.
+-- Compare if two references are equal based on the values they refer to.
+unsafeSTEq :: Eq a => ST s a -> ST s a -> Bool
+unsafeSTEq = let p = unsafePerformIO . unsafeSTToIO in (. p) . (==) . p

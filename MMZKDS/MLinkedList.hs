@@ -5,15 +5,17 @@
 
 module MMZKDS.MLinkedList where
 
-import           Control.Monad (forM_, join)
+import           Control.Monad (forM_)
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Foldable as F (toList)
+import           Data.List (sortOn)
 import           Data.Maybe (Maybe(..), isJust)
 import           Data.STRef 
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List (MList(..))
 import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 
 -- | @MLinkedList@ is a doubly-linked circular list implementing the 'MList'
@@ -35,7 +37,7 @@ data MLinkedList e s
 --
 data MNode e s 
   = MHead (STRef s (MNode e s)) (STRef s (MNode e s)) 
-  | MNode (STRef s (MNode e s)) e (STRef s (MNode e s)) 
+  | MNode (STRef s (MNode e s)) (STRef s e) (STRef s (MNode e s)) 
 
 
 --------------------------------------------------------------------------------
@@ -54,7 +56,8 @@ instance MList MLinkedList a ST s where
         prv <- prevN cur
         nR  <- newSTRef cur
         pR  <- newSTRef prv
-        let newNode = MNode pR e nR
+        eR  <- newSTRef e
+        let newNode = MNode pR eR nR
         writeSTRef (prevNRef cur) newNode
         writeSTRef (nextNRef prv) newNode
         writeSTRef cR newNode
@@ -81,7 +84,7 @@ instance MList MLinkedList a ST s where
         writeSTRef (prevNRef nxt) prv
         writeSTRef (nextNRef prv) nxt
         writeSTRef lR $! l - 1
-        return $ Just $ nodeElem cur
+        Just <$> nodeElem cur
 
   mGet :: MLinkedList a s -> Int -> ST s a
   mGet mll@(MLinkedList _ _ _ cR) index = do
@@ -89,19 +92,63 @@ instance MList MLinkedList a ST s where
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
-      else return $ nodeElem cur
+      else nodeElem cur
+
+  mIndicesOf :: Eq a => MLinkedList a s -> a -> ST s [Int]
+  mIndicesOf mll e = do
+    let mIndicesOf' i node = do
+        if isHead node
+          then return []
+          else if nodeElem node `unsafeSTEq` return e
+            then do
+              nxt <- nextN node
+              rst <- mIndicesOf' (i + 1) nxt
+              return $ i : rst
+            else nextN node >>= mIndicesOf' (i + 1)
+    hd <- getHead mll
+    nextN hd >>= mIndicesOf' 0
+
+  mSet :: MLinkedList a s -> Int -> a -> ST s ()
+  mSet mll@(MLinkedList _ _ _ cR) index e = do
+    accessNode index mll
+    cur <- readSTRef cR
+    if isHead cur
+      then outOfBoundError index
+      else do
+        let MNode _ eR _ = cur
+        writeSTRef eR e
+
+  mSize :: MLinkedList a s -> ST s Int
+  mSize (MLinkedList lR _ _ _)
+    = readSTRef lR
+
+  mSortOn :: Ord b => (a -> b) -> MLinkedList a s -> ST s ()
+  mSortOn f mll@(MLinkedList _ hR iR cR) = do
+    i    <- readSTRef iR
+    list <- mToList mll
+    let list' = sortOn (f . snd) $ zip [0..] list
+    let ui'   = lookup i $ zip (fst <$> list') [0..]
+    mll' <- newMList $ snd <$> list'
+    hd   <- getHead mll'
+    writeSTRef hR $! hd
+    writeSTRef cR $! hd
+    writeSTRef iR $ -1
+    case ui' of
+      Nothing -> return ()
+      Just i' -> accessNode i' mll
     
   mToList :: MLinkedList a s -> ST s [a]
-  mToList (MLinkedList _ hR _ _) = do
+  mToList mll = do
     let mToList' node = do
         if isHead node
           then return []
           else do
             nxt <- nextN node
+            e   <- nodeElem node
             rst <- mToList' nxt
-            return $ (nodeElem node) : rst
-    hd <- readSTRef hR
-    join $ mToList' <$> nextN hd
+            return $ e : rst
+    hd <- getHead mll
+    nextN hd >>= mToList'
 
   newMList :: Foldable f => f a -> ST s (MLinkedList a s)
   newMList xs = do
@@ -109,19 +156,45 @@ instance MList MLinkedList a ST s where
     forM_ xs (flip mAppend mll)
     return mll
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mAppend :: a -> MLinkedList a s -> ST s ()
   mAppend e (MLinkedList lR hR _ _) = do
     cur <- readSTRef hR
     prv <- prevN cur
     nR  <- newSTRef cur
     pR  <- newSTRef prv
-    let newNode = MNode pR e nR
+    eR  <- newSTRef e
+    let newNode = MNode pR eR nR
     writeSTRef (prevNRef cur) newNode
     writeSTRef (nextNRef prv) newNode
     modifySTRef' lR succ
 
-  -- Overwritten default methods
+  -- Overwritten default method
+  mIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
+  mIndexOf mll e = do
+    let mIndexOf' i node = do
+        if isHead node
+          then return Nothing
+          else if nodeElem node `unsafeSTEq` return e
+            then return $ Just i
+            else nextN node >>= mIndexOf' (i + 1)
+    hd <- getHead mll
+    nextN hd >>= mIndexOf' 0
+
+  -- Overwritten default method
+  mLastIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
+  mLastIndexOf mll e = do
+    l <- mSize mll
+    let mLastIndexOf' i node = do
+        if isHead node
+          then return Nothing
+          else if nodeElem node `unsafeSTEq` return e
+            then return $ Just i
+            else prevN node >>= mLastIndexOf' (i - 1)
+    hd <- getHead mll
+    prevN hd >>= mLastIndexOf' (l - 1)
+
+  -- Overwritten default method
   mPop :: MLinkedList a s -> ST s (Maybe a)
   mPop mll@(MLinkedList lR hR iR cR) = do
     i <- readSTRef iR
@@ -131,7 +204,7 @@ instance MList MLinkedList a ST s where
       then readSTRef hR >>= writeSTRef cR >> return r
       else return r
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mPopFront :: MLinkedList a s -> ST s (Maybe a)
   mPopFront mll@(MLinkedList _ hR iR cR) = do
     i <- readSTRef iR
@@ -140,14 +213,15 @@ instance MList MLinkedList a ST s where
       then readSTRef hR >>= nextN >>= writeSTRef cR >> return r
       else return r
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mPush :: a -> MLinkedList a s -> ST s ()
   mPush e (MLinkedList lR hR iR _) = do
     cur <- readSTRef hR
     nxt <- nextN cur
     pR  <- newSTRef cur
     nR  <- newSTRef nxt
-    let newNode = MNode pR e nR
+    eR  <- newSTRef e
+    let newNode = MNode pR eR nR
     writeSTRef (nextNRef cur) newNode
     writeSTRef (prevNRef nxt) newNode
     modifySTRef' lR succ
@@ -160,7 +234,7 @@ instance MList MLinkedList a ST s where
 
 instance MDT (MLinkedList a) s where
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
-  copy = (>>= newMList) . mToList
+  copy = (>>= new) . mToList
 
 instance Foldable f => MDTCons (f a) (MLinkedList a) s where
   new :: f a -> ST s (MLinkedList a s)
@@ -188,7 +262,7 @@ accessNode index (MLinkedList lR hR iR cR) = do
         | not inBound              = readSTRef hR
         | index <= i `div` 2       = front' (1 + index) hR
         | index <= i               = back' (i - index) cR
-        | index <= (i + l) `div` 2 = front' (index - i) cR
+        | index <= (i + l) `div` 2 = front' (1 + index - i) cR
         | otherwise                = back' (l - index) hR
   i   <- readSTRef iR
   nd' <- access' i l
@@ -205,6 +279,12 @@ emptyMLinkedList = do
   hR <- newSTRef hd
   cR <- newSTRef hd
   return $ MLinkedList lR hR iR cR
+
+-- | Utility Function.
+-- Returns the head of a linked list
+getHead :: MLinkedList a s -> ST s (MNode a s)
+getHead (MLinkedList _ hR _ _)
+  = readSTRef hR
 
 -- | Utility Function.
 -- Tests if a node is head.
@@ -254,9 +334,9 @@ prevNRef (MNode pR _ _)
 -- | Unsafe: Does not check if the node is head.
 -- Get the element from an @MNode@.
 -- Pre: The node is not head.
-nodeElem :: MNode e s -> e
-nodeElem (MNode _ e _)
-  = e
+nodeElem :: MNode e s -> ST s e
+nodeElem (MNode _ eR _)
+  = readSTRef eR
 
 
 --------------------------------------------------------------------------------
@@ -264,13 +344,13 @@ nodeElem (MNode _ e _)
 --------------------------------------------------------------------------------
 
 bar = runST $ do
-  e <- newMList [100..110] :: ST s (MLinkedList Int s)
-  mClear e
-  mAdd 0 2 e
-  mAdd 1 3 e
-  mAdd 0 4 e
-  mPush 10 e
-  mAdd 4 100 e
-  f  <- e `mGet` (-1)
+  e  <- newMList [1,1,4,5,1,4] :: ST s (MLinkedList Int s)
+  let MLinkedList _ _ iR cR = e
+  accessNode 2 e
+  nd <- readSTRef cR
+  mSort e
+  i  <- readSTRef iR
+  nd <- readSTRef cR
+  a  <- nodeElem nd
   el <- mToList e
-  return (f, el)
+  return (i, a, el)

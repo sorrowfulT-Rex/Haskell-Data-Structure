@@ -99,7 +99,7 @@ instance MList MArrayList a ST s where
           mAdd index e resized
         else do
           arrST <- readSTRef arrR
-          writeSTRef lR (ls + 1)
+          writeSTRef lR $! ls + 1
           unsafeAddST index e (ls - 1) arrST
 
   mClear :: MArrayList a s -> ST s ()
@@ -133,7 +133,7 @@ instance MList MArrayList a ST s where
       else do
         arrST <- readSTRef arrR
         v     <- readArray arrST index
-        writeSTRef lR (ls - 1)
+        writeSTRef lR $! ls - 1
         unsafeRemoveST index (ls - 2) arrST
         return $ Just v
 
