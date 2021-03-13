@@ -8,6 +8,7 @@ module MMZKDS.MLinkedList where
 import           Control.Monad (forM_, join)
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Foldable as F (toList)
+import           Data.Maybe (Maybe(..), isJust)
 import           Data.STRef 
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
@@ -43,14 +44,13 @@ data MNode e s
 
 instance MList MLinkedList a ST s where
   mAdd :: Int -> a -> MLinkedList a s -> ST s ()
-  mAdd index e mll = do
-    accessNode index mll
-    let MLinkedList lR _ iR cR = mll
-    cur <- readSTRef cR
-    l   <- readSTRef lR
+  mAdd index e mll@(MLinkedList lR _ iR cR) = do
+    l <- readSTRef lR
     if index < 0 || index > l
       then outOfBoundError index
       else do
+        accessNode index mll
+        cur <- readSTRef cR
         prv <- prevN cur
         nR  <- newSTRef cur
         pR  <- newSTRef prv
@@ -58,7 +58,7 @@ instance MList MLinkedList a ST s where
         writeSTRef (prevNRef cur) newNode
         writeSTRef (nextNRef prv) newNode
         writeSTRef cR newNode
-        writeSTRef lR (l + 1)
+        writeSTRef lR $! l + 1
 
   mClear :: MLinkedList a s -> ST s ()
   mClear (MLinkedList lR hR iR cR) = do
@@ -67,6 +67,29 @@ instance MList MLinkedList a ST s where
     hd <- newHead
     writeSTRef hR hd
     writeSTRef cR hd
+
+  mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
+  mDelete index mll@(MLinkedList lR _ iR cR) = do
+    l <- readSTRef lR
+    if index < 0 || index >= l
+      then return Nothing
+      else do
+        accessNode index mll
+        cur <- readSTRef cR
+        prv <- prevN cur
+        nxt <- nextN cur
+        writeSTRef (prevNRef nxt) prv
+        writeSTRef (nextNRef prv) nxt
+        writeSTRef lR $! l - 1
+        return $ Just $ nodeElem cur
+
+  mGet :: MLinkedList a s -> Int -> ST s a
+  mGet mll@(MLinkedList _ _ _ cR) index = do
+    accessNode index mll
+    cur <- readSTRef cR
+    if isHead cur
+      then outOfBoundError index
+      else return $ nodeElem cur
     
   mToList :: MLinkedList a s -> ST s [a]
   mToList (MLinkedList _ hR _ _) = do
@@ -97,6 +120,25 @@ instance MList MLinkedList a ST s where
     writeSTRef (prevNRef cur) newNode
     writeSTRef (nextNRef prv) newNode
     modifySTRef' lR succ
+
+  -- Overwritten default methods
+  mPop :: MLinkedList a s -> ST s (Maybe a)
+  mPop mll@(MLinkedList lR hR iR cR) = do
+    i <- readSTRef iR
+    l <- readSTRef lR
+    r <- mDelete (l - 1) mll
+    if i == l - 1 && isJust r
+      then readSTRef hR >>= writeSTRef cR >> return r
+      else return r
+
+  -- Overwritten default methods
+  mPopFront :: MLinkedList a s -> ST s (Maybe a)
+  mPopFront mll@(MLinkedList _ hR iR cR) = do
+    i <- readSTRef iR
+    r <- mDelete 0 mll
+    if i == 0 && isJust r
+      then readSTRef hR >>= nextN >>= writeSTRef cR >> return r
+      else return r
 
   -- Overwritten default methods
   mPush :: a -> MLinkedList a s -> ST s ()
@@ -228,6 +270,7 @@ bar = runST $ do
   mAdd 1 3 e
   mAdd 0 4 e
   mPush 10 e
-  mAdd 5 100 e
+  mAdd 4 100 e
+  f  <- e `mGet` (-1)
   el <- mToList e
-  return el
+  return (f, el)
