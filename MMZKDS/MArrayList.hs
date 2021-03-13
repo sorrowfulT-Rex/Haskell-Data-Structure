@@ -87,7 +87,7 @@ instance MList MArrayList a ST s where
     ls <- mSize mal
     ps <- mPhysicalSize mal
     if index < 0 || index > ls
-      then return $ outOfBoundError index
+      then outOfBoundError index
       else if ls == ps
         then do
           resized <- mResize (expandedSize ls) mal
@@ -110,7 +110,7 @@ instance MList MArrayList a ST s where
   mGet mal@(MArrayList lR arrR) index = do
     l <- mSize mal
     if index >= l || index < 0
-      then return $ outOfBoundError index
+      then outOfBoundError index
       else readSTRef arrR >>= flip readArray index
 
   mIndicesOf :: Eq a => MArrayList a s -> a -> ST s [Int]
@@ -141,7 +141,7 @@ instance MList MArrayList a ST s where
   mSet mal@(MArrayList _ arrR) index e = do
     ls <- mSize mal
     if index < 0 || index >= ls
-      then return $ outOfBoundError index
+      then outOfBoundError index
       else do
         arrST <- readSTRef arrR
         writeArray arrST index e
@@ -234,7 +234,7 @@ instance MArrayBased MArrayList a ST s where
 
   mResize :: Int -> MArrayList a s -> ST s (MArrayList a s)
   mResize s _
-    | s < 0 = return arrayLengthOverflowError
+    | s < 0 = arrayLengthOverflowError
   mResize s (MArrayList lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readSTRef lR
@@ -292,6 +292,6 @@ foom :: IO ()
 foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
-    mSort mal
+    mAdd 100 100 mal
     al  <- arrayListFreeze mal
     return [D al]
