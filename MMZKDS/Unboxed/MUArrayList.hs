@@ -198,7 +198,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   newMList :: Foldable f => f a -> ST s (MUArrayList a s)
   newMList = uArrayListThaw . newList
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = do
      l <- mSize mal
@@ -212,7 +212,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
             then return $ Just i
             else mIndexOf' (i + 1) l
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mLastIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mal e = do
      l <- mSize mal

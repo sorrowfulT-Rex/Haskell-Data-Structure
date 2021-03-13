@@ -180,7 +180,7 @@ instance MList MArrayList a ST s where
   newMList :: Foldable f => f a -> ST s (MArrayList a s)
   newMList = arrayListThaw . newList
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = do
      l <- mSize mal
@@ -194,7 +194,7 @@ instance MList MArrayList a ST s where
             then return $ Just i
             else mIndexOf' (i + 1) l
 
-  -- Overwritten default methods
+  -- Overwritten default method
   mLastIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mal e = do
      l <- mSize mal
