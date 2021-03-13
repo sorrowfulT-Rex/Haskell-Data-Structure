@@ -13,6 +13,7 @@ import           Data.STRef
 
 import           MMZKDS.List (MList(..))
 import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.Utilities (outOfBoundError)
 
 -- | @MLinkedList@ is a doubly-linked circular list implementing the 'MList'
 --  class.
@@ -46,14 +47,18 @@ instance MList MLinkedList a ST s where
     accessNode index mll
     let MLinkedList lR _ iR cR = mll
     cur <- readSTRef cR
-    prv <- prevN cur
-    nR  <- newSTRef cur
-    pR  <- newSTRef prv
-    let newNode = MNode pR e nR
-    writeSTRef (prevNRef cur) newNode
-    writeSTRef (nextNRef prv) newNode
-    writeSTRef cR newNode
-    modifySTRef' lR succ
+    l   <- readSTRef lR
+    if index < 0 || index > l
+      then outOfBoundError index
+      else do
+        prv <- prevN cur
+        nR  <- newSTRef cur
+        pR  <- newSTRef prv
+        let newNode = MNode pR e nR
+        writeSTRef (prevNRef cur) newNode
+        writeSTRef (nextNRef prv) newNode
+        writeSTRef cR newNode
+        writeSTRef lR (l + 1)
 
   mClear :: MLinkedList a s -> ST s ()
   mClear (MLinkedList lR hR iR cR) = do
@@ -62,7 +67,6 @@ instance MList MLinkedList a ST s where
     hd <- newHead
     writeSTRef hR hd
     writeSTRef cR hd
-    
     
   mToList :: MLinkedList a s -> ST s [a]
   mToList (MLinkedList _ hR _ _) = do
@@ -224,6 +228,6 @@ bar = runST $ do
   mAdd 1 3 e
   mAdd 0 4 e
   mPush 10 e
-  mAppend 100 e
+  mAdd 5 100 e
   el <- mToList e
   return el
