@@ -24,6 +24,8 @@ import           MMZKDS.Utilities
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.
+-- It has O(1) random access, O(1) appending/popping, O(n) inserting/deleting,
+-- O(n) searching, and O(n * log n) sorting.
 --
 data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 
