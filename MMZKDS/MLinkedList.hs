@@ -54,6 +54,15 @@ instance MList MLinkedList a ST s where
     writeSTRef (nextNRef prv) newNode
     writeSTRef cR newNode
     modifySTRef' lR succ
+
+  mClear :: MLinkedList a s -> ST s ()
+  mClear (MLinkedList lR hR iR cR) = do
+    writeSTRef lR 0
+    writeSTRef iR 0
+    hd <- newHead
+    writeSTRef hR hd
+    writeSTRef cR hd
+    
     
   mToList :: MLinkedList a s -> ST s [a]
   mToList (MLinkedList _ hR _ _) = do
@@ -146,14 +155,10 @@ emptyMLinkedList :: ST s (MLinkedList e s)
 emptyMLinkedList = do
   lR <- newSTRef 0
   iR <- newSTRef 0
-  pR <- newSTRef undefined
-  nR <- newSTRef undefined
-  let hNode = MHead pR nR
-  writeSTRef pR hNode
-  writeSTRef nR hNode
-  hd <- newSTRef hNode
-  cd <- newSTRef hNode
-  return $ MLinkedList lR hd iR cd
+  hd <- newHead
+  hR <- newSTRef hd
+  cR <- newSTRef hd
+  return $ MLinkedList lR hR iR cR
 
 -- | Utility Function.
 -- Tests if a node is head.
@@ -162,6 +167,17 @@ isHead (MHead _ _)
   = True
 isHead _
   = False
+
+-- | Utility Function
+-- Creates a head of a linked list.
+newHead :: ST s (MNode e s)
+newHead = do
+  pR <- newSTRef undefined
+  nR <- newSTRef undefined
+  let hNode = MHead pR nR
+  writeSTRef pR hNode
+  writeSTRef nR hNode
+  return hNode
 
 -- | Utility Function.
 -- Returns the next node.
@@ -202,7 +218,12 @@ nodeElem (MNode _ e _)
 --------------------------------------------------------------------------------
 
 bar = runST $ do
-  e <- newMList [1..10] :: ST s (MLinkedList Int s)
-  accessNode 1 e
+  e <- newMList [100..110] :: ST s (MLinkedList Int s)
+  mClear e
+  mAdd 0 2 e
+  mAdd 1 3 e
+  mAdd 0 4 e
+  mPush 10 e
+  mAppend 100 e
   el <- mToList e
   return el
