@@ -44,7 +44,7 @@ class ArrayBased a e where
 -- It provides methods to allocate new arrays for length adjustment, and to copy
 -- the structure that retains it's physical size.
 -- Instances of 'ArrayBased' is required to implement 'Foldable'.
--- Minimal implementation requires @mDeepClear@, @newMWithSize@, 
+-- Minimal implementation requires @mDeepClear@, @mNewWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
 class (Monad (m s), MDS (a e) s) => MArrayBased a e m s where
@@ -57,7 +57,7 @@ class (Monad (m s), MDS (a e) s) => MArrayBased a e m s where
   -- structure containing the elements in the 'Foldable' and the representing
   -- array has at least the length specified by the argument.
   -- 
-  newMWithSize :: Foldable f => Int -> f e -> m s (a e s)
+  mNewWithSize :: Foldable f => Int -> f e -> m s (a e s)
 
   -- | Returns the physical size of the structure, in other words, the length
   -- of the representing array.

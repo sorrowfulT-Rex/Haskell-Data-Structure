@@ -223,8 +223,8 @@ instance MArrayBased MArrayList a ST s where
     writeSTRef lR rl
     writeSTRef arrR resST
 
-  newMWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
-  newMWithSize = (arrayListThaw .) . newWithSize
+  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
+  mNewWithSize = (arrayListThaw .) . newWithSize
 
   mPhysicalSize :: MArrayList a s -> ST s Int
   mPhysicalSize (MArrayList _ arrR) = do

@@ -240,8 +240,8 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
     writeMURef lR rl
     writeSTRef arrR resST
 
-  newMWithSize  :: Foldable f => Int -> f a -> ST s (MUArrayList a s)
-  newMWithSize = (uArrayListThaw .) . newWithSize
+  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MUArrayList a s)
+  mNewWithSize = (uArrayListThaw .) . newWithSize
 
   mPhysicalSize :: MUArrayList a s -> ST s Int
   mPhysicalSize (MUArrayList _ arrR) = do
