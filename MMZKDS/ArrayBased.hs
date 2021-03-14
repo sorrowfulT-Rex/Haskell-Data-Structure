@@ -6,7 +6,7 @@ module MMZKDS.ArrayBased where
 import           Control.Monad (forM_)
 import           Data.Foldable (toList)
 
-import           MMZKDS.MDS (MDS(..))
+import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------
@@ -43,11 +43,13 @@ class ArrayBased a e where
 -- | 'MArrayBased' is a type class for mutable @STArray@-based data structure.
 -- It provides methods to allocate new arrays for length adjustment, and to copy
 -- the structure that retains it's physical size.
+-- It is expected that the type implements 'MDS' and 'MDSCons' with @[e]@.
 -- Instances of 'ArrayBased' is required to implement 'Foldable'.
 -- Minimal implementation requires @mDeepClear@, @mNewWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class (Monad (m s), MDS (a e) s) => MArrayBased a e m s where
+class (Monad (m s), MDS (a e) s, MDSCons [e] (a e) s) 
+  => MArrayBased a e m s where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.
   --
