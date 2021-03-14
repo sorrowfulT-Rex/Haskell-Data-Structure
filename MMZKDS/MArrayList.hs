@@ -16,7 +16,7 @@ import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
 import           MMZKDS.List (List(..), MList(..))
-import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Unsafe 
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -260,10 +260,10 @@ instance MArrayBased MArrayList a ST s where
 
 
 --------------------------------------------------------------------------------
--- MDT Functions
+-- MDS Functions
 --------------------------------------------------------------------------------
 
-instance MDT (MArrayList a) s where
+instance MDS (MArrayList a) s where
   copy :: MArrayList a s -> ST s (MArrayList a s)
   copy (MArrayList lR arrR) = do
     l     <- readSTRef lR
@@ -274,7 +274,7 @@ instance MDT (MArrayList a) s where
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
-instance Foldable f => MDTCons (f a) (MArrayList a) s where
+instance Foldable f => MDSCons (f a) (MArrayList a) s where
   new :: f a -> ST s (MArrayList a s)
   new = newMList
 
@@ -292,6 +292,6 @@ foom :: IO ()
 foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
-    mAdd 100 100 mal
+    mAdd 2 100 mal
     al  <- arrayListFreeze mal
     return [D al]

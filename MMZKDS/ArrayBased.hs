@@ -6,6 +6,8 @@ module MMZKDS.ArrayBased where
 import           Control.Monad (forM_)
 import           Data.Foldable (toList)
 
+import           MMZKDS.MDS (MDS(..))
+
 
 --------------------------------------------------------------------------------
 -- ArrayBased Type Class
@@ -45,7 +47,7 @@ class ArrayBased a e where
 -- Minimal implementation requires @mDeepClear@, @newMWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class MArrayBased a e m s where
+class (Monad (m s), MDS (a e) s) => MArrayBased a e m s where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.
   --

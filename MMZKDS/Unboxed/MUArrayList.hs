@@ -23,7 +23,7 @@ import           MMZKDS.Unboxed.MURef
   (MURef(..), newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
 import           MMZKDS.List (List(..), MList(..))
-import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Unsafe 
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -277,11 +277,11 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
 
 --------------------------------------------------------------------------------
--- MDT Functions
+-- MDS Functions
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
-  MDT (MUArrayList a) s where
+  MDS (MUArrayList a) s where
   copy :: MUArrayList a s -> ST s (MUArrayList a s)
   copy (MUArrayList lR arrR) = do
     l     <- readMURef lR
@@ -293,7 +293,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
     return $ MUArrayList rlR resR
 
 instance (Foldable f, IArray UArray a, MArray (STUArray s) a (ST s)) 
-  => MDTCons (f a) (MUArrayList a) s where
+  => MDSCons (f a) (MUArrayList a) s where
   new :: f a -> ST s (MUArrayList a s)
   new = newMList
 

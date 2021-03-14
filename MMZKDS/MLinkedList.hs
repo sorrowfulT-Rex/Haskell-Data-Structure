@@ -14,7 +14,7 @@ import           Data.STRef
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List (MList(..))
-import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 
@@ -220,14 +220,14 @@ instance MList MLinkedList a ST s where
     
 
 --------------------------------------------------------------------------------
--- MDT Functions
+-- MDS Functions
 --------------------------------------------------------------------------------
 
-instance MDT (MLinkedList a) s where
+instance MDS (MLinkedList a) s where
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
   copy = (>>= new) . mToList
 
-instance Foldable f => MDTCons (f a) (MLinkedList a) s where
+instance Foldable f => MDSCons (f a) (MLinkedList a) s where
   new :: f a -> ST s (MLinkedList a s)
   new = newMList
 

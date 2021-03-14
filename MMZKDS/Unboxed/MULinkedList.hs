@@ -15,7 +15,7 @@ import           Data.STRef
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List (MList(..))
-import           MMZKDS.MDT (MDT(..), MDTCons(..))
+import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Unboxed.MURef
   (MU(..), MURef(..), modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
@@ -223,14 +223,14 @@ instance MU a s => MList MULinkedList a ST s where
     
 
 --------------------------------------------------------------------------------
--- MDT Functions
+-- MDS Functions
 --------------------------------------------------------------------------------
 
-instance MU a s => MDT (MULinkedList a) s where
+instance MU a s => MDS (MULinkedList a) s where
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
   copy = (>>= new) . mToList
 
-instance (Foldable f, MU a s) => MDTCons (f a) (MULinkedList a) s where
+instance (Foldable f, MU a s) => MDSCons (f a) (MULinkedList a) s where
   new :: f a -> ST s (MULinkedList a s)
   new = newMList
 
