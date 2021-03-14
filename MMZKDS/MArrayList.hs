@@ -15,8 +15,9 @@ import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
-import           MMZKDS.List (List(..), MList(..))
+import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unsafe 
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -208,6 +209,21 @@ instance MList MArrayList a ST s where
         if v == e
           then return $ Just i
           else mLastIndexOf' (i - 1) l
+
+
+--------------------------------------------------------------------------------
+-- MQueue Instance
+--------------------------------------------------------------------------------
+
+instance MQueue MArrayList a ST s where
+  mAdd :: a -> MArrayList a s -> ST s ()
+  mAdd = mPush
+
+  mClear :: MArrayList a s -> ST s ()
+  mClear = L.mClear
+
+  mPop :: MArrayList a s -> ST s (Maybe a)
+  mPop = L.mPop
 
 
 --------------------------------------------------------------------------------
