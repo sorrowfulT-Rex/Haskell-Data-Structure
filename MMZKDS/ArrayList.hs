@@ -39,7 +39,7 @@ instance Foldable ArrayList where
 
 
 --------------------------------------------------------------------------------
--- List Functions
+-- List Instance
 --------------------------------------------------------------------------------
 
 instance List ArrayList a where
@@ -139,7 +139,7 @@ instance List ArrayList a where
 
 
 --------------------------------------------------------------------------------
--- Queue Functions
+-- Queue Instance
 --------------------------------------------------------------------------------
 
 instance Queue ArrayList a where
@@ -154,7 +154,7 @@ instance Queue ArrayList a where
 
 
 --------------------------------------------------------------------------------
--- ArrayBased Functions
+-- ArrayBased Instance
 --------------------------------------------------------------------------------
 
 instance ArrayBased ArrayList a where
@@ -178,7 +178,7 @@ instance ArrayBased ArrayList a where
 
 
 --------------------------------------------------------------------------------
--- DS Functions
+-- DSCons Instance
 --------------------------------------------------------------------------------
 
 instance DSCons [a] (ArrayList a) where

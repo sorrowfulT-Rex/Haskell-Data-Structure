@@ -40,7 +40,7 @@ data MNode e s
 
 
 --------------------------------------------------------------------------------
--- List Functions
+-- MList Instance
 --------------------------------------------------------------------------------
 
 instance MList MLinkedList a ST s where
@@ -219,7 +219,7 @@ instance MList MLinkedList a ST s where
     
 
 --------------------------------------------------------------------------------
--- MDS Functions
+-- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
 instance MDS (MLinkedList a) s where

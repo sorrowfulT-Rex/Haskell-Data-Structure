@@ -32,7 +32,7 @@ instance (Show a, IArray UArray a) => Show (UArrayList a) where
 
 
 --------------------------------------------------------------------------------
--- List Functions
+-- List Instance
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => List UArrayList a where
@@ -139,7 +139,7 @@ instance IArray UArray a => List UArrayList a where
 
 
 --------------------------------------------------------------------------------
--- Queue Functions
+-- Queue Instance
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => Queue UArrayList a where
@@ -178,7 +178,7 @@ instance IArray UArray a => ArrayBased UArrayList a where
 
 
 --------------------------------------------------------------------------------
--- DS Functions
+-- DSCons Instance
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => DSCons [a] (UArrayList a) where

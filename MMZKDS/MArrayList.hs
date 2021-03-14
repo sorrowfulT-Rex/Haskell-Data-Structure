@@ -78,7 +78,7 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 
 
 --------------------------------------------------------------------------------
--- List Functions
+-- MList Instance
 --------------------------------------------------------------------------------
 
 instance MList MArrayList a ST s where
@@ -211,7 +211,7 @@ instance MList MArrayList a ST s where
 
 
 --------------------------------------------------------------------------------
--- ArrayBased Functions
+-- MArrayBased Instance
 --------------------------------------------------------------------------------
 
 instance MArrayBased MArrayList a ST s where
@@ -260,7 +260,7 @@ instance MArrayBased MArrayList a ST s where
 
 
 --------------------------------------------------------------------------------
--- MDS Functions
+-- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
 instance MDS (MArrayList a) s where

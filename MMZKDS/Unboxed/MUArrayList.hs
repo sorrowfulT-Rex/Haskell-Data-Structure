@@ -93,7 +93,7 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 
 
 --------------------------------------------------------------------------------
--- List Functions
+-- MList Instance
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
@@ -227,7 +227,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
 
 --------------------------------------------------------------------------------
--- ArrayBased Functions
+-- MArrayBased Instance
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
@@ -277,7 +277,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
 
 --------------------------------------------------------------------------------
--- MDS Functions
+-- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
@@ -301,9 +301,9 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   new = mNewList
 
 
--- --------------------------------------------------------------------------------
--- -- Playground
--- --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Playground
+--------------------------------------------------------------------------------
 
 data D = forall a. Show a => D a
 

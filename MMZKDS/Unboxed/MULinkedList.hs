@@ -44,7 +44,7 @@ data MNode e s
 
 
 --------------------------------------------------------------------------------
--- List Functions
+-- List Instance
 --------------------------------------------------------------------------------
 
 instance MU a s => MList MULinkedList a ST s where
@@ -223,7 +223,7 @@ instance MU a s => MList MULinkedList a ST s where
     
 
 --------------------------------------------------------------------------------
--- MDS Functions
+-- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
 instance MU a s => MDS (MULinkedList a) s where
