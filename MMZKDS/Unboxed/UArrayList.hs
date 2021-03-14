@@ -14,6 +14,7 @@ import           Data.Foldable as F (toList)
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DSCons(..))
 import           MMZKDS.List as L (List(..))
+import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
@@ -35,10 +36,10 @@ instance (Show a, IArray UArray a) => Show (UArrayList a) where
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => List UArrayList a where
-  add :: Int -> a -> UArrayList a -> UArrayList a
-  add index e al@(UArrayList l arr)
+  insert :: Int -> a -> UArrayList a -> UArrayList a
+  insert index e al@(UArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
-    | l == pl                = add index e (resize l' al)
+    | l == pl                = insert index e (resize l' al)
     | otherwise 
       = UArrayList (l + 1) 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
@@ -135,6 +136,21 @@ instance IArray UArray a => List UArrayList a where
       lastIndexOf' i
         | al `get` i == e = Just i
         | otherwise       = lastIndexOf' (i - 1)
+
+
+--------------------------------------------------------------------------------
+-- Queue Functions
+--------------------------------------------------------------------------------
+
+instance IArray UArray a => Queue UArrayList a where
+  add :: a -> UArrayList a -> UArrayList a
+  add = push
+
+  clear :: UArrayList a -> UArrayList a
+  clear = L.clear
+
+  pop :: UArrayList a -> (Maybe a, UArrayList a)
+  pop = L.pop
 
 
 --------------------------------------------------------------------------------

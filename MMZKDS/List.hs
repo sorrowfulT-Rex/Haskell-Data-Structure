@@ -20,8 +20,8 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- | 'List' is a type class for immutable sequential (list) data structures, 
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
--- Minimal implementation requires @add@, @clear@, @delete@, @get@, @indicesOf@,
--- @newList@, @set@, @size@ and @subList@.
+-- Minimal implementation requires @clear@, @delete@, @get@, @indicesOf@, 
+-- @insert@, @newList@, @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
 -- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@, @sort@, @sortOn@, 
 -- @toList@ and @update@.
@@ -40,7 +40,7 @@ class DSCons [e] (l e) => List l e where
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  add :: Int -> e -> l e -> l e
+  insert :: Int -> e -> l e -> l e
 
   -- | Returns an empty list.
   -- Note that it is not guaranteed that any element is physically removed from
@@ -96,7 +96,7 @@ class DSCons [e] (l e) => List l e where
   -- Insert an element to the end of the list structure.
   --
   append :: e -> l e -> l e 
-  append = flip (join (flip . add . size))
+  append = flip (join (flip . insert . size))
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
@@ -161,7 +161,7 @@ class DSCons [e] (l e) => List l e where
   -- Insert an element to the front of the list structure.
   --
   push :: e -> l e -> l e
-  push = add 0
+  push = insert 0
 
   -- | Default method.
   -- Removes the first occurrence of an element from the list structure, and
@@ -199,7 +199,7 @@ class DSCons [e] (l e) => List l e where
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[e]@.
--- Minimal implementation requires @mAdd@, @mClear@, @mDelete@, @mGet@, 
+-- Minimal implementation requires @mClear@, @mDelete@, @mGet@, @mInsert@,
 -- @mIndicesOf@, @mNewList@ @mSet@, @mSize@, @mSortOn@, @mSubList@,
 -- and @mToList@ .
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
@@ -217,7 +217,7 @@ class (Monad (m s), MDS (l e) s, MDSCons [e] (l e) s) => MList l e m s where
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  mAdd :: Int -> e -> l e s -> m s ()
+  mInsert :: Int -> e -> l e s -> m s ()
 
   -- | Makes the list empty, i.e. remove all elements.
   -- Note that it is not guaranteed that any element is physically removed from
@@ -277,7 +277,7 @@ class (Monad (m s), MDS (l e) s, MDSCons [e] (l e) s) => MList l e m s where
   -- Insert an element to the end of the list structure.
   --
   mAppend :: e -> l e s -> m s ()
-  mAppend = liftM2 (>>=) mSize . flip . flip mAdd
+  mAppend = liftM2 (>>=) mSize . flip . flip mInsert
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
@@ -340,7 +340,7 @@ class (Monad (m s), MDS (l e) s, MDSCons [e] (l e) s) => MList l e m s where
   -- Insert an element to the front of the list structure.
   --
   mPush :: e -> l e s -> m s ()
-  mPush = mAdd 0
+  mPush = mInsert 0
 
   -- | Default method.
   -- Removes the first occurrence of an element from the list structure, and

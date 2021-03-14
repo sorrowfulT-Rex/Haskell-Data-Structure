@@ -11,6 +11,7 @@ import           Data.Foldable as F (toList)
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DSCons(..))
 import           MMZKDS.List as L (List(..))
+import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
@@ -42,10 +43,10 @@ instance Foldable ArrayList where
 --------------------------------------------------------------------------------
 
 instance List ArrayList a where
-  add :: Int -> a -> ArrayList a -> ArrayList a
-  add index e al@(ArrayList l arr)
+  insert :: Int -> a -> ArrayList a -> ArrayList a
+  insert index e al@(ArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
-    | l == pl                = add index e (resize l' al)
+    | l == pl                = insert index e (resize l' al)
     | otherwise 
       = ArrayList (l + 1) 
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
@@ -135,6 +136,21 @@ instance List ArrayList a where
       lastIndexOf' i
         | al `get` i == e = Just i
         | otherwise       = lastIndexOf' (i - 1)
+
+
+--------------------------------------------------------------------------------
+-- Queue Functions
+--------------------------------------------------------------------------------
+
+instance Queue ArrayList a where
+  add :: a -> ArrayList a -> ArrayList a
+  add = push
+
+  clear :: ArrayList a -> ArrayList a
+  clear = L.clear
+
+  pop :: ArrayList a -> (Maybe a, ArrayList a)
+  pop = L.pop
 
 
 --------------------------------------------------------------------------------
