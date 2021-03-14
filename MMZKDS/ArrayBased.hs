@@ -6,6 +6,7 @@ module MMZKDS.ArrayBased where
 import           Control.Monad (forM_)
 import           Data.Foldable (toList)
 
+import           MMZKDS.DS (DSCons(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
@@ -18,7 +19,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- Minimal implementation requires @deepClear@, @newWithSize@, @physicalSize@
 -- and @resize@.
 --
-class ArrayBased a e where
+class DSCons [e] (a e) => ArrayBased a e where
   -- | Returns a new structure that is truly empty; in other words, all elements
   -- are physically removed from the structure.
   --

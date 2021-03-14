@@ -9,6 +9,7 @@ import           Data.Array (Array(..), accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
+import           MMZKDS.DS (DSCons(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -161,11 +162,23 @@ instance ArrayBased ArrayList a where
 
 
 --------------------------------------------------------------------------------
+-- DS Functions
+--------------------------------------------------------------------------------
+
+instance DSCons [a] (ArrayList a) where
+  finish :: ArrayList a -> [a]
+  finish = L.toList
+
+  new :: [a] -> ArrayList a
+  new = newList
+
+
+--------------------------------------------------------------------------------
 -- Playground
 --------------------------------------------------------------------------------
 
 foo :: IO ()
 foo = do
-  al  <- return $ (newList [4, 3, 2, 1] :: ArrayList Int)
+  al  <- return $ (new [4::Int, 3, 2, 1] :: ArrayList Int)
   print $ sort al
   

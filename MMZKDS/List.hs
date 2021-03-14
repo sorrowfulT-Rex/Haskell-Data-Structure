@@ -9,6 +9,7 @@ import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 
+import           MMZKDS.DS (DSCons(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
@@ -32,7 +33,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
 -- argument.
 --
-class List l e where
+class DSCons [e] (l e) => List l e where
   -- | Adds an element into the list structure.
   -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.

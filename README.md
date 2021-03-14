@@ -6,9 +6,14 @@ My aim is to make a wide range of data structures that ideally would satisfy not
 Now working on: Array-based Heap.  
 Next to come: AVL; Red-Black Tree.  
 
+# [MMZKDS/DS.hs](MMZKDS/DS.hs)
+This file provides a type classe for immutable data structures.  
+It contains a class, `class MDSCons`, providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
+See the [Haddocks](MMZKDS/DS.hs) for full documentation.  
+
 # [MMZKDS/MDS.hs](MMZKDS/MDS.hs)
 MDS is short for Mutable Data Structure. This file provides type classes for mutable structures.  
-It contains `class MDS` providing away of copying, and `class MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
+It contains `class MDS` providing a way of copying, and `class MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
 See the [Haddocks](MMZKDS/MDS.hs) for full documentation.  
 
 # [MMZKDS/List.hs](MMZKDS/List.hs)
