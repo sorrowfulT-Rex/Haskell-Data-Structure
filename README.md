@@ -3,7 +3,7 @@ This repo serves as a practice of writing both functional and mutable data struc
 
 My aim is to make a wide range of data structures that ideally would satisfy not performance-sensitive purposes. However, since it is a practice code instead of a library, there is no guarantee of correctness and stability. Moreover, efficiency was not an design objective. Therefore, any performance-sensitive task should not be relied on this.  
 
-Now working on: Array-based Heap; Linked-List.  
+Now working on: Array-based Heap.  
 Next to come: AVL; Red-Black Tree.  
 
 # [MMZKDS/MDT.hs](MMZKDS/MDT.hs)
@@ -31,6 +31,10 @@ See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.
 # [MMZKDS/MArrayList.hs](MMZKDS/MArrayList.hs)
 `MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
 See the [Haddocks](MMZKDS/MArrayList.hs) for full documentation.  
+
+# [MMZKDS/MLinkedList.hs](MMZKDS/MArrayList.hs)
+`MLinkedList` is a doubly-linked circular list implementing the `MList` class.  
+See the [Haddocks](MMZKDS/MLinkedList.hs) for full documentation.  
 
 # [MMZKDS/UnBoxed](MMZKDS/Unboxed/)
 Contains the unboxed version of (some of) the data structures.  

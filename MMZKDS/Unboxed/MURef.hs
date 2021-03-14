@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module MMZKDS.Unboxed.MURef where
@@ -7,7 +8,8 @@ import           Data.Array.Base
 import           Data.Array.ST
 import           Data.Array.Unboxed
 
-type MURef s a = STUArray s Int a
+type MU e s    = MArray (STUArray s) e (ST s)
+type MURef s e = STUArray s Int e
 
 newMURef :: MArray (STUArray s) a (ST s) => a -> ST s (MURef s a)
 newMURef = newArray (0, 0)
