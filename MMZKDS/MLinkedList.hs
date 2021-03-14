@@ -81,9 +81,13 @@ instance MList MLinkedList a ST s where
         cur <- readSTRef cR
         prv <- prevN cur
         nxt <- nextN cur
+        i   <- readSTRef iR
         writeSTRef (prevNRef nxt) prv
         writeSTRef (nextNRef prv) nxt
         writeSTRef lR $! l - 1
+        if index == i
+          then writeSTRef iR (-1) >> getHead mll >>= writeSTRef cR
+          else return ()
         Just <$> nodeElem cur
 
   mGet :: MLinkedList a s -> Int -> ST s a
@@ -199,25 +203,6 @@ instance MList MLinkedList a ST s where
             else prevN node >>= mLastIndexOf' (i - 1)
     hd <- getHead mll
     prevN hd >>= mLastIndexOf' (l - 1)
-
-  -- Overwritten default method
-  mPop :: MLinkedList a s -> ST s (Maybe a)
-  mPop mll@(MLinkedList lR hR iR cR) = do
-    i <- readSTRef iR
-    l <- readSTRef lR
-    r <- mDelete (l - 1) mll
-    if i == l - 1
-      then readSTRef hR >>= writeSTRef cR >> writeSTRef iR (-1) >> return r
-      else return r
-
-  -- Overwritten default method
-  mPopFront :: MLinkedList a s -> ST s (Maybe a)
-  mPopFront mll@(MLinkedList _ hR iR cR) = do
-    i <- readSTRef iR
-    r <- mDelete 0 mll
-    if i == 0
-      then readSTRef hR >>= writeSTRef cR >> writeSTRef iR (-1) >> return r
-      else return r
 
   -- Overwritten default method
   mPush :: a -> MLinkedList a s -> ST s ()
@@ -351,7 +336,10 @@ nodeElem (MNode _ eR _)
 
 bar = runST $ do
   e  <- newMList [1..10] :: ST s (MLinkedList Int s)
-  let (MLinkedList _ _ _ cR) = e
-  e  <- mSubList 1 10 e
+  accessNode 0 e
+  f  <- mPopFront e
+  let MLinkedList _ _ _ cR = e
+  nd <- readSTRef cR
+  b  <- return $ isHead nd
   el <- mToList e
-  return el
+  return (f, b, el)
