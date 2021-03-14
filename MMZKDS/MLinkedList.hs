@@ -7,7 +7,6 @@ module MMZKDS.MLinkedList where
 
 import           Control.Monad (forM, forM_)
 import           Control.Monad.ST (ST(..), runST)
-import           Data.Foldable as F (toList)
 import           Data.List (sortOn)
 import           Data.Maybe (Maybe(..), isJust)
 import           Data.STRef 
@@ -227,8 +226,11 @@ instance MDS (MLinkedList a) s where
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
   copy = (>>= new) . mToList
 
-instance Foldable f => MDSCons (f a) (MLinkedList a) s where
-  new :: f a -> ST s (MLinkedList a s)
+instance MDSCons [a] (MLinkedList a) s where
+  finish :: MLinkedList a s -> ST s [a]
+  finish = mToList
+
+  new :: [a] -> ST s (MLinkedList a s)
   new = newMList
 
 

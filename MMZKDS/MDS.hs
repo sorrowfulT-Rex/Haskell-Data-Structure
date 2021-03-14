@@ -18,13 +18,16 @@ class MDS d s where
   copy :: d s -> ST s (d s)
 
 -- | The 'MDSCons' class defines how to initialise the mutable data structure
--- from a potentially different immutable data structure.
--- It provides a single @new@ method.
+-- from or to a potentially different immutable data structure.
+-- It provides a @finish@ method and a @new@ method.
 -- For example, assume there is a mutable data structure by the name of 
 -- 'Foo a s', then @instance [a] (Foo a) s@ is used to define how to make a new 
 -- instance of 'Foo' from a list.
 --
 class MDSCons a d s where
+    -- | Turn the mutable data structure to the given immutable data structure
+  finish :: d s -> ST s a
+
   -- | Create a new mutable data structure from the given immutable data 
   -- structure.
   --

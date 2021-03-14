@@ -230,8 +230,11 @@ instance MU a s => MDS (MULinkedList a) s where
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
   copy = (>>= new) . mToList
 
-instance (Foldable f, MU a s) => MDSCons (f a) (MULinkedList a) s where
-  new :: f a -> ST s (MULinkedList a s)
+instance MU a s => MDSCons [a] (MULinkedList a) s where
+  finish :: MULinkedList a s -> ST s [a]
+  finish = mToList
+
+  new :: [a] -> ST s (MULinkedList a s)
   new = newMList
 
 

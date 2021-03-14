@@ -292,9 +292,12 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
     resR  <- newSTRef resST
     return $ MUArrayList rlR resR
 
-instance (Foldable f, IArray UArray a, MArray (STUArray s) a (ST s)) 
-  => MDSCons (f a) (MUArrayList a) s where
-  new :: f a -> ST s (MUArrayList a s)
+instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
+  => MDSCons [a] (MUArrayList a) s where
+  finish :: MUArrayList a s -> ST s [a]
+  finish = mToList
+
+  new :: [a] -> ST s (MUArrayList a s)
   new = newMList
 
 

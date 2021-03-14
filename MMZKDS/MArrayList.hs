@@ -274,8 +274,11 @@ instance MDS (MArrayList a) s where
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
-instance Foldable f => MDSCons (f a) (MArrayList a) s where
-  new :: f a -> ST s (MArrayList a s)
+instance MDSCons [a] (MArrayList a) s where
+  finish :: MArrayList a s -> ST s [a]
+  finish = mToList
+
+  new :: [a] -> ST s (MArrayList a s)
   new = newMList
 
 
