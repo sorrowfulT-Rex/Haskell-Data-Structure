@@ -38,3 +38,7 @@ See the [Haddocks](MMZKDS/MLinkedList.hs) for full documentation.
 
 # [MMZKDS/UnBoxed](MMZKDS/Unboxed/)
 Contains the unboxed version of (some of) the data structures.  
+
+# [MMZKDS/UnBoxed/MURef.hs](MMZKDS/Unboxed/MURef.hs)
+The strict unboxed equivalence for @STRef@.  
+See the [Haddocks](MMZKDS/Unboxed/MURef.hs) for full documentation.  
