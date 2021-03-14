@@ -131,7 +131,7 @@ instance MList MLinkedList a ST s where
     list <- mToList mll
     let list' = sortOn (f . snd) $ zip [0..] list
     let ui'   = lookup i $ zip (fst <$> list') [0..]
-    mll' <- newMList $ snd <$> list'
+    mll' <- mNewList $ snd <$> list'
     hd   <- getHead mll'
     writeSTRef hR $! hd
     writeSTRef cR $! hd
@@ -144,7 +144,7 @@ instance MList MLinkedList a ST s where
   mSubList inf sup mll@(MLinkedList _ _ _ cR) = do
     ls <- mSize mll
     forM [(max inf 0)..(min sup ls - 1)] 
-      ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= newMList
+      ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= mNewList
     
   mToList :: MLinkedList a s -> ST s [a]
   mToList mll = do
@@ -159,8 +159,8 @@ instance MList MLinkedList a ST s where
     hd <- getHead mll
     nextN hd >>= mToList'
 
-  newMList :: Foldable f => f a -> ST s (MLinkedList a s)
-  newMList xs = do
+  mNewList :: Foldable f => f a -> ST s (MLinkedList a s)
+  mNewList xs = do
     mll <- emptyMLinkedList
     forM_ xs (flip mAppend mll)
     return mll
@@ -231,7 +231,7 @@ instance MDSCons [a] (MLinkedList a) s where
   finish = mToList
 
   new :: [a] -> ST s (MLinkedList a s)
-  new = newMList
+  new = mNewList
 
 
 --------------------------------------------------------------------------------
@@ -337,7 +337,7 @@ nodeElem (MNode _ eR _)
 --------------------------------------------------------------------------------
 
 bar = runST $ do
-  e  <- newMList [1..10] :: ST s (MLinkedList Int s)
+  e  <- mNewList [1..10] :: ST s (MLinkedList Int s)
   accessNode 0 e
   f  <- mPopFront e
   let MLinkedList _ _ _ cR = e

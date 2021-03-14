@@ -181,7 +181,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
     let len' = sup' - inf'
     let ps   = initialSize len'
     if sup' <= inf
-      then newMList []
+      then mNewList []
       else do
         resST <- newArray_ (0, ps - 1)
         forM_ [0..(len' - 1)] 
@@ -195,8 +195,8 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
     al <- uArrayListFreeze mal
     return $ toList al
 
-  newMList :: Foldable f => f a -> ST s (MUArrayList a s)
-  newMList = uArrayListThaw . newList
+  mNewList :: Foldable f => f a -> ST s (MUArrayList a s)
+  mNewList = uArrayListThaw . newList
 
   -- Overwritten default method
   mIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
@@ -234,7 +234,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MArrayBased MUArrayList a ST s where
   mDeepClear :: MUArrayList a s -> ST s ()
   mDeepClear (MUArrayList lR arrR) = do
-    MUArrayList rlR resR <- newMList []
+    MUArrayList rlR resR <- mNewList []
     rl                   <- readMURef rlR
     resST                <- readSTRef resR
     writeMURef lR rl
@@ -298,7 +298,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   finish = mToList
 
   new :: [a] -> ST s (MUArrayList a s)
-  new = newMList
+  new = mNewList
 
 
 -- --------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ instance Show D where
 foom :: IO ()
 foom = do
   print $ runST $ do
-    mal <- newMList [100,99..1] :: ST s (MUArrayList Int s)
+    mal <- mNewList [100,99..1] :: ST s (MUArrayList Int s)
     mSort mal
     al  <- uArrayListFreeze mal
     return [D al, D $ physicalSize al]

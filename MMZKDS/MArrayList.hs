@@ -165,7 +165,7 @@ instance MList MArrayList a ST s where
     let len' = sup' - inf'
     let ps   = initialSize len'
     if sup' <= inf
-      then newMList []
+      then mNewList []
       else do
         resST <- newArray_ (0, ps - 1)
         forM_ [0..(len' - 1)] 
@@ -179,8 +179,8 @@ instance MList MArrayList a ST s where
     al <- arrayListFreeze mal
     return $ toList al
 
-  newMList :: Foldable f => f a -> ST s (MArrayList a s)
-  newMList = arrayListThaw . newList
+  mNewList :: Foldable f => f a -> ST s (MArrayList a s)
+  mNewList = arrayListThaw . newList
 
   -- Overwritten default method
   mIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
@@ -217,7 +217,7 @@ instance MList MArrayList a ST s where
 instance MArrayBased MArrayList a ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
-    MArrayList rlR resR <- newMList []
+    MArrayList rlR resR <- mNewList []
     rl                  <- readSTRef rlR
     resST               <- readSTRef resR
     writeSTRef lR rl
@@ -279,7 +279,7 @@ instance MDSCons [a] (MArrayList a) s where
   finish = mToList
 
   new :: [a] -> ST s (MArrayList a s)
-  new = newMList
+  new = mNewList
 
 
 --------------------------------------------------------------------------------

@@ -197,8 +197,8 @@ class List l e where
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- Minimal implementation requires @mAdd@, @mClear@, @mDelete@, @mGet@, 
--- @mIndicesOf@, @mSet@, @mSize@, @mSortOn@, @mSubList@, @mToList@ and 
--- @newWList@.
+-- @mIndicesOf@, @mNewList@ @mSet@, @mSize@, @mSortOn@, @mSubList@,
+-- and @mToList@ .
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
 -- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@ and 
 -- @mUpdate@.
@@ -242,6 +242,11 @@ class (Monad (m s), MDS (l e) s) => MList l e m s where
   --
   mIndicesOf :: Eq e => l e s -> e -> m s [Int]
 
+  -- | Returns a new list structure with the elements of a 'Foldable' instance,
+  -- for example, @[a]@.
+  --
+  mNewList :: Foldable f => f e -> m s (l e s)
+
   -- | Takes a list structure, an @Int@ as index and an element, modifies the list
   -- by overwriting the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
@@ -264,11 +269,6 @@ class (Monad (m s), MDS (l e) s) => MList l e m s where
   -- | Returns the default list (@[a]@) representation of the list structure.
   --
   mToList :: l e s -> m s [e]
-
-  -- | Returns a new list structure with the elements of a 'Foldable' instance,
-  -- for example, @[a]@.
-  --
-  newMList :: Foldable f => f e -> m s (l e s)
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
