@@ -36,21 +36,6 @@ instance (Show a, IArray UArray a) => Show (UArrayList a) where
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => List UArrayList a where
-  insert :: Int -> a -> UArrayList a -> UArrayList a
-  insert index e al@(UArrayList l arr)
-    | index > l || index < 0 = outOfBoundError index
-    | l == pl                = insert index e (resize l' al)
-    | otherwise 
-      = UArrayList (l + 1) 
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
-    where
-      pl = physicalSize al
-      l' = expandedSize l
-      worker _ i
-        | i < index = arr ! i
-        | i > index = arr ! (i - 1)
-        | otherwise = e
-
   clear :: UArrayList a -> UArrayList a
   clear (UArrayList l arr)
     = UArrayList 0 arr
@@ -81,6 +66,21 @@ instance IArray UArray a => List UArrayList a where
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
   
+  insert :: Int -> a -> UArrayList a -> UArrayList a
+  insert index e al@(UArrayList l arr)
+    | index > l || index < 0 = outOfBoundError index
+    | l == pl                = insert index e (resize l' al)
+    | otherwise 
+      = UArrayList (l + 1) 
+        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
+    where
+      pl = physicalSize al
+      l' = expandedSize l
+      worker _ i
+        | i < index = arr ! i
+        | i > index = arr ! (i - 1)
+        | otherwise = e
+
   newList :: Foldable f => f a -> UArrayList a
   newList fl
     = UArrayList l (array (0, l' - 1) $ zip [0..] $ F.toList fl)

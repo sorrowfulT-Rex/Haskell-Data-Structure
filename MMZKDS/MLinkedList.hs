@@ -44,24 +44,6 @@ data MNode e s
 --------------------------------------------------------------------------------
 
 instance MList MLinkedList a ST s where
-  mAdd :: Int -> a -> MLinkedList a s -> ST s ()
-  mAdd index e mll@(MLinkedList lR _ iR cR) = do
-    l <- readSTRef lR
-    if index < 0 || index > l
-      then outOfBoundError index
-      else do
-        accessNode index mll
-        cur <- readSTRef cR
-        prv <- prevN cur
-        nR  <- newSTRef cur
-        pR  <- newSTRef prv
-        eR  <- newSTRef e
-        let newNode = MNode pR eR nR
-        writeSTRef (prevNRef cur) newNode
-        writeSTRef (nextNRef prv) newNode
-        writeSTRef cR newNode
-        writeSTRef lR $! l + 1
-
   mClear :: MLinkedList a s -> ST s ()
   mClear (MLinkedList lR hR iR cR) = do
     writeSTRef lR 0
@@ -110,6 +92,24 @@ instance MList MLinkedList a ST s where
             else nextN node >>= mIndicesOf' (i + 1)
     hd <- getHead mll
     nextN hd >>= mIndicesOf' 0
+
+  mInsert :: Int -> a -> MLinkedList a s -> ST s ()
+  mInsert index e mll@(MLinkedList lR _ iR cR) = do
+    l <- readSTRef lR
+    if index < 0 || index > l
+      then outOfBoundError index
+      else do
+        accessNode index mll
+        cur <- readSTRef cR
+        prv <- prevN cur
+        nR  <- newSTRef cur
+        pR  <- newSTRef prv
+        eR  <- newSTRef e
+        let newNode = MNode pR eR nR
+        writeSTRef (prevNRef cur) newNode
+        writeSTRef (nextNRef prv) newNode
+        writeSTRef cR newNode
+        writeSTRef lR $! l + 1
 
   mSet :: MLinkedList a s -> Int -> a -> ST s ()
   mSet mll@(MLinkedList _ _ _ cR) index e = do

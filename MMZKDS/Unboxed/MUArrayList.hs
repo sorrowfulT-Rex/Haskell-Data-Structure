@@ -98,26 +98,6 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
   => MList MUArrayList a ST s where
-  mAdd :: Int -> a -> MUArrayList a s -> ST s ()
-  mAdd index e mal@(MUArrayList lR arrR) = do
-    ls <- mSize mal
-    ps <- mPhysicalSize mal
-    if index < 0 || index > ls
-      then return $ outOfBoundError index
-      else if ls == ps
-        then do
-          resized <- mResize (expandedSize ls) mal
-          let MUArrayList rlR resR = resized
-          rl      <- readMURef rlR
-          writeMURef lR rl
-          resST   <- readSTRef resR
-          writeSTRef arrR resST
-          mAdd index e resized
-        else do
-          arrST <- readSTRef arrR
-          writeMURef lR (ls + 1)
-          unsafeAddST index e (ls - 1) arrST
-
   mClear :: MUArrayList a s -> ST s ()
   mClear (MUArrayList lR arrR) 
     = writeMURef lR 0
@@ -152,6 +132,26 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
         writeMURef lR (ls - 1)
         unsafeRemoveST index (ls - 2) arrST
         return $ Just v
+
+  mInsert :: Int -> a -> MUArrayList a s -> ST s ()
+  mInsert index e mal@(MUArrayList lR arrR) = do
+    ls <- mSize mal
+    ps <- mPhysicalSize mal
+    if index < 0 || index > ls
+      then return $ outOfBoundError index
+      else if ls == ps
+        then do
+          resized <- mResize (expandedSize ls) mal
+          let MUArrayList rlR resR = resized
+          rl      <- readMURef rlR
+          writeMURef lR rl
+          resST   <- readSTRef resR
+          writeSTRef arrR resST
+          mInsert index e resized
+        else do
+          arrST <- readSTRef arrR
+          writeMURef lR (ls + 1)
+          unsafeAddST index e (ls - 1) arrST
 
   mSet :: MUArrayList a s -> Int -> a -> ST s ()
   mSet mal@(MUArrayList _ arrR) index e = do

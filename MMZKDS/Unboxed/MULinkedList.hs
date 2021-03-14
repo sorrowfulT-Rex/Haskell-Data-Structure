@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.MULinkedList where
+module MMZKDS.Unboxed.MULinkedList where
 
 import           Control.Monad (forM, forM_)
 import           Control.Monad.ST (ST(..), runST)
@@ -15,6 +15,7 @@ import           Data.STRef
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List (MList(..))
+-- import           MMZKDS.MLinkedList (MUNode(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Unboxed.MURef
   (MU(..), MURef(..), modifyMURef, newMURef, readMURef, writeMURef)
@@ -32,40 +33,21 @@ import           MMZKDS.Utilities (outOfBoundError)
 data MULinkedList e s 
   = MULinkedList 
     (MURef s Int)  -- ^ Length of the Linked-List
-    (STRef s (MNode e s)) -- ^ Point to the head node
+    (STRef s (MUNode e s)) -- ^ Point to the head node
     (MURef s Int)  -- ^ Index of the most recently accessed node
-    (STRef s (MNode e s)) -- ^ Pointer to the most recently accessed node
+    (STRef s (MUNode e s)) -- ^ Pointer to the most recently accessed node
 
--- | @MNode@ represents a single node in @MULinkedList@.
+-- | @MUNode@ represents a single node in @MULinkedList@.
 --
-data MNode e s 
-  = MHead (STRef s (MNode e s)) (STRef s (MNode e s)) 
-  | MNode (STRef s (MNode e s)) (MURef s e) (STRef s (MNode e s)) 
-
+data MUNode e s 
+  = MHead (STRef s (MUNode e s)) (STRef s (MUNode e s)) 
+  | MUNode (STRef s (MUNode e s)) (MURef s e) (STRef s (MUNode e s)) 
 
 --------------------------------------------------------------------------------
 -- List Instance
 --------------------------------------------------------------------------------
 
 instance MU a s => MList MULinkedList a ST s where
-  mAdd :: Int -> a -> MULinkedList a s -> ST s ()
-  mAdd index e mll@(MULinkedList lR _ iR cR) = do
-    l <- readMURef lR
-    if index < 0 || index > l
-      then outOfBoundError index
-      else do
-        accessNode index mll
-        cur <- readSTRef cR
-        prv <- prevN cur
-        nR  <- newSTRef cur
-        pR  <- newSTRef prv
-        eR  <- newMURef e
-        let newNode = MNode pR eR nR
-        writeSTRef (prevNRef cur) newNode
-        writeSTRef (nextNRef prv) newNode
-        writeSTRef cR newNode
-        writeMURef lR $ l + 1
-
   mClear :: MULinkedList a s -> ST s ()
   mClear (MULinkedList lR hR iR cR) = do
     writeMURef lR 0
@@ -115,6 +97,24 @@ instance MU a s => MList MULinkedList a ST s where
     hd <- getHead mll
     nextN hd >>= mIndicesOf' 0
 
+  mInsert :: Int -> a -> MULinkedList a s -> ST s ()
+  mInsert index e mll@(MULinkedList lR _ iR cR) = do
+    l <- readMURef lR
+    if index < 0 || index > l
+      then outOfBoundError index
+      else do
+        accessNode index mll
+        cur <- readSTRef cR
+        prv <- prevN cur
+        nR  <- newSTRef cur
+        pR  <- newSTRef prv
+        eR  <- newMURef e
+        let newNode = MUNode pR eR nR
+        writeSTRef (prevNRef cur) newNode
+        writeSTRef (nextNRef prv) newNode
+        writeSTRef cR newNode
+        writeMURef lR $ l + 1
+
   mSet :: MULinkedList a s -> Int -> a -> ST s ()
   mSet mll@(MULinkedList _ _ _ cR) index e = do
     accessNode index mll
@@ -122,7 +122,7 @@ instance MU a s => MList MULinkedList a ST s where
     if isHead cur
       then outOfBoundError index
       else do
-        let MNode _ eR _ = cur
+        let MUNode _ eR _ = cur
         writeMURef eR e
 
   mSize :: MULinkedList a s -> ST s Int
@@ -177,7 +177,7 @@ instance MU a s => MList MULinkedList a ST s where
     nR  <- newSTRef cur
     pR  <- newSTRef prv
     eR  <- newMURef e
-    let newNode = MNode pR eR nR
+    let newNode = MUNode pR eR nR
     writeSTRef (prevNRef cur) newNode
     writeSTRef (nextNRef prv) newNode
     modifyMURef lR succ
@@ -215,7 +215,7 @@ instance MU a s => MList MULinkedList a ST s where
     pR  <- newSTRef cur
     nR  <- newSTRef nxt
     eR  <- newMURef e
-    let newNode = MNode pR eR nR
+    let newNode = MUNode pR eR nR
     writeSTRef (nextNRef cur) newNode
     writeSTRef (prevNRef nxt) newNode
     modifyMURef lR succ
@@ -279,13 +279,13 @@ emptyMULinkedList = do
 
 -- | Utility Function.
 -- Returns the head of a linked list
-getHead :: MULinkedList a s -> ST s (MNode a s)
+getHead :: MULinkedList a s -> ST s (MUNode a s)
 getHead (MULinkedList _ hR _ _)
   = readSTRef hR
 
 -- | Utility Function.
 -- Tests if a node is head.
-isHead :: MNode a s -> Bool
+isHead :: MUNode a s -> Bool
 isHead (MHead _ _)
   = True
 isHead _
@@ -293,7 +293,7 @@ isHead _
 
 -- | Utility Function
 -- Creates a head of a linked list.
-newHead :: ST s (MNode a s)
+newHead :: ST s (MUNode a s)
 newHead = do
   pR <- newSTRef undefined
   nR <- newSTRef undefined
@@ -304,35 +304,35 @@ newHead = do
 
 -- | Utility Function.
 -- Returns the next node.
-nextN :: MNode a s -> ST s (MNode a s)
+nextN :: MUNode a s -> ST s (MUNode a s)
 nextN = readSTRef . nextNRef
 
 -- | Utility Function.
 -- The reference to the next node.
-nextNRef :: MNode a s -> STRef s (MNode a s)
+nextNRef :: MUNode a s -> STRef s (MUNode a s)
 nextNRef (MHead _ nR)
   = nR
-nextNRef (MNode _ _ nR)
+nextNRef (MUNode _ _ nR)
   = nR
 
 -- | Utility Function.
 -- Returns the previous node.
-prevN :: MNode a s -> ST s (MNode a s)
+prevN :: MUNode a s -> ST s (MUNode a s)
 prevN = readSTRef . prevNRef
 
 -- | Utility Function.
 -- The reference to the previous node.
-prevNRef :: MNode a s -> STRef s (MNode a s)
+prevNRef :: MUNode a s -> STRef s (MUNode a s)
 prevNRef (MHead pR _)
   = pR
-prevNRef (MNode pR _ _)
+prevNRef (MUNode pR _ _)
   = pR
 
 -- | Unsafe: Does not check if the node is head.
--- Get the element from an @MNode@.
+-- Get the element from an @MUNode@.
 -- Pre: The node is not head.
-nodeElem :: MU a s => MNode a s -> ST s a
-nodeElem (MNode _ eR _)
+nodeElem :: MU a s => MUNode a s -> ST s a
+nodeElem (MUNode _ eR _)
   = readMURef eR
 
 

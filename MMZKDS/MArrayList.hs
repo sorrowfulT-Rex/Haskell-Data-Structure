@@ -82,26 +82,6 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 --------------------------------------------------------------------------------
 
 instance MList MArrayList a ST s where
-  mAdd :: Int -> a -> MArrayList a s -> ST s ()
-  mAdd index e mal@(MArrayList lR arrR) = do
-    ls <- mSize mal
-    ps <- mPhysicalSize mal
-    if index < 0 || index > ls
-      then outOfBoundError index
-      else if ls == ps
-        then do
-          resized <- mResize (expandedSize ls) mal
-          let MArrayList rlR resR = resized
-          rl      <- readSTRef rlR
-          writeSTRef lR rl
-          resST   <- readSTRef resR
-          writeSTRef arrR resST
-          mAdd index e resized
-        else do
-          arrST <- readSTRef arrR
-          writeSTRef lR $! ls + 1
-          unsafeAddST index e (ls - 1) arrST
-
   mClear :: MArrayList a s -> ST s ()
   mClear (MArrayList lR arrR) 
     = writeSTRef lR 0
@@ -124,6 +104,26 @@ instance MList MArrayList a ST s where
           then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
+  mInsert :: Int -> a -> MArrayList a s -> ST s ()
+  mInsert index e mal@(MArrayList lR arrR) = do
+    ls <- mSize mal
+    ps <- mPhysicalSize mal
+    if index < 0 || index > ls
+      then outOfBoundError index
+      else if ls == ps
+        then do
+          resized <- mResize (expandedSize ls) mal
+          let MArrayList rlR resR = resized
+          rl      <- readSTRef rlR
+          writeSTRef lR rl
+          resST   <- readSTRef resR
+          writeSTRef arrR resST
+          mInsert index e resized
+        else do
+          arrST <- readSTRef arrR
+          writeSTRef lR $! ls + 1
+          unsafeAddST index e (ls - 1) arrST
+          
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MArrayList lR arrR) = do
     ls <- mSize mal
@@ -295,6 +295,6 @@ foom :: IO ()
 foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
-    mAdd 2 100 mal
+    mInsert 2 100 mal
     al  <- arrayListFreeze mal
     return [D al]

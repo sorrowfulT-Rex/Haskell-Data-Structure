@@ -43,21 +43,6 @@ instance Foldable ArrayList where
 --------------------------------------------------------------------------------
 
 instance List ArrayList a where
-  insert :: Int -> a -> ArrayList a -> ArrayList a
-  insert index e al@(ArrayList l arr)
-    | index > l || index < 0 = outOfBoundError index
-    | l == pl                = insert index e (resize l' al)
-    | otherwise 
-      = ArrayList (l + 1) 
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
-    where
-      pl = physicalSize al
-      l' = expandedSize l
-      worker _ i
-        | i < index = arr ! i
-        | i > index = arr ! (i - 1)
-        | otherwise = e
-
   clear :: ArrayList a -> ArrayList a
   clear (ArrayList l arr)
     = ArrayList 0 arr
@@ -88,6 +73,21 @@ instance List ArrayList a where
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
   
+  insert :: Int -> a -> ArrayList a -> ArrayList a
+  insert index e al@(ArrayList l arr)
+    | index > l || index < 0 = outOfBoundError index
+    | l == pl                = insert index e (resize l' al)
+    | otherwise 
+      = ArrayList (l + 1) 
+        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
+    where
+      pl = physicalSize al
+      l' = expandedSize l
+      worker _ i
+        | i < index = arr ! i
+        | i > index = arr ! (i - 1)
+        | otherwise = e
+
   newList :: Foldable f => f a -> ArrayList a
   newList fl
     = ArrayList l (array (0, l' - 1) $ zip [0..] $ F.toList fl)
