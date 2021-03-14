@@ -77,11 +77,11 @@ instance MList MLinkedList a ST s where
     if index < 0 || index >= l
       then return Nothing
       else do
+        i   <- readSTRef iR
         accessNode index mll
         cur <- readSTRef cR
         prv <- prevN cur
         nxt <- nextN cur
-        i   <- readSTRef iR
         writeSTRef (prevNRef nxt) prv
         writeSTRef (nextNRef prv) nxt
         writeSTRef lR $! l - 1

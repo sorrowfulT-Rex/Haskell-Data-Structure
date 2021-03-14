@@ -80,11 +80,11 @@ instance MU a s => MList MULinkedList a ST s where
     if index < 0 || index >= l
       then return Nothing
       else do
+        i   <- readMURef iR
         accessNode index mll
         cur <- readSTRef cR
         prv <- prevN cur
         nxt <- nextN cur
-        i   <- readMURef iR
         writeSTRef (prevNRef nxt) prv
         writeSTRef (nextNRef prv) nxt
         writeMURef lR $ l - 1
@@ -339,7 +339,7 @@ nodeElem (MNode _ eR _)
 
 bar = runST $ do
   e  <- newMList [1..10] :: ST s (MULinkedList Int s)
-  accessNode 0 e
+  accessNode 1 e
   f  <- mPopFront e
   let MULinkedList _ _ _ cR = e
   nd <- readSTRef cR
