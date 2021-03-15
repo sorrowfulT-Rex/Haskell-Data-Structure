@@ -222,11 +222,11 @@ instance MList MLinkedList a ST s where
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance MDS (MLinkedList a) s where
+instance MDS (MLinkedList a) ST s where
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
   copy = (>>= new) . mToList
 
-instance MDSCons [a] (MLinkedList a) s where
+instance MDSCons [a] (MLinkedList a) ST s where
   finish :: MLinkedList a s -> ST s [a]
   finish = mToList
 

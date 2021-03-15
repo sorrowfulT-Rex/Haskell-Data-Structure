@@ -210,7 +210,7 @@ class DSCons [e] (l e) => List l e where
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
 -- first argument.
 --
-class (Monad (m s), MDS (l e) s, MDSCons [e] (l e) s) => MList l e m s where
+class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by
   -- inserting the given element before the index.

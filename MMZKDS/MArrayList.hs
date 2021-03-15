@@ -263,7 +263,7 @@ instance MArrayBased MArrayList a ST s where
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance MDS (MArrayList a) s where
+instance MDS (MArrayList a) ST s where
   copy :: MArrayList a s -> ST s (MArrayList a s)
   copy (MArrayList lR arrR) = do
     l     <- readSTRef lR
@@ -274,7 +274,7 @@ instance MDS (MArrayList a) s where
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
-instance MDSCons [a] (MArrayList a) s where
+instance MDSCons [a] (MArrayList a) ST s where
   finish :: MArrayList a s -> ST s [a]
   finish = mToList
 

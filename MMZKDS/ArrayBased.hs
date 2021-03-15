@@ -49,7 +49,7 @@ class DSCons [e] (a e) => ArrayBased a e where
 -- Minimal implementation requires @mDeepClear@, @mNewWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class (Monad (m s), MDS (a e) s, MDSCons [e] (a e) s) 
+class (Monad (m s), MDS (a e) m s, MDSCons [e] (a e) m s) 
   => MArrayBased a e m s where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.

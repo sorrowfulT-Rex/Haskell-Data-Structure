@@ -281,7 +281,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
-  MDS (MUArrayList a) s where
+  MDS (MUArrayList a) ST s where
   copy :: MUArrayList a s -> ST s (MUArrayList a s)
   copy (MUArrayList lR arrR) = do
     l     <- readMURef lR
@@ -293,7 +293,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
     return $ MUArrayList rlR resR
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
-  => MDSCons [a] (MUArrayList a) s where
+  => MDSCons [a] (MUArrayList a) ST s where
   finish :: MUArrayList a s -> ST s [a]
   finish = mToList
 

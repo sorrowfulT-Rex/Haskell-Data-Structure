@@ -8,14 +8,14 @@ import           Control.Monad.ST (ST(..))
 -- (strict) ST monad.
 -- It provides a single @copy@ method.
 --
-class MDS d s where
+class Monad (m s) => MDS d m s where
   -- | The 'copy' method returns a new mutable data structure containing the
   -- same data as the argument provides.
   -- Note that this copy is "shallow" by nature, in other words, if the data
   -- structure contains pointers such as @STRef@, it is expected to copy the
   -- reference only.
   --
-  copy :: d s -> ST s (d s)
+  copy :: d s -> m s (d s)
 
 -- | The 'MDSCons' class defines how to initialise the mutable data structure
 -- from or to a potentially different immutable data structure.
@@ -24,11 +24,11 @@ class MDS d s where
 -- 'Foo a s', then @instance [a] (Foo a) s@ is used to define how to make a new 
 -- instance of 'Foo' from a list.
 --
-class MDSCons a d s where
+class Monad (m s) => MDSCons a d m s where
     -- | Turn the mutable data structure to the given immutable data structure
-  finish :: d s -> ST s a
+  finish :: d s -> m s a
 
   -- | Create a new mutable data structure from the given immutable data 
   -- structure.
   --
-  new :: a -> ST s (d s)
+  new :: a -> m s (d s)

@@ -225,11 +225,11 @@ instance MU a s => MList MULinkedList a ST s where
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance MU a s => MDS (MULinkedList a) s where
+instance MU a s => MDS (MULinkedList a) ST s where
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
   copy = (>>= new) . mToList
 
-instance MU a s => MDSCons [a] (MULinkedList a) s where
+instance MU a s => MDSCons [a] (MULinkedList a) ST s where
   finish :: MULinkedList a s -> ST s [a]
   finish = mToList
 
