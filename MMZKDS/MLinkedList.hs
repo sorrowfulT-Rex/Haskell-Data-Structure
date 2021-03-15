@@ -145,25 +145,6 @@ instance MList MLinkedList a ST s where
     ls <- mSize mll
     forM [(max inf 0)..(min sup ls - 1)] 
       ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= mNewList
-    
-  mToList :: MLinkedList a s -> ST s [a]
-  mToList mll = do
-    let mToList' node = do
-        if isHead node
-          then return []
-          else do
-            nxt <- nextN node
-            e   <- nodeElem node
-            rst <- mToList' nxt
-            return $ e : rst
-    hd <- getHead mll
-    nextN hd >>= mToList'
-
-  mNewList :: Foldable f => f a -> ST s (MLinkedList a s)
-  mNewList xs = do
-    mll <- emptyMLinkedList
-    forM_ xs (flip mAppend mll)
-    return mll
 
   -- Overwritten default method
   mAppend :: a -> MLinkedList a s -> ST s ()
@@ -228,10 +209,23 @@ instance MDS (MLinkedList a) ST s where
 
 instance MDSCons [a] (MLinkedList a) ST s where
   finish :: MLinkedList a s -> ST s [a]
-  finish = mToList
+  finish mll = do
+    let mToList' node = do
+        if isHead node
+          then return []
+          else do
+            nxt <- nextN node
+            e   <- nodeElem node
+            rst <- mToList' nxt
+            return $ e : rst
+    hd <- getHead mll
+    nextN hd >>= mToList'
 
   new :: [a] -> ST s (MLinkedList a s)
-  new = mNewList
+  new xs = do
+    mll <- emptyMLinkedList
+    forM_ xs (flip mAppend mll)
+    return mll
 
 
 --------------------------------------------------------------------------------
@@ -338,7 +332,7 @@ nodeElem (MNode _ eR _)
 
 bar = runST $ do
   e  <- mNewList [1..10] :: ST s (MLinkedList Int s)
-  accessNode 0 e
+  accessNode 1 e
   f  <- mPopFront e
   let MLinkedList _ _ _ cR = e
   nd <- readSTRef cR

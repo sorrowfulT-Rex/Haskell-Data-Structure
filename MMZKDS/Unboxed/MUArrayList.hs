@@ -190,14 +190,6 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
         resR <- newSTRef resST
         return $ MUArrayList lR resR
 
-  mToList :: MUArrayList a s -> ST s [a]
-  mToList mal = do
-    al <- uArrayListFreeze mal
-    return $ toList al
-
-  mNewList :: Foldable f => f a -> ST s (MUArrayList a s)
-  mNewList = uArrayListThaw . newList
-
   -- Overwritten default method
   mIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = do
@@ -295,10 +287,12 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
   => MDSCons [a] (MUArrayList a) ST s where
   finish :: MUArrayList a s -> ST s [a]
-  finish = mToList
+  finish mal = do
+    al <- uArrayListFreeze mal
+    return $ toList al
 
   new :: [a] -> ST s (MUArrayList a s)
-  new = mNewList
+  new = uArrayListThaw . newList
 
 
 --------------------------------------------------------------------------------
@@ -315,5 +309,5 @@ foom = do
   print $ runST $ do
     mal <- mNewList [100,99..1] :: ST s (MUArrayList Int s)
     mSort mal
-    al  <- uArrayListFreeze mal
-    return [D al, D $ physicalSize al]
+    al  <- mToList mal
+    return [D al]

@@ -174,14 +174,6 @@ instance MList MArrayList a ST s where
         resR <- newSTRef resST
         return $ MArrayList lR resR
 
-  mToList :: MArrayList a s -> ST s [a]
-  mToList mal = do
-    al <- arrayListFreeze mal
-    return $ toList al
-
-  mNewList :: Foldable f => f a -> ST s (MArrayList a s)
-  mNewList = arrayListThaw . newList
-
   -- Overwritten default method
   mIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = do
@@ -276,10 +268,12 @@ instance MDS (MArrayList a) ST s where
 
 instance MDSCons [a] (MArrayList a) ST s where
   finish :: MArrayList a s -> ST s [a]
-  finish = mToList
+  finish mal = do
+    al <- arrayListFreeze mal
+    return $ toList al
 
   new :: [a] -> ST s (MArrayList a s)
-  new = mNewList
+  new = arrayListThaw . newList
 
 
 --------------------------------------------------------------------------------
@@ -296,5 +290,5 @@ foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
     mInsert 2 100 mal
-    al  <- arrayListFreeze mal
-    return [D al]
+    al  <- mToList mal
+    return al

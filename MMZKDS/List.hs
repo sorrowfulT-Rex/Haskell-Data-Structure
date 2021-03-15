@@ -9,8 +9,8 @@ import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 
-import           MMZKDS.DS (DSCons(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.DS as DS (DSCons(..))
+import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------
@@ -20,11 +20,12 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- | 'List' is a type class for immutable sequential (list) data structures, 
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
+-- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- Minimal implementation requires @clear@, @delete@, @get@, @indicesOf@, 
--- @insert@, @newList@, @set@, @size@ and @subList@.
+-- @insert@, @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
--- @lastIndexOf@, @pop@, @popFront@, @push@, @remove@, @sort@, @sortOn@, 
--- @toList@ and @update@.
+-- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @sort@, 
+-- @sortOn@, @toList@ and @update@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
@@ -68,11 +69,6 @@ class DSCons [e] (l e) => List l e where
   --
   indicesOf :: Eq e => l e -> e -> [Int]
 
-  -- | Returns a new list structure with the elements of a 'Foldable' instance,
-  -- for example, @[a]@.
-  --
-  newList :: Foldable f => f e -> l e 
-
   -- | Takes a list structure, an @Int@ as index and an element, returns a list
   -- that overwrites the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
@@ -87,10 +83,6 @@ class DSCons [e] (l e) => List l e where
   -- (inclusive) to the second argument (exclusive).
   --
   subList :: Int -> Int -> l e -> l e
-
-  -- | Return the list representation of the list structure.
-  toList :: l e -> [e]
-
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
@@ -139,6 +131,12 @@ class DSCons [e] (l e) => List l e where
       notFound = null indices
       indices  = indicesOf l e
 
+  -- | Default Method
+  -- Returns a new list structure with from @[]@.
+  --
+  newList :: [e] -> l e 
+  newList = DS.new
+
   -- | Default method.
   -- Removes the last element from the list structure.
   -- Returns a tuple containing the removed element and a list that removes the 
@@ -162,6 +160,11 @@ class DSCons [e] (l e) => List l e where
   --
   push :: e -> l e -> l e
   push = insert 0
+
+  -- | Default method.
+  -- Return the list representation of the list structure.
+  toList :: l e -> [e]
+  toList = DS.finish
 
   -- | Default method.
   -- Removes the first occurrence of an element from the list structure, and
@@ -198,13 +201,12 @@ class DSCons [e] (l e) => List l e where
 -- @ST@-monad, with 
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
--- It is expected that the type implements 'MDS' and 'MDSCons' with @[e]@.
+-- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- Minimal implementation requires @mClear@, @mDelete@, @mGet@, @mInsert@,
--- @mIndicesOf@, @mNewList@ @mSet@, @mSize@, @mSortOn@, @mSubList@,
--- and @mToList@ .
+-- @mIndicesOf@, @mSet@, @mSize@, @mSortOn@ and @mSubList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
--- @mLastIndexOf@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@ and 
--- @mUpdate@.
+-- @mLastIndexOf@, @mNewList@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@,
+-- @mToList@ and  @mUpdate@.
 -- For methods that involves indices or elements, if the method changes the size
 -- of the list (e.g. @mAdd@ or @mPop@), the list is the last argument; if the
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
@@ -245,11 +247,6 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   --
   mIndicesOf :: Eq e => l e s -> e -> m s [Int]
 
-  -- | Returns a new list structure with the elements of a 'Foldable' instance,
-  -- for example, @[a]@.
-  --
-  mNewList :: Foldable f => f e -> m s (l e s)
-
   -- | Takes a list structure, an @Int@ as index and an element, modifies the list
   -- by overwriting the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
@@ -268,10 +265,6 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- (inclusive) to the second argument (exclusive).
   --
   mSubList :: Int -> Int -> l e s -> m s (l e s)
-
-  -- | Returns the default list (@[a]@) representation of the list structure.
-  --
-  mToList :: l e s -> m s [e]
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
@@ -311,6 +304,12 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
     return $ if null indices
       then Nothing
       else Just $ last indices
+
+  -- | Default method.
+  -- Returns a new list structure with from @[]@.
+  --
+  mNewList :: [e] -> m s (l e s)
+  mNewList = MDS.new
 
   -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.
@@ -358,6 +357,11 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   {-# INLINE mSort #-}
   mSort :: Ord e => l e s -> m s ()
   mSort = mSortOn id
+
+  -- | Returns the default list (@[]@) representation of the list structure.
+  --
+  mToList :: l e s -> m s [e]
+  mToList = MDS.finish
 
   -- | Default method.
   -- Takes a list structure, an @Int@ as index, and a function updating an

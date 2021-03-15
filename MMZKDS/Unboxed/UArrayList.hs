@@ -167,10 +167,21 @@ instance IArray UArray a => ArrayBased UArrayList a where
 
 instance IArray UArray a => DSCons [a] (UArrayList a) where
   finish :: UArrayList a -> [a]
-  finish = L.toList
+  finish (UArrayList l arr)
+    = toList' lb
+    where
+      (lb, _) = bounds arr
+      sup     = lb + l
+      toList' i
+        | i == sup  = []
+        | otherwise = (arr ! i) : toList' (i + 1)
 
   new :: [a] -> UArrayList a
-  new = newList
+  new list
+    = UArrayList l (array (0, l' - 1) $ zip [0..] list)
+    where
+      l  = length list
+      l' = initialSize l
 
 
 --------------------------------------------------------------------------------
@@ -179,5 +190,5 @@ instance IArray UArray a => DSCons [a] (UArrayList a) where
 
 foo :: IO ()
 foo = do
-  al  <- return $ (new [4::Int, 3, 2, 1] :: UArrayList Int)
-  print $ (finish $ sort al :: [Int])
+  al  <- return $ (newList [4::Int, 3, 2, 1] :: UArrayList Int)
+  print $ (L.toList $ sort al :: [Int])

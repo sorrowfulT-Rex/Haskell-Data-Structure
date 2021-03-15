@@ -87,13 +87,6 @@ instance List ArrayList a where
         | i > index = arr ! (i - 1)
         | otherwise = e
 
-  newList :: Foldable f => f a -> ArrayList a
-  newList fl
-    = ArrayList l (array (0, l' - 1) $ zip [0..] $ F.toList fl)
-    where
-      l  = length fl
-      l' = initialSize l
-
   set :: ArrayList a -> Int -> a -> ArrayList a
   set al@(ArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
@@ -170,7 +163,11 @@ instance DSCons [a] (ArrayList a) where
   finish = L.toList
 
   new :: [a] -> ArrayList a
-  new = newList
+  new list
+    = ArrayList l (array (0, l' - 1) $ zip [0..] list)
+    where
+      l  = length list
+      l' = initialSize l
 
 
 --------------------------------------------------------------------------------
