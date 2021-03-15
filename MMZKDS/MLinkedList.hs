@@ -305,6 +305,13 @@ nextNRef (MHead _ nR)
 nextNRef (MNode _ _ nR)
   = nR
 
+-- | Unsafe: Does not check if the node is head.
+-- Get the element from an @MNode@.
+-- Pre: The node is not head.
+nodeElem :: MNode a s -> ST s a
+nodeElem (MNode _ eR _)
+  = readSTRef eR
+
 -- | Utility Function.
 -- Returns the previous node.
 prevN :: MNode a s -> ST s (MNode a s)
@@ -317,13 +324,6 @@ prevNRef (MHead pR _)
   = pR
 prevNRef (MNode pR _ _)
   = pR
-
--- | Unsafe: Does not check if the node is head.
--- Get the element from an @MNode@.
--- Pre: The node is not head.
-nodeElem :: MNode a s -> ST s a
-nodeElem (MNode _ eR _)
-  = readSTRef eR
 
 
 --------------------------------------------------------------------------------

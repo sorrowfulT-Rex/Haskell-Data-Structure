@@ -16,17 +16,22 @@ MDS is short for Mutable Data Structure. This file provides type classes for mut
 It contains `class MDS` providing a way of copying, and `class MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
 See the [Haddocks](MMZKDS/MDS.hs) for full documentation.  
 
-# [MMZKDS/List.hs](MMZKDS/List.hs)
-This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, finding indices *etc.*   
-There are two classes, namely `List` and `MList`, for immutable and mutable lists, respectively.  
-The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
-Instances of `List` and `MList` are automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
-See the [Haddocks](MMZKDS/List.hs) for full documentation.  
-
 # [MMZKDS/ArrayBased.hs](MMZKDS/ArrayBased.hs)
 This file provides type classes for immutable and mutable data structures in which their implementations are based on arrays.  
 The classes `ArrayBased` and `MArrayBased` provide methods for re-allocating arrays in the need of larger or smaller length.  
 See the [Haddocks](MMZKDS/ArrayBased.hs) for full documentation.  
+
+# [MMZKDS/List.hs](MMZKDS/List.hs)
+This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, finding indices *etc.*   
+There are two classes, namely `List` and `MList`, for immutable and mutable lists, respectively.  
+The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
+Instances of `List` is automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
+See the [Haddocks](MMZKDS/List.hs) for full documentation.  
+
+# [MMZKDS/Queue.hs](MMZKDS/Queue.hs)
+This file provides type classes for both immutable and mutable queue structures.  
+There are two classes, namely `Queue` and `MQueue`, for immutable and mutable lists, respectively.  
+See the [Haddocks](MMZKDS/Queue.hs) for full documentation.  
 
 # [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  

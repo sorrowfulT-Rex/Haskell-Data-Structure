@@ -20,7 +20,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- | 'List' is a type class for immutable sequential (list) data structures, 
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
--- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
+-- It is expected that the type implements 'DSCons' with @[]@.
 -- Minimal implementation requires @clear@, @delete@, @get@, @indicesOf@, 
 -- @insert@, @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
