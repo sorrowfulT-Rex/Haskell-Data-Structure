@@ -5,7 +5,7 @@ module MMZKDS.MDS where
 import           Control.Monad.ST (ST(..))
 
 -- | The 'MDS' class is a type class for mutable data structures living in the 
--- (strict) ST monad.
+-- ST monad.
 -- It provides ways to copy the data structure and to clear all elements.
 -- Minimum implementation reqires @clear@ and @copy@.
 --

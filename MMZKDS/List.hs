@@ -9,7 +9,7 @@ import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 
-import           MMZKDS.DS as DS (DSCons(..))
+import           MMZKDS.DS as DS (DS(..), DSCons(..))
 import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 
 
@@ -20,9 +20,9 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- | 'List' is a type class for immutable sequential (list) data structures, 
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
--- It is expected that the type implements 'DSCons' with @[]@.
--- Minimal implementation requires @clear@, @delete@, @get@, @indicesOf@, 
--- @insert@, @set@, @size@ and @subList@.
+-- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
+-- Minimal implementation requires  @delete@, @get@, @indicesOf@, @insert@,
+-- @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
 -- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @sort@, 
 -- @sortOn@, @toList@ and @update@.
@@ -34,7 +34,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
 -- argument.
 --
-class DSCons [e] (l e) => List l e where
+class (DS (l e), DSCons [e] (l e)) => List l e where
   -- | Adds an element into the list structure.
   -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.
@@ -42,12 +42,6 @@ class DSCons [e] (l e) => List l e where
   -- the function returns an error.
   --
   insert :: Int -> e -> l e -> l e
-
-  -- | Returns an empty list.
-  -- Note that it is not guaranteed that any element is physically removed from
-  -- the list structure; the method may simply render all elements inaccessible.
-  --
-  clear :: l e -> l e
 
   -- | Removes an element from the list structure.
   -- Takes an @Int@ as index and a list, returns a tuple containing the removed 

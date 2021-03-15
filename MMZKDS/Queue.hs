@@ -7,7 +7,7 @@ module MMZKDS.Queue where
 
 import           Data.Maybe (fromJust, isNothing)
 
-import           MMZKDS.DS (DSCons(..))
+import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L 
   (List(push, clear, pop), MList(mPush, mClear, mPop))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
@@ -21,10 +21,10 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- It provides methods of adding and removing element from the queue.
 -- The choice of the element being inserted or deleted is up to the 
 -- implementation, but it should follow a queue or priority queue logic.
--- It is expected that the type implements 'DSCons' with @[]@.
+-- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- Minimal implementation requires @add@ and @pop@.
 -- Default method is @peek@.
-class DSCons [e] (q e) => Queue q e where
+class (DS (q e), DSCons [e] (q e)) => Queue q e where
   -- | Adds an element into the queue.
   add :: e -> q e -> q e
 
@@ -64,6 +64,11 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
     if isNothing e
       then return e
       else mAdd (fromJust e) mq >> return e
+
+
+--------------------------------------------------------------------------------
+-- List -> Queue
+--------------------------------------------------------------------------------
 
 instance (List l a, DSCons [a] (l a)) => Queue l a where
   add   = push

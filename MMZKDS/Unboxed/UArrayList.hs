@@ -12,7 +12,7 @@ import           Data.Array.Unboxed
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
-import           MMZKDS.DS (DSCons(..))
+import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -35,10 +35,6 @@ instance (Show a, IArray UArray a) => Show (UArrayList a) where
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => List UArrayList a where
-  clear :: UArrayList a -> UArrayList a
-  clear (UArrayList l arr)
-    = UArrayList 0 arr
-
   delete :: Int -> UArrayList a -> (Maybe a, UArrayList a)
   delete index al@(UArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
@@ -162,9 +158,14 @@ instance IArray UArray a => ArrayBased UArrayList a where
 
 
 --------------------------------------------------------------------------------
--- DSCons Instance
+-- DS & DSCons Instances
 --------------------------------------------------------------------------------
 
+instance IArray UArray a => DS (UArrayList a) where
+  clear :: UArrayList a -> UArrayList a
+  clear (UArrayList _ arr)
+    = UArrayList 0 arr
+  
 instance IArray UArray a => DSCons [a] (UArrayList a) where
   finish :: UArrayList a -> [a]
   finish (UArrayList l arr)

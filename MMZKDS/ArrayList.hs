@@ -9,7 +9,7 @@ import           Data.Array (Array(..), accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
-import           MMZKDS.DS (DSCons(..))
+import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -42,10 +42,6 @@ instance Foldable ArrayList where
 --------------------------------------------------------------------------------
 
 instance List ArrayList a where
-  clear :: ArrayList a -> ArrayList a
-  clear (ArrayList l arr)
-    = ArrayList 0 arr
-
   delete :: Int -> ArrayList a -> (Maybe a, ArrayList a)
   delete index al@(ArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
@@ -155,8 +151,13 @@ instance ArrayBased ArrayList a where
 
 
 --------------------------------------------------------------------------------
--- DSCons Instance
+-- DS & DSCons Instances
 --------------------------------------------------------------------------------
+
+instance DS (ArrayList a) where
+  clear :: ArrayList a -> ArrayList a
+  clear (ArrayList _ arr)
+    = ArrayList 0 arr
 
 instance DSCons [a] (ArrayList a) where
   finish :: ArrayList a -> [a]
