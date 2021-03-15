@@ -82,10 +82,6 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 --------------------------------------------------------------------------------
 
 instance MList MArrayList a ST s where
-  mClear :: MArrayList a s -> ST s ()
-  mClear (MArrayList lR arrR) 
-    = writeSTRef lR 0
-
   mGet :: MArrayList a s -> Int -> ST s a
   mGet mal@(MArrayList lR arrR) index = do
     l <- mSize mal
@@ -256,6 +252,10 @@ instance MArrayBased MArrayList a ST s where
 --------------------------------------------------------------------------------
 
 instance MDS (MArrayList a) ST s where
+  clear :: MArrayList a s -> ST s ()
+  clear (MArrayList lR _) 
+    = writeSTRef lR 0
+
   copy :: MArrayList a s -> ST s (MArrayList a s)
   copy (MArrayList lR arrR) = do
     l     <- readSTRef lR

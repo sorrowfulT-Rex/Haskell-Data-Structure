@@ -47,14 +47,6 @@ data MUNode e s
 --------------------------------------------------------------------------------
 
 instance MU a s => MList MULinkedList a ST s where
-  mClear :: MULinkedList a s -> ST s ()
-  mClear (MULinkedList lR hR iR cR) = do
-    writeMURef lR 0
-    writeMURef iR $ -1
-    hd <- newHead
-    writeSTRef hR hd
-    writeSTRef cR hd
-
   mDelete :: Int -> MULinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MULinkedList lR _ iR cR) = do
     l <- readMURef lR
@@ -207,6 +199,14 @@ instance MU a s => MList MULinkedList a ST s where
 --------------------------------------------------------------------------------
 
 instance MU a s => MDS (MULinkedList a) ST s where
+  clear :: MULinkedList a s -> ST s ()
+  clear (MULinkedList lR hR iR cR) = do
+    writeMURef lR 0
+    writeMURef iR $ -1
+    hd <- newHead
+    writeSTRef hR hd
+    writeSTRef cR hd
+
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
   copy = (>>= new) . mToList
 

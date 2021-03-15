@@ -6,9 +6,16 @@ import           Control.Monad.ST (ST(..))
 
 -- | The 'MDS' class is a type class for mutable data structures living in the 
 -- (strict) ST monad.
--- It provides a single @copy@ method.
+-- It provides ways to copy the data structure and to clear all elements.
+-- Minimum implementation reqires @clear@ and @copy@.
 --
 class Monad (m s) => MDS d m s where
+  -- | Makes the data structure empty, i.e. remove all elements.
+  -- Note that it is not guaranteed that any element is physically removed from
+  -- the structure; the method may simply render all elements inaccessible.
+  --
+  clear :: d s -> m s ()
+
   -- | The 'copy' method returns a new mutable data structure containing the
   -- same data as the argument provides.
   -- Note that this copy is "shallow" by nature, in other words, if the data

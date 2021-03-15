@@ -98,10 +98,6 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
   => MList MUArrayList a ST s where
-  mClear :: MUArrayList a s -> ST s ()
-  mClear (MUArrayList lR arrR) 
-    = writeMURef lR 0
-
   mGet :: MUArrayList a s -> Int -> ST s a
   mGet mal@(MUArrayList lR arrR) index = do
     l <- mSize mal
@@ -274,6 +270,10 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
   MDS (MUArrayList a) ST s where
+  clear :: MUArrayList a s -> ST s ()
+  clear (MUArrayList lR _) 
+    = writeMURef lR 0
+
   copy :: MUArrayList a s -> ST s (MUArrayList a s)
   copy (MUArrayList lR arrR) = do
     l     <- readMURef lR

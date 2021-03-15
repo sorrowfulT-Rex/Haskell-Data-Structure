@@ -44,14 +44,6 @@ data MNode e s
 --------------------------------------------------------------------------------
 
 instance MList MLinkedList a ST s where
-  mClear :: MLinkedList a s -> ST s ()
-  mClear (MLinkedList lR hR iR cR) = do
-    writeSTRef lR 0
-    writeSTRef iR $ -1
-    hd <- newHead
-    writeSTRef hR hd
-    writeSTRef cR hd
-
   mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MLinkedList lR _ iR cR) = do
     l <- readSTRef lR
@@ -204,6 +196,14 @@ instance MList MLinkedList a ST s where
 --------------------------------------------------------------------------------
 
 instance MDS (MLinkedList a) ST s where
+  clear :: MLinkedList a s -> ST s ()
+  clear (MLinkedList lR hR iR cR) = do
+    writeSTRef lR 0
+    writeSTRef iR $ -1
+    hd <- newHead
+    writeSTRef hR hd
+    writeSTRef cR hd
+
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
   copy = (>>= new) . mToList
 

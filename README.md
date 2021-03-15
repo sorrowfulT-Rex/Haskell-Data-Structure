@@ -13,7 +13,7 @@ See the [Haddocks](MMZKDS/DS.hs) for full documentation (TODO).
 
 # [MMZKDS/MDS.hs](MMZKDS/MDS.hs)
 MDS is short for Mutable Data Structure. This file provides type classes for mutable structures.  
-It contains `class MDS` providing a way of copying, and `class MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
+It contains `class MDS` providing ways of copying and clearing, and `class MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
 See the [Haddocks](MMZKDS/MDS.hs) for full documentation.  
 
 # [MMZKDS/ArrayBased.hs](MMZKDS/ArrayBased.hs)

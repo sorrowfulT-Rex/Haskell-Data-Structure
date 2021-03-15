@@ -202,8 +202,8 @@ class DSCons [e] (l e) => List l e where
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
--- Minimal implementation requires @mClear@, @mDelete@, @mGet@, @mInsert@,
--- @mIndicesOf@, @mSet@, @mSize@, @mSortOn@ and @mSubList@.
+-- Minimal implementation requires @mDelete@, @mGet@, @mInsert@, @mIndicesOf@,
+-- @mSet@, @mSize@, @mSortOn@ and @mSubList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
 -- @mLastIndexOf@, @mNewList@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@,
 -- @mToList@ and  @mUpdate@.
@@ -220,12 +220,6 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- the function returns an error.
   --
   mInsert :: Int -> e -> l e s -> m s ()
-
-  -- | Makes the list empty, i.e. remove all elements.
-  -- Note that it is not guaranteed that any element is physically removed from
-  -- the list structure; the method may simply render all elements inaccessible.
-  --
-  mClear :: l e s -> m s ()
 
   -- | Removes an element into the list structure.
   -- Takes an @Int@ as index and a list, returns the removed element and deletes
