@@ -12,9 +12,8 @@ import           Data.Maybe (Maybe(..), isJust)
 import           Data.STRef 
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.List as L (MList(..))
+import           MMZKDS.List (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 
@@ -217,21 +216,6 @@ instance MList MLinkedList a ST s where
     writeSTRef (prevNRef nxt) newNode
     modifySTRef' lR succ
     modifySTRef' iR succ
-
-
---------------------------------------------------------------------------------
--- MQueue Instance
---------------------------------------------------------------------------------
-
-instance MQueue MLinkedList a ST s where
-  mAdd :: a -> MLinkedList a s -> ST s ()
-  mAdd = mPush
-
-  mClear :: MLinkedList a s -> ST s ()
-  mClear = L.mClear
-
-  mPop :: MLinkedList a s -> ST s (Maybe a)
-  mPop = L.mPop
 
 
 --------------------------------------------------------------------------------

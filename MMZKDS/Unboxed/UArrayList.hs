@@ -14,7 +14,6 @@ import           Data.Foldable as F (toList)
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DSCons(..))
 import           MMZKDS.List as L (List(..))
-import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.Utilities 
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
@@ -136,21 +135,6 @@ instance IArray UArray a => List UArrayList a where
       lastIndexOf' i
         | al `get` i == e = Just i
         | otherwise       = lastIndexOf' (i - 1)
-
-
---------------------------------------------------------------------------------
--- Queue Instance
---------------------------------------------------------------------------------
-
-instance IArray UArray a => Queue UArrayList a where
-  add :: a -> UArrayList a -> UArrayList a
-  add = push
-
-  clear :: UArrayList a -> UArrayList a
-  clear = L.clear
-
-  pop :: UArrayList a -> (Maybe a, UArrayList a)
-  pop = L.pop
 
 
 --------------------------------------------------------------------------------

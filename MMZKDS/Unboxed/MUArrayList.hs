@@ -22,16 +22,15 @@ import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.Unboxed.MURef 
   (MURef(..), newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
-import           MMZKDS.List as L (List(newList, toList), MList(..))
+import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unsafe 
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
 -- | @MUArrayList@ is a data structure implementing the 'MList' class with an
--- internal @STArray@.
+-- internal @STUArray@.
 --
 data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 
@@ -225,22 +224,6 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
         if v == e
           then return $ Just i
           else mLastIndexOf' (i - 1) l
-
-
---------------------------------------------------------------------------------
--- MQueue Instance
---------------------------------------------------------------------------------
-
-instance (IArray UArray a, MArray (STUArray s) a (ST s)) => 
-  MQueue MUArrayList a ST s where
-  mAdd :: a -> MUArrayList a s -> ST s ()
-  mAdd = mPush
-
-  mClear :: MUArrayList a s -> ST s ()
-  mClear = L.mClear
-
-  mPop :: MUArrayList a s -> ST s (Maybe a)
-  mPop = L.mPop
 
 
 --------------------------------------------------------------------------------

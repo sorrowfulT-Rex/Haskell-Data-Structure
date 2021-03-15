@@ -14,9 +14,8 @@ import           Data.Maybe (Maybe(..), isJust)
 import           Data.STRef 
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.List as L (MList(..))
+import           MMZKDS.List (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unboxed.MURef
   (MU(..), MURef(..), modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
@@ -221,21 +220,6 @@ instance MU a s => MList MULinkedList a ST s where
     modifyMURef lR succ
     modifyMURef iR succ
     
-
---------------------------------------------------------------------------------
--- MQueue Instance
---------------------------------------------------------------------------------
-
-instance MU a s => MQueue MULinkedList a ST s where
-  mAdd :: a -> MULinkedList a s -> ST s ()
-  mAdd = mPush
-
-  mClear :: MULinkedList a s -> ST s ()
-  mClear = L.mClear
-
-  mPop :: MULinkedList a s -> ST s (Maybe a)
-  mPop = L.mPop
-
 
 --------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
