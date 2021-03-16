@@ -25,7 +25,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
 -- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @sort@, 
--- @sortOn@, @toList@ and @update@.
+-- @sortOn@, @toList@, @update@ and @update'@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
@@ -191,6 +191,12 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   update :: l e -> Int -> (e -> e) -> l e
   update = ap (ap . ((.) .) . set) ((flip id .) . get)
 
+  -- | Default method.
+  -- Strict version of @update@.
+  --
+  update' :: l e -> Int -> (e -> e) -> l e
+  update' = ap (ap . (((.) . ($!)) .) . set) ((flip id .) . get)
+
 -- | 'MList' is a type class for mutable sequential data structures based on the
 -- @ST@-monad, with 
 -- methods including random access, addition, deletion, find index and so on.
@@ -200,7 +206,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
 -- @mSet@, @mSize@, @mSortOn@ and @mSubList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
 -- @mLastIndexOf@, @mNewList@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@,
--- @mToList@ and  @mUpdate@.
+-- @mToList@, @mUpdate@ and @mUpdate'@.
 -- For methods that involves indices or elements, if the method changes the size
 -- of the list (e.g. @mAdd@ or @mPop@), the list is the last argument; if the
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
@@ -360,14 +366,22 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   mUpdate :: l e s -> Int -> (e -> e) -> m s ()
   mUpdate ml index f = do
     v <- mGet ml index
-    mSet ml index (f v)
+    mSet ml index $ f v
+
+  -- | Default method.
+  -- Strict version of @mUpdate@.
+  --
+  mUpdate' :: l e s -> Int -> (e -> e) -> m s ()
+  mUpdate' ml index f = do
+    v <- mGet ml index
+    mSet ml index $! f v
 
 
 --------------------------------------------------------------------------------
 -- List -> Eq
 --------------------------------------------------------------------------------
 
-instance (Eq a, List l a) => Eq (l a) where
+instance {-# OVERLAPPABLE #-} (Eq a, List l a) => Eq (l a) where
   l == l'
     = ls == ls' && all (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)]
     where

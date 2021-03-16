@@ -22,7 +22,7 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 
-# Silly Mac
 .DS_Store
 Playground.hs
 Playground
+Test/*
