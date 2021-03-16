@@ -289,5 +289,5 @@ foom :: IO ()
 foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
-    mInsert 2 100 mal
+    mRemoveAll 1 mal
     mToList mal

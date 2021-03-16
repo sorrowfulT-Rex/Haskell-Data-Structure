@@ -5,9 +5,9 @@
 
 module MMZKDS.List where
 
-import           Control.Monad (ap, join, liftM2, (<=<))
+import           Control.Monad (ap, forM, join, liftM2, (<=<))
 import           Data.List as L (foldl', maximumBy, sort, sortOn)
-import           Data.Maybe (Maybe(..), isJust, maybe)
+import           Data.Maybe (Maybe(..), fromJust, isJust, maybe)
 
 import           MMZKDS.DS as DS (DS(..), DSCons(..))
 import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
@@ -231,8 +231,8 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
 -- Minimal implementation requires @mDelete@, @mGet@, @mInsert@, @mIndicesOf@,
 -- @mSet@, @mSize@, @mSortOn@ and @mSubList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
--- @mLastIndexOf@, @mNewList@, @mPop@, @mPopFront@, @mPush@, @mRemove@, @mSort@,
--- @mToList@, @mUpdate@ and @mUpdate'@.
+-- @mLastIndexOf@, @mNewList@, @mPop@, @mPopFront@, @mPush@, @mRemove@,
+-- @mRemoveAll@, @mRemoveLast@, @mSort@, @mToList@, @mUpdate@ and @mUpdate'@.
 -- For methods that involves indices or elements, if the method changes the size
 -- of the list (e.g. @mAdd@ or @mPop@), the list is the last argument; if the
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
@@ -267,8 +267,8 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   --
   mIndicesOf :: Eq e => l e s -> e -> m s [Int]
 
-  -- | Takes a list structure, an @Int@ as index and an element, modifies the list
-  -- by overwriting the element at the index by the given element.
+  -- | Takes a list structure, an @Int@ as index and an element, modifies the 
+  -- list by overwriting the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
   --
   mSet :: l e s -> Int -> e -> m s ()
@@ -369,6 +369,27 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   mRemove :: Eq e => e -> l e s -> m s (Maybe e)
   mRemove e ml = do
     index <- ml `mIndexOf` e
+    maybe (return Nothing) (`mDelete` ml) index
+
+  -- | Default method.
+  -- Removes all occurrences of an element from the list structure, and returns 
+  -- that element while removing the element.
+  -- If the element does not appear in the list, returns @Nothing@.
+  --
+  mRemoveAll :: Eq e => e -> l e s -> m s [e]
+  mRemoveAll e ml = do
+    indices <- ml `mIndicesOf` e
+    forM (zip indices [0..]) $ \(i, offset) -> do
+      fromJust <$> mDelete (i - offset) ml
+
+  -- | Default method.
+  -- Removes the last occurrence of an element from the list structure, and
+  -- returns that element while removing the element.
+  -- If the element does not appear in the list, returns @Nothing@.
+  --
+  mRemoveLast :: Eq e => e -> l e s -> m s (Maybe e)
+  mRemoveLast e ml = do
+    index <- ml `mLastIndexOf` e
     maybe (return Nothing) (`mDelete` ml) index
 
   -- | Default method.
