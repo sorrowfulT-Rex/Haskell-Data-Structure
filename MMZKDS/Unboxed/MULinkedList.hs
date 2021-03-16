@@ -6,12 +6,12 @@
 
 module MMZKDS.Unboxed.MULinkedList where
 
-import           Control.Monad (forM, forM_)
+import           Control.Monad (forM, forM_, when, (<=<))
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Foldable as F (toList)
-import           Data.List (sortOn)
+import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (Maybe(..), isJust)
-import           Data.STRef 
+import           Data.STRef
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List (MList(..))
@@ -29,8 +29,8 @@ import           MMZKDS.Utilities (outOfBoundError)
 -- It remembers the node most recently accessed, and operating at the vicinity 
 -- of this node is O(1).
 --
-data MULinkedList e s 
-  = MULinkedList 
+data MULinkedList e s
+  = MULinkedList
     (MURef s Int)  -- ^ Length of the Linked-List
     (STRef s (MUNode e s)) -- ^ Point to the head node
     (MURef s Int)  -- ^ Index of the most recently accessed node
@@ -38,9 +38,9 @@ data MULinkedList e s
 
 -- | @MUNode@ represents a single node in @MULinkedList@.
 --
-data MUNode e s 
-  = MHead (STRef s (MUNode e s)) (STRef s (MUNode e s)) 
-  | MUNode (STRef s (MUNode e s)) (MURef s e) (STRef s (MUNode e s)) 
+data MUNode e s
+  = MHead (STRef s (MUNode e s)) (STRef s (MUNode e s))
+  | MUNode (STRef s (MUNode e s)) (MURef s e) (STRef s (MUNode e s))
 
 --------------------------------------------------------------------------------
 -- List Instance
@@ -61,9 +61,7 @@ instance MU a s => MList MULinkedList a ST s where
         writeSTRef (prevUNRef nxt) prv
         writeSTRef (nextUNRef prv) nxt
         writeMURef lR $ l - 1
-        if index == i
-          then writeMURef iR (-1) >> getHead mll >>= writeSTRef cR
-          else return ()
+        when (index == i) $ writeMURef iR (-1) >> getHead mll >>= writeSTRef cR
         Just <$> uNodeElem cur
 
   mGet :: MULinkedList a s -> Int -> ST s a
@@ -125,7 +123,7 @@ instance MU a s => MList MULinkedList a ST s where
     i    <- readMURef iR
     list <- mToList mll
     let list' = sortOn (f . snd) $ zip [0..] list
-    let ui'   = lookup i $ zip (fst <$> list') [0..]
+    let ui'   = elemIndex i (fst <$> list')
     mll' <- mNewList $ snd <$> list'
     hd   <- getHead mll'
     writeSTRef hR $! hd
@@ -138,7 +136,7 @@ instance MU a s => MList MULinkedList a ST s where
   mSubList :: Int -> Int -> MULinkedList a s -> ST s (MULinkedList a s)
   mSubList inf sup mll@(MULinkedList _ _ _ cR) = do
     ls <- mSize mll
-    forM [(max inf 0)..(min sup ls - 1)] 
+    forM [(max inf 0)..(min sup ls - 1)]
       ((>> (readSTRef cR >>= uNodeElem)) . flip accessUNode mll) >>= mNewList
 
   -- Overwritten default method
@@ -192,7 +190,7 @@ instance MU a s => MList MULinkedList a ST s where
     writeSTRef (prevUNRef nxt) newNode
     modifyMURef lR succ
     modifyMURef iR succ
-    
+
 
 --------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
@@ -208,7 +206,7 @@ instance MU a s => MDS (MULinkedList a) ST s where
     writeSTRef cR hd
 
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
-  copy = (>>= new) . mToList
+  copy = new <=< mToList
 
 instance MU a s => MDSCons [a] (MULinkedList a) ST s where
   finish :: MULinkedList a s -> ST s [a]
@@ -227,7 +225,7 @@ instance MU a s => MDSCons [a] (MULinkedList a) ST s where
   new :: [a] -> ST s (MULinkedList a s)
   new xs = do
     mll <- emptyMULinkedList
-    forM_ xs (flip mAppend mll)
+    forM_ xs (`mAppend` mll)
     return mll
 
 
@@ -244,10 +242,10 @@ accessUNode index (MULinkedList lR hR iR cR) = do
   let inBound = index >= 0 && index < l
   let front' i nR
         | i == 0    = readSTRef nR
-        | otherwise = readSTRef nR >>= return . nextUNRef >>= front' (i - 1)
+        | otherwise = readSTRef nR >>= front' (i - 1) . nextUNRef
   let back' i nR
         | i == 0    = readSTRef nR
-        | otherwise = readSTRef nR >>= return . prevUNRef >>= back' (i - 1)
+        | otherwise = readSTRef nR >>= front' (i - 1) . prevUNRef
   let access' i l
         | not inBound              = readSTRef hR
         | index <= i `div` 2       = front' (1 + index) hR
@@ -335,10 +333,10 @@ uNodeElem (MUNode _ eR _)
 
 bar = runST $ do
   e  <- mNewList [1..10] :: ST s (MULinkedList Int s)
-  accessUNode 0 e
+  accessUNode 1 e
   f  <- mPopFront e
   let MULinkedList _ _ _ cR = e
   nd <- readSTRef cR
-  b  <- return $ isHead nd
+  let b = isHead nd
   el <- mToList e
   return (f, b, el)

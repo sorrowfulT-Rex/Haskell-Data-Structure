@@ -5,7 +5,7 @@
 
 module MMZKDS.List where
 
-import           Control.Monad (ap, join, liftM2)
+import           Control.Monad (ap, join, liftM2, (<=<))
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 
@@ -168,7 +168,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   --
   remove :: Eq e => e -> l e -> (Maybe e, l e)
   remove e l
-    = maybe (Nothing, l) (flip delete l) (indexOf l e)
+    = maybe (Nothing, l) (`delete` l) (indexOf l e)
 
   -- | Default method.
   -- Sort the list structure in the default ordering of its elements.
@@ -303,7 +303,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Returns @True@ if and only if the list structure is empty.
   --
   mIsNull :: l e s -> m s Bool
-  mIsNull = (>>= return . (== 0)) . mSize
+  mIsNull = (return . (== 0)) <=< mSize
 
   -- | Default method.
   -- Removes the last element from the list structure.
@@ -337,7 +337,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   mRemove :: Eq e => e -> l e s -> m s (Maybe e)
   mRemove e ml = do
     index <- ml `mIndexOf` e
-    maybe (return Nothing) (flip mDelete ml) index
+    maybe (return Nothing) (`mDelete` ml) index
 
   -- | Default method.
   -- Sort the list structure in the default ordering of its elements.

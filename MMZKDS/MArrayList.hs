@@ -17,7 +17,7 @@ import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
 import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Unsafe 
+import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -92,12 +92,12 @@ instance MList MArrayList a ST s where
   mIndicesOf :: Eq a => MArrayList a s -> a -> ST s [Int]
   mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
     where
-      mIndicesOf' i l 
+      mIndicesOf' i l
         | i >= l = return []
       mIndicesOf' i l = do
         v <- mal `mGet` i
         if v == e
-          then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
+          then fmap (i :) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
   mInsert :: Int -> a -> MArrayList a s -> ST s ()
@@ -119,7 +119,7 @@ instance MList MArrayList a ST s where
           arrST <- readSTRef arrR
           writeSTRef lR $! ls + 1
           unsafeAddST index e (ls - 1) arrST
-          
+
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MArrayList lR arrR) = do
     ls <- mSize mal
@@ -149,7 +149,7 @@ instance MList MArrayList a ST s where
   {-# INLINE mSortOn #-}
   mSortOn :: Ord b => (a -> b) -> MArrayList a s -> ST s ()
   mSortOn f mal@(MArrayList _ arrR) = do
-    arrST <- readSTRef arrR 
+    arrST <- readSTRef arrR
     l     <- mSize mal
     unsafeQuickSort f 0 l arrST
 
@@ -164,7 +164,7 @@ instance MList MArrayList a ST s where
       then mNewList []
       else do
         resST <- newArray_ (0, ps - 1)
-        forM_ [0..(len' - 1)] 
+        forM_ [0..(len' - 1)]
           $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
         lR <- newSTRef len'
         resR <- newSTRef resST
@@ -176,7 +176,7 @@ instance MList MArrayList a ST s where
      l <- mSize mal
      mIndexOf' 0 l
     where
-      mIndexOf' i l    
+      mIndexOf' i l
         | i == l    = return Nothing
         | otherwise = do
           v <- mal `mGet` i
@@ -253,7 +253,7 @@ instance MArrayBased MArrayList a ST s where
 
 instance MDS (MArrayList a) ST s where
   clear :: MArrayList a s -> ST s ()
-  clear (MArrayList lR _) 
+  clear (MArrayList lR _)
     = writeSTRef lR 0
 
   copy :: MArrayList a s -> ST s (MArrayList a s)
@@ -290,5 +290,4 @@ foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
     mInsert 2 100 mal
-    al  <- mToList mal
-    return al
+    mToList mal

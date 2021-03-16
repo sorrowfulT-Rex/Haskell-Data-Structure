@@ -11,7 +11,7 @@ module MMZKDS.MUArrayList where
 import           Control.Monad (forM_, liftM2)
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Array.ST
-  (STUArray(..), MArray(..), freeze, getBounds, newArray_, readArray, thaw, 
+  (STUArray(..), MArray(..), freeze, getBounds, newArray_, readArray, thaw,
    writeArray
   )
 import           Data.Array.Unboxed (IArray(..), UArray(..))
@@ -19,12 +19,12 @@ import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
-import           MMZKDS.Unboxed.MURef 
+import           MMZKDS.Unboxed.MURef
   (MURef(..), newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
 import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Unsafe 
+import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -41,8 +41,8 @@ data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 
 -- | Makes a mutable @MUArrayList@ from an immutable @ArrayList@ by copying. 
 --
-uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s)) 
-               => UArrayList a 
+uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+               => UArrayList a
                -> ST s (MUArrayList a s)
 uArrayListThaw (UArrayList l arr) = do
   arrST <- thaw arr :: ST s (STUArray s Int a)
@@ -52,8 +52,8 @@ uArrayListThaw (UArrayList l arr) = do
 
 -- | Makes a immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
 --
-uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s)) 
-                 => MUArrayList a s 
+uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+                 => MUArrayList a s
                  -> ST s (UArrayList a)
 uArrayListFreeze (MUArrayList lR arrR) = do
   l     <- readMURef lR
@@ -66,9 +66,9 @@ uArrayListFreeze (MUArrayList lR arrR) = do
 -- copying.
 -- The original immutable list should not be used ever since.
 --
-unsafeUArrayListThaw 
+unsafeUArrayListThaw
   :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-  => UArrayList a 
+  => UArrayList a
   -> ST s (MUArrayList a s)
 unsafeUArrayListThaw (UArrayList l arr) = do
   arrST <- unsafeThaw arr
@@ -81,9 +81,9 @@ unsafeUArrayListThaw (UArrayList l arr) = do
 -- copying.
 -- The original mutable list should not be used ever since.
 --
-unsafeUArrayListFreeze 
+unsafeUArrayListFreeze
   :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-  => MUArrayList a s 
+  => MUArrayList a s
   -> ST s (UArrayList a)
 unsafeUArrayListFreeze (MUArrayList lR arrR) = do
   l     <- readMURef lR
@@ -96,7 +96,7 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 -- MList Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
+instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MList MUArrayList a ST s where
   mGet :: MUArrayList a s -> Int -> ST s a
   mGet mal@(MUArrayList lR arrR) index = do
@@ -108,12 +108,12 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   mIndicesOf :: Eq a => MUArrayList a s -> a -> ST s [Int]
   mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
     where
-      mIndicesOf' i l 
+      mIndicesOf' i l
         | i >= l = return []
       mIndicesOf' i l = do
         v <- mal `mGet` i
         if v == e
-          then liftM2 (:) (pure i) (mIndicesOf' (i + 1) l)
+          then fmap (i :) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
   mDelete :: Int -> MUArrayList a s -> ST s (Maybe a)
@@ -165,7 +165,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   {-# INLINE mSortOn #-}
   mSortOn :: Ord b => (a -> b) -> MUArrayList a s -> ST s ()
   mSortOn f mal@(MUArrayList _ arrR) = do
-    arrST <- readSTRef arrR 
+    arrST <- readSTRef arrR
     l     <- mSize mal
     unsafeQuickSort f 0 l arrST
 
@@ -180,7 +180,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
       then mNewList []
       else do
         resST <- newArray_ (0, ps - 1)
-        forM_ [0..(len' - 1)] 
+        forM_ [0..(len' - 1)]
           $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
         lR <- newMURef len'
         resR <- newSTRef resST
@@ -192,7 +192,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
      l <- mSize mal
      mIndexOf' 0 l
     where
-      mIndexOf' i l    
+      mIndexOf' i l
         | i == l    = return Nothing
         | otherwise = do
           v <- mal `mGet` i
@@ -218,7 +218,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
+instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MArrayBased MUArrayList a ST s where
   mDeepClear :: MUArrayList a s -> ST s ()
   mDeepClear (MUArrayList lR arrR) = do
@@ -271,7 +271,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
   MDS (MUArrayList a) ST s where
   clear :: MUArrayList a s -> ST s ()
-  clear (MUArrayList lR _) 
+  clear (MUArrayList lR _)
     = writeMURef lR 0
 
   copy :: MUArrayList a s -> ST s (MUArrayList a s)
@@ -284,7 +284,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
     resR  <- newSTRef resST
     return $ MUArrayList rlR resR
 
-instance (IArray UArray a, MArray (STUArray s) a (ST s)) 
+instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MDSCons [a] (MUArrayList a) ST s where
   finish :: MUArrayList a s -> ST s [a]
   finish mal = do

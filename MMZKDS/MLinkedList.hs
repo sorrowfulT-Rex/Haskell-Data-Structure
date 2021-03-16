@@ -5,11 +5,11 @@
 
 module MMZKDS.MLinkedList where
 
-import           Control.Monad (forM, forM_)
+import           Control.Monad (forM, forM_, when, (<=<))
 import           Control.Monad.ST (ST(..), runST)
-import           Data.List (sortOn)
+import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (Maybe(..), isJust)
-import           Data.STRef 
+import           Data.STRef
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List (MList(..))
@@ -25,8 +25,8 @@ import           MMZKDS.Utilities (outOfBoundError)
 -- It remembers the node most recently accessed, and operating at the vicinity 
 -- of this node is O(1).
 --
-data MLinkedList e s 
-  = MLinkedList 
+data MLinkedList e s
+  = MLinkedList
     (STRef s Int)  -- ^ Length of the Linked-List
     (STRef s (MNode e s)) -- ^ Point to the head node
     (STRef s Int)  -- ^ Index of the most recently accessed node
@@ -34,9 +34,9 @@ data MLinkedList e s
 
 -- | @MNode@ represents a single node in @MLinkedList@.
 --
-data MNode e s 
-  = MHead (STRef s (MNode e s)) (STRef s (MNode e s)) 
-  | MNode (STRef s (MNode e s)) (STRef s e) (STRef s (MNode e s)) 
+data MNode e s
+  = MHead (STRef s (MNode e s)) (STRef s (MNode e s))
+  | MNode (STRef s (MNode e s)) (STRef s e) (STRef s (MNode e s))
 
 
 --------------------------------------------------------------------------------
@@ -58,9 +58,7 @@ instance MList MLinkedList a ST s where
         writeSTRef (prevNRef nxt) prv
         writeSTRef (nextNRef prv) nxt
         writeSTRef lR $! l - 1
-        if index == i
-          then writeSTRef iR (-1) >> getHead mll >>= writeSTRef cR
-          else return ()
+        when (index == i) $ writeSTRef iR (-1) >> getHead mll >>= writeSTRef cR
         Just <$> nodeElem cur
 
   mGet :: MLinkedList a s -> Int -> ST s a
@@ -122,7 +120,7 @@ instance MList MLinkedList a ST s where
     i    <- readSTRef iR
     list <- mToList mll
     let list' = sortOn (f . snd) $ zip [0..] list
-    let ui'   = lookup i $ zip (fst <$> list') [0..]
+    let ui'   = elemIndex i (fst <$> list')
     mll' <- mNewList $ snd <$> list'
     hd   <- getHead mll'
     writeSTRef hR $! hd
@@ -135,7 +133,7 @@ instance MList MLinkedList a ST s where
   mSubList :: Int -> Int -> MLinkedList a s -> ST s (MLinkedList a s)
   mSubList inf sup mll@(MLinkedList _ _ _ cR) = do
     ls <- mSize mll
-    forM [(max inf 0)..(min sup ls - 1)] 
+    forM [(max inf 0)..(min sup ls - 1)]
       ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= mNewList
 
   -- Overwritten default method
@@ -205,7 +203,7 @@ instance MDS (MLinkedList a) ST s where
     writeSTRef cR hd
 
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
-  copy = (>>= new) . mToList
+  copy = new <=< mToList
 
 instance MDSCons [a] (MLinkedList a) ST s where
   finish :: MLinkedList a s -> ST s [a]
@@ -224,7 +222,7 @@ instance MDSCons [a] (MLinkedList a) ST s where
   new :: [a] -> ST s (MLinkedList a s)
   new xs = do
     mll <- emptyMLinkedList
-    forM_ xs (flip mAppend mll)
+    forM_ xs (`mAppend` mll)
     return mll
 
 
@@ -241,10 +239,10 @@ accessNode index (MLinkedList lR hR iR cR) = do
   let inBound = index >= 0 && index < l
   let front' i nR
         | i == 0    = readSTRef nR
-        | otherwise = readSTRef nR >>= return . nextNRef >>= front' (i - 1)
+        | otherwise = readSTRef nR >>= front' (i - 1) . nextNRef
   let back' i nR
         | i == 0    = readSTRef nR
-        | otherwise = readSTRef nR >>= return . prevNRef >>= back' (i - 1)
+        | otherwise = readSTRef nR >>= front' (i - 1) . prevNRef
   let access' i l
         | not inBound              = readSTRef hR
         | index <= i `div` 2       = front' (1 + index) hR
@@ -336,6 +334,6 @@ bar = runST $ do
   f  <- mPopFront e
   let MLinkedList _ _ _ cR = e
   nd <- readSTRef cR
-  b  <- return $ isHead nd
+  let b = isHead nd
   el <- mToList e
   return (f, b, el)

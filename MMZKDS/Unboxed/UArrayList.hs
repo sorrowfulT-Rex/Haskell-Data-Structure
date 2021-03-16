@@ -7,14 +7,14 @@
 module MMZKDS.Unboxed.UArrayList where
 
 import           Control.Monad (join)
-import           Data.Array.Unboxed 
+import           Data.Array.Unboxed
   (IArray(..), UArray(..), accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L (List(..))
-import           MMZKDS.Utilities 
+import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
 -- | @UArrayList@ is a data structure implementing the 'List' class with an
@@ -38,7 +38,7 @@ instance IArray UArray a => List UArrayList a where
   delete :: Int -> UArrayList a -> (Maybe a, UArrayList a)
   delete index al@(UArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = (Just (arr ! index), UArrayList (l - 1) 
+    | otherwise               = (Just (arr ! index), UArrayList (l - 1)
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
     where
       pl = physicalSize al
@@ -60,13 +60,13 @@ instance IArray UArray a => List UArrayList a where
         | i >= l          = []
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
-  
+
   insert :: Int -> a -> UArrayList a -> UArrayList a
   insert index e al@(UArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
     | l == pl                = insert index e (resize l' al)
-    | otherwise 
-      = UArrayList (l + 1) 
+    | otherwise
+      = UArrayList (l + 1)
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
     where
       pl = physicalSize al
@@ -86,16 +86,16 @@ instance IArray UArray a => List UArrayList a where
   set :: UArrayList a -> Int -> a -> UArrayList a
   set al@(UArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = UArrayList l 
+    | otherwise               = UArrayList l
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 1)]
     where
       pl = physicalSize al
       worker _ i
         | i == index = e
         | otherwise  = arr ! i
-  
+
   size :: UArrayList a -> Int
-  size (UArrayList l _) 
+  size (UArrayList l _)
     = l
 
   subList :: Int -> Int -> UArrayList a -> UArrayList a
@@ -165,7 +165,7 @@ instance IArray UArray a => DS (UArrayList a) where
   clear :: UArrayList a -> UArrayList a
   clear (UArrayList _ arr)
     = UArrayList 0 arr
-  
+
 instance IArray UArray a => DSCons [a] (UArrayList a) where
   finish :: UArrayList a -> [a]
   finish (UArrayList l arr)
@@ -191,5 +191,5 @@ instance IArray UArray a => DSCons [a] (UArrayList a) where
 
 foo :: IO ()
 foo = do
-  al  <- return $ (newList [4::Int, 3, 2, 1] :: UArrayList Int)
-  print $ (L.toList $ sort al :: [Int])
+  let al = (newList [4::Int, 3, 2, 1] :: UArrayList Int)
+  print (L.toList $ sort al :: [Int])

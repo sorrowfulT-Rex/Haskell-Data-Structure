@@ -32,7 +32,7 @@ class Monad (m s) => MDS d m s where
 -- instance of 'Foo' from a list.
 --
 class Monad (m s) => MDSCons a d m s where
-    -- | Turn the mutable data structure to the given immutable data structure
+  -- | Turn the mutable data structure to the given immutable data structure
   finish :: d s -> m s a
 
   -- | Create a new mutable data structure from the given immutable data 

@@ -11,7 +11,7 @@ import           Data.Foldable as F (toList)
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L (List(..))
-import           MMZKDS.Utilities 
+import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
@@ -45,7 +45,7 @@ instance List ArrayList a where
   delete :: Int -> ArrayList a -> (Maybe a, ArrayList a)
   delete index al@(ArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = (Just (arr ! index), ArrayList (l - 1) 
+    | otherwise               = (Just (arr ! index), ArrayList (l - 1)
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
     where
       pl = physicalSize al
@@ -67,13 +67,13 @@ instance List ArrayList a where
         | i >= l          = []
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
-  
+
   insert :: Int -> a -> ArrayList a -> ArrayList a
   insert index e al@(ArrayList l arr)
     | index > l || index < 0 = outOfBoundError index
     | l == pl                = insert index e (resize l' al)
-    | otherwise 
-      = ArrayList (l + 1) 
+    | otherwise
+      = ArrayList (l + 1)
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
     where
       pl = physicalSize al
@@ -86,16 +86,16 @@ instance List ArrayList a where
   set :: ArrayList a -> Int -> a -> ArrayList a
   set al@(ArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = ArrayList l 
+    | otherwise               = ArrayList l
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 1)]
     where
       pl = physicalSize al
       worker _ i
         | i == index = e
         | otherwise  = arr ! i
-  
+
   size :: ArrayList a -> Int
-  size (ArrayList l _) 
+  size (ArrayList l _)
     = l
 
   subList :: Int -> Int -> ArrayList a -> ArrayList a
@@ -177,6 +177,5 @@ instance DSCons [a] (ArrayList a) where
 
 foo :: IO ()
 foo = do
-  al  <- return $ (new [4::Int, 3, 2, 1] :: ArrayList Int)
+  let al = new [4::Int, 3, 2, 1] :: ArrayList Int
   print $ sort al
-  
