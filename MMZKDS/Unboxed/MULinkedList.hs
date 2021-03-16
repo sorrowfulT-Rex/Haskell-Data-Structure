@@ -49,39 +49,38 @@ data MUNode e s
 instance MU a s => MList MULinkedList a ST s where
   mDelete :: Int -> MULinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MULinkedList lR _ iR cR) = do
-    let delete' i l
-          | index < 0 || index >= l = return Nothing
-          | index == i              = do
-            cur <- readSTRef cR
-            prv <- prevUN cur
-            nxt <- nextUN cur
-            writeSTRef (prevUNRef nxt) prv
-            writeSTRef (nextUNRef prv) nxt
-            writeMURef lR $ l - 1
-            writeMURef iR (-1)
-            getHead mll >>= writeSTRef cR
-            Just <$> uNodeElem cur
-          | i < index               = do
-            accessUNode (index - 1) mll
-            prv <- readSTRef cR
-            cur <- nextUN prv
-            nxt <- nextUN cur
-            writeSTRef (prevUNRef nxt) prv
-            writeSTRef (nextUNRef prv) nxt
-            writeMURef lR $ l - 1
-            Just <$> uNodeElem cur
-          | otherwise               = do
-            accessUNode (index + 1) mll
-            nxt <- readSTRef cR
-            cur <- prevUN nxt
-            prv <- prevUN cur
-            writeSTRef (prevUNRef nxt) prv
-            writeSTRef (nextUNRef prv) nxt
-            writeMURef lR $ l - 1
-            Just <$> uNodeElem cur
     l <- readMURef lR
-    i <- readMURef iR
-    delete' i l
+    if index < 0 || index >= l
+      then return Nothing
+      else do
+        let preDelete i l
+              | index == i = do
+                cur <- readSTRef cR
+                prv <- prevUN cur
+                nxt <- nextUN cur
+                writeMURef iR (-1)
+                getHead mll >>= writeSTRef cR
+                return (prv, cur, nxt)
+              | i < index  = do
+                accessUNode (index - 1) mll
+                prv <- readSTRef cR
+                cur <- nextUN prv
+                nxt <- nextUN cur
+                return (prv, cur, nxt)
+              | otherwise  = do
+                accessUNode (index + 1) mll
+                nxt <- readSTRef cR
+                cur <- prevUN nxt
+                prv <- prevUN cur
+                return (prv, cur, nxt)
+        let del prv cur nxt = do
+            writeSTRef (prevUNRef nxt) prv
+            writeSTRef (nextUNRef prv) nxt
+            Just <$> uNodeElem cur
+        i <- readMURef iR
+        writeMURef lR $ l - 1
+        (pre, cur, nxt) <- preDelete i l
+        del pre cur nxt
 
   mGet :: MULinkedList a s -> Int -> ST s a
   mGet mll@(MULinkedList _ _ _ cR) index = do
@@ -352,8 +351,8 @@ uNodeElem (MUNode _ eR _)
 
 bar = runST $ do
   e  <- mNewList [1..10] :: ST s (MULinkedList Int s)
-  accessUNode 7 e
-  f  <- mDelete 0 e
+  accessUNode 2 e
+  f  <- mDelete 3 e
   let MULinkedList _ _ _ cR = e
   nd <- readSTRef cR
   b  <- uNodeElem nd

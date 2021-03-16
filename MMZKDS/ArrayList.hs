@@ -169,13 +169,3 @@ instance DSCons [a] (ArrayList a) where
     where
       l  = length list
       l' = initialSize l
-
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-foo :: IO ()
-foo = do
-  let al = new [4::Int, 3, 2, 1] :: ArrayList Int
-  print $ sort al

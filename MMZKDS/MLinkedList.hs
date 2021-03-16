@@ -46,39 +46,38 @@ data MNode e s
 instance MList MLinkedList a ST s where
   mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MLinkedList lR _ iR cR) = do
-    let delete' i l
-          | index < 0 || index >= l = return Nothing
-          | index == i              = do
-            cur <- readSTRef cR
-            prv <- prevN cur
-            nxt <- nextN cur
-            writeSTRef (prevNRef nxt) prv
-            writeSTRef (nextNRef prv) nxt
-            writeSTRef lR $! l - 1
-            writeSTRef iR (-1)
-            getHead mll >>= writeSTRef cR
-            Just <$> nodeElem cur
-          | i < index               = do
-            accessNode (index - 1) mll
-            prv <- readSTRef cR
-            cur <- nextN prv
-            nxt <- nextN cur
-            writeSTRef (prevNRef nxt) prv
-            writeSTRef (nextNRef prv) nxt
-            writeSTRef lR $! l - 1
-            Just <$> nodeElem cur
-          | otherwise               = do
-            accessNode (index + 1) mll
-            nxt <- readSTRef cR
-            cur <- prevN nxt
-            prv <- prevN cur
-            writeSTRef (prevNRef nxt) prv
-            writeSTRef (nextNRef prv) nxt
-            writeSTRef lR $! l - 1
-            Just <$> nodeElem cur
     l <- readSTRef lR
-    i <- readSTRef iR
-    delete' i l
+    if index < 0 || index >= l
+      then return Nothing
+      else do
+        let preDelete i l
+              | index == i = do
+                cur <- readSTRef cR
+                prv <- prevN cur
+                nxt <- nextN cur
+                writeSTRef iR (-1)
+                getHead mll >>= writeSTRef cR
+                return (prv, cur, nxt)
+              | i < index  = do
+                accessNode (index - 1) mll
+                prv <- readSTRef cR
+                cur <- nextN prv
+                nxt <- nextN cur
+                return (prv, cur, nxt)
+              | otherwise  = do
+                accessNode (index + 1) mll
+                nxt <- readSTRef cR
+                cur <- prevN nxt
+                prv <- prevN cur
+                return (prv, cur, nxt)
+        let del prv cur nxt = do
+            writeSTRef (prevNRef nxt) prv
+            writeSTRef (nextNRef prv) nxt
+            Just <$> nodeElem cur
+        i <- readSTRef iR
+        writeSTRef lR $! l - 1
+        (pre, cur, nxt) <- preDelete i l
+        del pre cur nxt
 
   mGet :: MLinkedList a s -> Int -> ST s a
   mGet mll@(MLinkedList _ _ _ cR) index = do
@@ -350,7 +349,7 @@ prevNRef (MNode pR _ _)
 bar = runST $ do
   e  <- mNewList [1..10] :: ST s (MLinkedList Int s)
   accessNode 7 e
-  f  <- mDelete 7 e
+  f  <- mDelete 9 e
   let MLinkedList _ _ _ cR = e
   nd <- readSTRef cR
   b  <- nodeElem nd
