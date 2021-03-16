@@ -6,7 +6,7 @@
 module MMZKDS.List where
 
 import           Control.Monad (ap, join, liftM2, (<=<))
-import           Data.List as L (maximumBy, sort, sortOn)
+import           Data.List as L (foldl', maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
 
 import           MMZKDS.DS as DS (DS(..), DSCons(..))
@@ -21,11 +21,12 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- with methods including random access, addition, deletion and so on.
 -- It is based on the Java List Interface.
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
+-- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires  @delete@, @get@, @indicesOf@, @insert@,
 -- @set@, @size@ and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
--- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @sort@, 
--- @sortOn@, @toList@, @update@ and @update'@.
+-- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@,
+-- @removeLast@, @sort@, @sortOn@, @toList@, @update@ and @update'@.
 -- For functional operations, one can either create an 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
@@ -171,6 +172,30 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
     = maybe (Nothing, l) (`delete` l) (indexOf l e)
 
   -- | Default method.
+  -- Removes the all occurrences of an element from the list structure, and
+  -- returns a tuple of that element and the list without that element.
+  -- If the element does not appear in the list, returns a tuple of @Nothing@
+  -- and the original list.
+  --
+  removeAll :: Eq e => e -> l e -> ([e], l e)
+  removeAll e l
+    = let (a, b, _) = foldl' worker ([], l, 0) indices in (a, b)
+    where
+      indices = l `indicesOf` e
+      worker (es, l, offset) i
+        = let (Just e', l') = delete (i - offset) l in (e' : es, l', offset + 1)
+
+  -- | Default method.
+  -- Removes the last occurrence of an element from the list structure, and
+  -- returns a tuple of that element and the list without that element.
+  -- If the element does not appear in the list, returns a tuple of @Nothing@
+  -- and the original list.
+  --
+  removeLast :: Eq e => e -> l e -> (Maybe e, l e)
+  removeLast e l
+    = maybe (Nothing, l) (`delete` l) (lastIndexOf l e)
+
+  -- | Default method.
   -- Sort the list structure in the default ordering of its elements.
   --
   sort :: Ord e => l e -> l e
@@ -202,6 +227,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
 -- methods including random access, addition, deletion, find index and so on.
 -- It is based on the Java List Interface.  
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
+-- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires @mDelete@, @mGet@, @mInsert@, @mIndicesOf@,
 -- @mSet@, @mSize@, @mSortOn@ and @mSubList@.
 -- Default methods include @mAppend@, @mContains@, @mIndexof@, @mIsNull@, 
