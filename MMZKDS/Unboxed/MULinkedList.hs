@@ -49,20 +49,39 @@ data MUNode e s
 instance MU a s => MList MULinkedList a ST s where
   mDelete :: Int -> MULinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MULinkedList lR _ iR cR) = do
+    let delete' i l
+          | index < 0 || index >= l = return Nothing
+          | index == i              = do
+            cur <- readSTRef cR
+            prv <- prevUN cur
+            nxt <- nextUN cur
+            writeSTRef (prevUNRef nxt) prv
+            writeSTRef (nextUNRef prv) nxt
+            writeMURef lR $ l - 1
+            writeMURef iR (-1)
+            getHead mll >>= writeSTRef cR
+            Just <$> uNodeElem cur
+          | i < index               = do
+            accessUNode (index - 1) mll
+            prv <- readSTRef cR
+            cur <- nextUN prv
+            nxt <- nextUN cur
+            writeSTRef (prevUNRef nxt) prv
+            writeSTRef (nextUNRef prv) nxt
+            writeMURef lR $ l - 1
+            Just <$> uNodeElem cur
+          | otherwise               = do
+            accessUNode (index + 1) mll
+            nxt <- readSTRef cR
+            cur <- prevUN nxt
+            prv <- prevUN cur
+            writeSTRef (prevUNRef nxt) prv
+            writeSTRef (nextUNRef prv) nxt
+            writeMURef lR $ l - 1
+            Just <$> uNodeElem cur
     l <- readMURef lR
-    if index < 0 || index >= l
-      then return Nothing
-      else do
-        i   <- readMURef iR
-        accessUNode index mll
-        cur <- readSTRef cR
-        prv <- prevUN cur
-        nxt <- nextUN cur
-        writeSTRef (prevUNRef nxt) prv
-        writeSTRef (nextUNRef prv) nxt
-        writeMURef lR $ l - 1
-        when (index == i) $ writeMURef iR (-1) >> getHead mll >>= writeSTRef cR
-        Just <$> uNodeElem cur
+    i <- readMURef iR
+    delete' i l
 
   mGet :: MULinkedList a s -> Int -> ST s a
   mGet mll@(MULinkedList _ _ _ cR) index = do
@@ -245,7 +264,7 @@ accessUNode index (MULinkedList lR hR iR cR) = do
         | otherwise = readSTRef nR >>= front' (i - 1) . nextUNRef
   let back' i nR
         | i == 0    = readSTRef nR
-        | otherwise = readSTRef nR >>= front' (i - 1) . prevUNRef
+        | otherwise = readSTRef nR >>= back' (i - 1) . prevUNRef
   let access' i l
         | not inBound              = readSTRef hR
         | index <= i `div` 2       = front' (1 + index) hR
@@ -333,10 +352,10 @@ uNodeElem (MUNode _ eR _)
 
 bar = runST $ do
   e  <- mNewList [1..10] :: ST s (MULinkedList Int s)
-  accessUNode 1 e
-  f  <- mPopFront e
+  accessUNode 7 e
+  f  <- mDelete 0 e
   let MULinkedList _ _ _ cR = e
   nd <- readSTRef cR
-  let b = isHead nd
+  b  <- uNodeElem nd
   el <- mToList e
   return (f, b, el)

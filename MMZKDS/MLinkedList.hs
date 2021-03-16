@@ -5,7 +5,7 @@
 
 module MMZKDS.MLinkedList where
 
-import           Control.Monad (forM, forM_, when, (<=<))
+import           Control.Monad (forM, forM_, (<=<))
 import           Control.Monad.ST (ST(..), runST)
 import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (Maybe(..), isJust)
@@ -44,23 +44,41 @@ data MNode e s
 --------------------------------------------------------------------------------
 
 instance MList MLinkedList a ST s where
-  -- HAS BUG
   mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MLinkedList lR _ iR cR) = do
+    let delete' i l
+          | index < 0 || index >= l = return Nothing
+          | index == i              = do
+            cur <- readSTRef cR
+            prv <- prevN cur
+            nxt <- nextN cur
+            writeSTRef (prevNRef nxt) prv
+            writeSTRef (nextNRef prv) nxt
+            writeSTRef lR $! l - 1
+            writeSTRef iR (-1)
+            getHead mll >>= writeSTRef cR
+            Just <$> nodeElem cur
+          | i < index               = do
+            accessNode (index - 1) mll
+            prv <- readSTRef cR
+            cur <- nextN prv
+            nxt <- nextN cur
+            writeSTRef (prevNRef nxt) prv
+            writeSTRef (nextNRef prv) nxt
+            writeSTRef lR $! l - 1
+            Just <$> nodeElem cur
+          | otherwise               = do
+            accessNode (index + 1) mll
+            nxt <- readSTRef cR
+            cur <- prevN nxt
+            prv <- prevN cur
+            writeSTRef (prevNRef nxt) prv
+            writeSTRef (nextNRef prv) nxt
+            writeSTRef lR $! l - 1
+            Just <$> nodeElem cur
     l <- readSTRef lR
-    if index < 0 || index >= l
-      then return Nothing
-      else do
-        i   <- readSTRef iR
-        accessNode index mll
-        cur <- readSTRef cR
-        prv <- prevN cur
-        nxt <- nextN cur
-        writeSTRef (prevNRef nxt) prv
-        writeSTRef (nextNRef prv) nxt
-        writeSTRef lR $! l - 1
-        when (index == i) $ writeSTRef iR (-1) >> getHead mll >>= writeSTRef cR
-        Just <$> nodeElem cur
+    i <- readSTRef iR
+    delete' i l
 
   mGet :: MLinkedList a s -> Int -> ST s a
   mGet mll@(MLinkedList _ _ _ cR) index = do
@@ -243,7 +261,7 @@ accessNode index (MLinkedList lR hR iR cR) = do
         | otherwise = readSTRef nR >>= front' (i - 1) . nextNRef
   let back' i nR
         | i == 0    = readSTRef nR
-        | otherwise = readSTRef nR >>= front' (i - 1) . prevNRef
+        | otherwise = readSTRef nR >>= back' (i - 1) . prevNRef
   let access' i l
         | not inBound              = readSTRef hR
         | index <= i `div` 2       = front' (1 + index) hR
@@ -331,8 +349,8 @@ prevNRef (MNode pR _ _)
 
 bar = runST $ do
   e  <- mNewList [1..10] :: ST s (MLinkedList Int s)
-  accessNode 1 e
-  f  <- mPopFront e
+  accessNode 7 e
+  f  <- mDelete 7 e
   let MLinkedList _ _ _ cR = e
   nd <- readSTRef cR
   b  <- nodeElem nd

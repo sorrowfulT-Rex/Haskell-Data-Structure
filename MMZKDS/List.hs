@@ -379,8 +379,8 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   mRemoveAll :: Eq e => e -> l e s -> m s [e]
   mRemoveAll e ml = do
     indices <- ml `mIndicesOf` e
-    forM (zip indices [0..]) $ \(i, offset) -> do
-      fromJust <$> mDelete (i - offset) ml
+    forM (zip indices [0..]) $ 
+      \(i, offset) -> fromJust <$> mDelete (i - offset) ml
 
   -- | Default method.
   -- Removes the last occurrence of an element from the list structure, and

@@ -4,7 +4,6 @@
 module MMZKDS.ArrayBased where 
 
 import           Control.Monad (forM_)
-import           Data.Foldable (toList)
 
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
