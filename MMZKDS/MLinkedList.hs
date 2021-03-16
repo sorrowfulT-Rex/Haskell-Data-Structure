@@ -44,6 +44,7 @@ data MNode e s
 --------------------------------------------------------------------------------
 
 instance MList MLinkedList a ST s where
+  -- HAS BUG
   mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MLinkedList lR _ iR cR) = do
     l <- readSTRef lR
@@ -334,6 +335,6 @@ bar = runST $ do
   f  <- mPopFront e
   let MLinkedList _ _ _ cR = e
   nd <- readSTRef cR
-  let b = isHead nd
+  b  <- nodeElem nd
   el <- mToList e
   return (f, b, el)
