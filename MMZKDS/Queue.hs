@@ -9,7 +9,7 @@ import           Data.Maybe (fromJust, isNothing)
 
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L 
-  (List(push, clear, pop), MList(mPush, mClear, mPop))
+  (List(push, pop), MList(mPush, mPop))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
@@ -27,8 +27,6 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 class (DS (q e), DSCons [e] (q e)) => Queue q e where
   -- | Adds an element into the queue.
   add :: e -> q e -> q e
-
-  clear :: q e -> q e
 
   -- | Removes the element at the "front" of the queue, returning a tuple of the
   -- element and the rest of the queue.
@@ -51,8 +49,6 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
   -- | Adds an element into the queue.
   mAdd :: e -> q e s -> m s ()
 
-  mClear :: q e s -> m s ()
-
   -- | Removes the element at the "front" of the queue, returning the element.
   mPop :: q e s -> m s (Maybe e)
 
@@ -70,13 +66,11 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
 -- List -> Queue
 --------------------------------------------------------------------------------
 
-instance (List l a, DSCons [a] (l a)) => Queue l a where
+instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
   add   = push
-  clear = L.clear
   pop   = L.pop
 
 instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
   => MQueue l a m s where
   mAdd   = mPush
-  mClear = L.mClear
   mPop   = L.mPop

@@ -49,7 +49,7 @@ unsafeCopyArray arrST resST (inf, sup) = do
     \(i, i') -> readArray arrST i >>= writeArray resST i'
 
 -- | Unsafe Function.
--- Random generator.
+-- Random generator in @ST@.
 unsafeGenST :: ST s StdGen
 unsafeGenST = unsafeIOToST newStdGen
 
@@ -127,7 +127,7 @@ unsafeQuickSort f inf sup arrST
       | inf + 1 >= sup = return ()
       | otherwise      = do
         let getPivot = do
-            (r, gen) <- unsafeRandRangeST (inf, sup - 1) gen
+            (r, gen) <- return $ randomR (inf, sup - 1) gen
             vi       <- readArray arrST inf
             vp       <- readArray arrST $ (inf + sup) `div` 2
             writeArray arrST inf vp
@@ -150,11 +150,6 @@ unsafeQuickSort f inf sup arrST
         writeArray arrST pi vp
         worker inf pi gen
         worker (pi + 1) sup gen
-
--- | Unsafe Function.
--- Generate random value between a range.
-unsafeRandRangeST :: (Random a) => (a, a) -> StdGen -> ST s (a, StdGen)
-unsafeRandRangeST = (return .) . randomR
 
 -- | Unsafe: Does not conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index

@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.List where
-  
+
 import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), isJust, maybe)
@@ -81,7 +81,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- | Default method.
   -- Insert an element to the end of the list structure.
   --
-  append :: e -> l e -> l e 
+  append :: e -> l e -> l e
   append = flip (join (flip . insert . size))
 
   -- | Default method.
@@ -128,7 +128,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- | Default Method
   -- Returns a new list structure with from @[]@.
   --
-  newList :: [e] -> l e 
+  newList :: [e] -> l e
   newList = DS.new
 
   -- | Default method.
@@ -167,7 +167,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- and the original list.
   --
   remove :: Eq e => e -> l e -> (Maybe e, l e)
-  remove e l 
+  remove e l
     = maybe (Nothing, l) (flip delete l) (indexOf l e)
 
   -- | Default method.
@@ -363,9 +363,13 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
     mSet ml index (f v)
 
 
-instance {-# OVERLAPPABLE #-} (Eq a, List l a) => Eq (l a) where
-  l == l' 
-    = ls == ls' && and (map (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)])
+--------------------------------------------------------------------------------
+-- List -> Eq
+--------------------------------------------------------------------------------
+
+instance (Eq a, List l a) => Eq (l a) where
+  l == l'
+    = ls == ls' && all (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)]
     where
       ls  = size l
       ls' = size l'
