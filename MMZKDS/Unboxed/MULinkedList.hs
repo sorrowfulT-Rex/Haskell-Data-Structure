@@ -78,8 +78,8 @@ instance MU a s => MList MULinkedList a ST s where
             writeSTRef (nextUNRef prv) nxt
             Just <$> uNodeElem cur
         i <- readMURef iR
-        writeMURef lR $ l - 1
         (pre, cur, nxt) <- preDelete i l
+        writeMURef lR $ l - 1
         del pre cur nxt
 
   mGet :: MULinkedList a s -> Int -> ST s a
@@ -207,7 +207,9 @@ instance MU a s => MList MULinkedList a ST s where
     writeSTRef (nextUNRef cur) newNode
     writeSTRef (prevUNRef nxt) newNode
     modifyMURef lR succ
-    modifyMURef iR succ
+    i   <- readMURef iR
+    when (i >= 0) $ modifyMURef iR succ
+    
 
 
 --------------------------------------------------------------------------------
@@ -272,7 +274,7 @@ accessUNode index (MULinkedList lR hR iR cR) = do
         | otherwise                = back' (l - index) hR
   i   <- readMURef iR
   nd' <- access' i l
-  writeMURef iR $ if inBound then index else l
+  writeMURef iR $ if inBound then index else (-1)
   writeSTRef cR nd'
 
 -- | Utility Function.

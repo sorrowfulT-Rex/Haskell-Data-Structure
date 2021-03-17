@@ -5,7 +5,7 @@
 
 module MMZKDS.MLinkedList where
 
-import           Control.Monad (forM, forM_, (<=<))
+import           Control.Monad (forM, forM_, when, (<=<))
 import           Control.Monad.ST (ST(..), runST)
 import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (Maybe(..), isJust)
@@ -77,8 +77,8 @@ instance MList MLinkedList a ST s where
             writeSTRef (nextNRef prv) nxt
             Just <$> nodeElem cur
         i <- readMURef iR
-        writeMURef lR $! l - 1
         (pre, cur, nxt) <- preDelete i l
+        writeMURef lR $! l - 1
         del pre cur nxt
 
   mGet :: MLinkedList a s -> Int -> ST s a
@@ -206,7 +206,8 @@ instance MList MLinkedList a ST s where
     writeSTRef (nextNRef cur) newNode
     writeSTRef (prevNRef nxt) newNode
     modifyMURef lR succ
-    modifyMURef iR succ
+    i   <- readMURef iR
+    when (i >= 0) $ modifyMURef iR succ
 
 
 --------------------------------------------------------------------------------
@@ -271,7 +272,7 @@ accessNode index (MLinkedList lR hR iR cR) = do
         | otherwise                = back' (l - index) hR
   i   <- readMURef iR
   nd' <- access' i l
-  writeMURef iR $ if inBound then index else l
+  writeMURef iR $ if inBound then index else (-1)
   writeSTRef cR nd'
 
 -- | Utility Function.
