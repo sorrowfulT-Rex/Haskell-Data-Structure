@@ -5,11 +5,12 @@
 
 module MMZKDS.Queue where
 
-import           Data.Maybe (fromJust, isNothing)
+import           Control.Monad (when)
+import           Data.Maybe (fromJust, isJust)
 
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.List as L 
-  (List(push, pop), MList(mPush, mPop))
+  (List(push, pop), MList(mAppend, mPush, mPop))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
@@ -42,29 +43,24 @@ class (DS (q e), DSCons [e] (q e)) => Queue q e where
 -- The choice of the element being inserted or deleted is up to the 
 -- implementation, but it should follow a queue or priority queue logic.
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
--- Minimal implementation requires @mAdd@ and @mPop@.
--- Default method is @mPeek@.
+-- Minimal implementation requires @mAdd@, @mPeek@ and @mPop@.
 class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s) 
   => MQueue q e m s where
   -- | Adds an element into the queue.
   mAdd :: e -> q e s -> m s ()
 
-  -- | Removes the element at the "front" of the queue, returning the element.
-  mPop :: q e s -> m s (Maybe e)
-
-  -- | Default method.
   -- Retrieves the element at the "front", but not removing it.
   mPeek :: q e s -> m s (Maybe e)
-  mPeek mq = do
-    e <- MMZKDS.Queue.mPop mq
-    if isNothing e
-      then return e
-      else mAdd (fromJust e) mq >> return e
+
+  -- | Removes the element at the "front" of the queue, returning the element.
+  mPop :: q e s -> m s (Maybe e)
 
 
 --------------------------------------------------------------------------------
 -- List -> Queue
 --------------------------------------------------------------------------------
+
+-- A 'List' is by default a 'Queue' that adds in the front and pops in the rear.
 
 instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
   add   = push
@@ -72,5 +68,11 @@ instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
 
 instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
   => MQueue l a m s where
-  mAdd   = mPush
-  mPop   = L.mPop
+  mAdd = mPush
+  
+  mPeek m = do
+    e <- L.mPop m
+    when (isJust e) $ mAppend (fromJust e) m
+    return e
+
+  mPop = L.mPop

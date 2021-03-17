@@ -39,17 +39,6 @@ data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 -- Freeze & Thaw
 --------------------------------------------------------------------------------
 
--- | Makes a mutable @MUArrayList@ from an immutable @ArrayList@ by copying. 
---
-uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-               => UArrayList a
-               -> ST s (MUArrayList a s)
-uArrayListThaw (UArrayList l arr) = do
-  arrST <- thaw arr :: ST s (STUArray s Int a)
-  lR    <- newMURef l
-  arrR  <- newSTRef arrST
-  return $ MUArrayList lR arrR
-
 -- | Makes a immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
 --
 uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
@@ -61,17 +50,13 @@ uArrayListFreeze (MUArrayList lR arrR) = do
   arr   <- freeze arrST
   return $ UArrayList l arr
 
--- | Unsafe Function.
--- Makes a mutable @MUArrayList@ from an immutable @UArrayList@, perhaps without
--- copying.
--- The original immutable list should not be used ever since.
+-- | Makes a mutable @MUArrayList@ from an immutable @ArrayList@ by copying. 
 --
-unsafeUArrayListThaw
-  :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-  => UArrayList a
-  -> ST s (MUArrayList a s)
-unsafeUArrayListThaw (UArrayList l arr) = do
-  arrST <- unsafeThaw arr
+uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+               => UArrayList a
+               -> ST s (MUArrayList a s)
+uArrayListThaw (UArrayList l arr) = do
+  arrST <- thaw arr :: ST s (STUArray s Int a)
   lR    <- newMURef l
   arrR  <- newSTRef arrST
   return $ MUArrayList lR arrR
@@ -81,8 +66,8 @@ unsafeUArrayListThaw (UArrayList l arr) = do
 -- copying.
 -- The original mutable list should not be used ever since.
 --
-unsafeUArrayListFreeze
-  :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+unsafeUArrayListFreeze :: 
+  forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
   => MUArrayList a s
   -> ST s (UArrayList a)
 unsafeUArrayListFreeze (MUArrayList lR arrR) = do
@@ -90,6 +75,21 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
   return $ UArrayList l arr
+
+-- | Unsafe Function.
+-- Makes a mutable @MUArrayList@ from an immutable @UArrayList@, perhaps without
+-- copying.
+-- The original immutable list should not be used ever since.
+--
+unsafeUArrayListThaw :: 
+  forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+  => UArrayList a
+  -> ST s (MUArrayList a s)
+unsafeUArrayListThaw (UArrayList l arr) = do
+  arrST <- unsafeThaw arr
+  lR    <- newMURef l
+  arrR  <- newSTRef arrST
+  return $ MUArrayList lR arrR
 
 
 --------------------------------------------------------------------------------

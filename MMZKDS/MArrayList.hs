@@ -1,4 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -36,15 +35,6 @@ data MArrayList e s = MArrayList (MURef s Int) (STRef s (STArray s Int e))
 -- Freeze & Thaw
 --------------------------------------------------------------------------------
 
--- | Makes a mutable @MArrayList@ from an immutable @ArrayList@ by copying. 
---
-arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
-arrayListThaw (ArrayList l arr) = do
-  arrST <- thaw arr
-  lR    <- newMURef l
-  arrR  <- newSTRef arrST
-  return $ MArrayList lR arrR
-
 -- | Makes a immutable @ArrayList@ from a mutable @MArrayList@ by copying. 
 --
 arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
@@ -54,14 +44,11 @@ arrayListFreeze (MArrayList lR arrR) = do
   arr   <- freeze arrST
   return $ ArrayList l arr
 
--- | Unsafe Function.
--- Makes a mutable @MArrayList@ from an immutable @ArrayList@, perhaps without
--- copying.
--- The original immutable list should not be used ever since.
+-- | Makes a mutable @MArrayList@ from an immutable @ArrayList@ by copying. 
 --
-unsafeArrayListThaw :: ArrayList a -> ST s (MArrayList a s)
-unsafeArrayListThaw (ArrayList l arr) = do
-  arrST <- unsafeThaw arr
+arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
+arrayListThaw (ArrayList l arr) = do
+  arrST <- thaw arr
   lR    <- newMURef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
@@ -77,6 +64,18 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
   return $ ArrayList l arr
+
+-- | Unsafe Function.
+-- Makes a mutable @MArrayList@ from an immutable @ArrayList@, perhaps without
+-- copying.
+-- The original immutable list should not be used ever since.
+--
+unsafeArrayListThaw :: ArrayList a -> ST s (MArrayList a s)
+unsafeArrayListThaw (ArrayList l arr) = do
+  arrST <- unsafeThaw arr
+  lR    <- newMURef l
+  arrR  <- newSTRef arrST
+  return $ MArrayList lR arrR
 
 
 --------------------------------------------------------------------------------
@@ -277,19 +276,3 @@ instance MDSCons [a] (MArrayList a) ST s where
   new :: [a] -> ST s (MArrayList a s)
   new = arrayListThaw . newList
 
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-data D = forall a. Show a => D a
-
-instance Show D where
-  show (D a) = show a
-
-foom :: IO ()
-foom = do
-  print $ runST $ do
-    mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
-    mRemoveAll 4 mal
-    mToList mal

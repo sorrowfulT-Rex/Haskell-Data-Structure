@@ -181,13 +181,3 @@ instance IArray UArray a => DSCons [a] (UArrayList a) where
     where
       l  = length list
       l' = initialSize l
-
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-foo :: IO ()
-foo = do
-  let al = (newList [4::Int, 3, 2, 1] :: UArrayList Int)
-  print (L.toList $ sort al :: [Int])
