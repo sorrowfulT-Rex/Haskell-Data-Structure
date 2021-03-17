@@ -8,7 +8,7 @@ module MMZKDS.Unboxed.UArrayList where
 
 import           Control.Monad (join)
 import           Data.Array.Unboxed
-  (IArray(..), UArray(..), accumArray, array, bounds, (!))
+  (IArray(..), UArray(..), accum, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
@@ -39,7 +39,7 @@ instance IArray UArray a => List UArrayList a where
   delete index al@(UArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
     | otherwise               = (Just (arr ! index), UArrayList (l - 1)
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
+        $ accum worker arr $ join zip [0..(l - 2)])
     where
       pl = physicalSize al
       worker _ i
@@ -67,7 +67,7 @@ instance IArray UArray a => List UArrayList a where
     | l == pl                = insert index e (resize l' al)
     | otherwise
       = UArrayList (l + 1)
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
+        $ accum worker arr $ join zip [0..l]
     where
       pl = physicalSize al
       l' = expandedSize l
@@ -87,7 +87,7 @@ instance IArray UArray a => List UArrayList a where
   set al@(UArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
     | otherwise               = UArrayList l
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 1)]
+        $ accum worker arr $ join zip [0..(l - 1)]
     where
       pl = physicalSize al
       worker _ i
@@ -99,17 +99,15 @@ instance IArray UArray a => List UArrayList a where
     = l
 
   subList :: Int -> Int -> UArrayList a -> UArrayList a
-  subList inf sup al
+  subList inf sup al@(UArrayList _ arr)
     | sup' <= inf' = deepClear al
     | otherwise    = UArrayList len'
-        $ accumArray worker undefined (0, ps - 1) $ join zip [0..(len' - 1)]
+        $ accum (const ((al `get`) . (inf' +))) arr $ join zip [0..(len' - 1)]
       where
         inf' = max inf 0
         sup' = min sup (size al)
         len' = sup' - inf'
         ps   = initialSize len'
-        worker _ i
-          = al `get` (i + inf')
 
   toList :: UArrayList a -> [a]
   toList (UArrayList l arr)
