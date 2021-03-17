@@ -17,6 +17,8 @@ import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
 import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Unboxed.MURef
+  (MURef(..), newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -27,7 +29,7 @@ import           MMZKDS.Utilities
 -- It has O(1) random access, O(1) appending/popping, O(n) inserting/deleting,
 -- O(n) searching, and O(n * log n) sorting.
 --
-data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
+data MArrayList e s = MArrayList (MURef s Int) (STRef s (STArray s Int e))
 
 
 --------------------------------------------------------------------------------
@@ -39,7 +41,7 @@ data MArrayList e s = MArrayList (STRef s Int) (STRef s (STArray s Int e))
 arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 arrayListThaw (ArrayList l arr) = do
   arrST <- thaw arr
-  lR    <- newSTRef l
+  lR    <- newMURef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
@@ -47,7 +49,7 @@ arrayListThaw (ArrayList l arr) = do
 --
 arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreeze (MArrayList lR arrR) = do
-  l     <- readSTRef lR
+  l     <- readMURef lR
   arrST <- readSTRef arrR
   arr   <- freeze arrST
   return $ ArrayList l arr
@@ -60,7 +62,7 @@ arrayListFreeze (MArrayList lR arrR) = do
 unsafeArrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 unsafeArrayListThaw (ArrayList l arr) = do
   arrST <- unsafeThaw arr
-  lR    <- newSTRef l
+  lR    <- newMURef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
@@ -71,7 +73,7 @@ unsafeArrayListThaw (ArrayList l arr) = do
 --
 unsafeArrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 unsafeArrayListFreeze (MArrayList lR arrR) = do
-  l     <- readSTRef lR
+  l     <- readMURef lR
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
   return $ ArrayList l arr
@@ -110,14 +112,14 @@ instance MList MArrayList a ST s where
         then do
           resized <- mResize (expandedSize ls) mal
           let MArrayList rlR resR = resized
-          rl      <- readSTRef rlR
-          writeSTRef lR rl
+          rl      <- readMURef rlR
+          writeMURef lR rl
           resST   <- readSTRef resR
           writeSTRef arrR resST
           mInsert index e resized
         else do
           arrST <- readSTRef arrR
-          writeSTRef lR $! ls + 1
+          writeMURef lR $! ls + 1
           unsafeAddST index e (ls - 1) arrST
 
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
@@ -129,7 +131,7 @@ instance MList MArrayList a ST s where
       else do
         arrST <- readSTRef arrR
         v     <- readArray arrST index
-        writeSTRef lR $! ls - 1
+        writeMURef lR $! ls - 1
         unsafeRemoveST index (ls - 2) arrST
         return $ Just v
 
@@ -144,7 +146,7 @@ instance MList MArrayList a ST s where
 
   mSize :: MArrayList a s -> ST s Int
   mSize (MArrayList lR _)
-    = readSTRef lR
+    = readMURef lR
 
   {-# INLINE mSortOn #-}
   mSortOn :: Ord b => (a -> b) -> MArrayList a s -> ST s ()
@@ -166,7 +168,7 @@ instance MList MArrayList a ST s where
         resST <- newArray_ (0, ps - 1)
         forM_ [0..(len' - 1)]
           $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
-        lR <- newSTRef len'
+        lR <- newMURef len'
         resR <- newSTRef resST
         return $ MArrayList lR resR
 
@@ -206,9 +208,9 @@ instance MArrayBased MArrayList a ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- mNewList []
-    rl                  <- readSTRef rlR
+    rl                  <- readMURef rlR
     resST               <- readSTRef resR
-    writeSTRef lR rl
+    writeMURef lR rl
     writeSTRef arrR resST
 
   mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
@@ -225,7 +227,7 @@ instance MArrayBased MArrayList a ST s where
     | s < 0 = arrayLengthOverflowError
   mResize s (MArrayList lR arrR) = do
     arrST    <- readSTRef arrR
-    l        <- readSTRef lR
+    l        <- readMURef lR
     (_, sup) <- getBounds arrST
     let s' = max s (sup + 1)
     resST    <- newArray_ (0, s' - 1)
@@ -242,7 +244,7 @@ instance MArrayBased MArrayList a ST s where
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
     unsafeCopyArray arrST resST (0, ls - 1)
-    rlR   <- newSTRef ls
+    rlR   <- newMURef ls
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
@@ -254,15 +256,15 @@ instance MArrayBased MArrayList a ST s where
 instance MDS (MArrayList a) ST s where
   clear :: MArrayList a s -> ST s ()
   clear (MArrayList lR _)
-    = writeSTRef lR 0
+    = writeMURef lR 0
 
   copy :: MArrayList a s -> ST s (MArrayList a s)
   copy (MArrayList lR arrR) = do
-    l     <- readSTRef lR
+    l     <- readMURef lR
     arrST <- readSTRef arrR
     resST <- newArray_ (0, initialSize l - 1)
     unsafeCopyArray arrST resST (0, l - 1)
-    rlR   <- newSTRef l
+    rlR   <- newMURef l
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
@@ -289,5 +291,5 @@ foom :: IO ()
 foom = do
   print $ runST $ do
     mal <- new [1,1,4,5,1,4] :: ST s (MArrayList Integer s)
-    mRemoveAll 1 mal
+    mRemoveAll 4 mal
     mToList mal
