@@ -272,7 +272,7 @@ accessNode index (MLinkedList lR hR iR cR) = do
         | otherwise                = back' (l - index) hR
   i   <- readMURef iR
   nd' <- access' i l
-  writeMURef iR $ if inBound then index else (-1)
+  writeMURef iR $ if inBound then index else -1
   writeSTRef cR nd'
 
 -- | Utility Function.
@@ -343,18 +343,3 @@ prevNRef (MHead pR _)
   = pR
 prevNRef (MNode pR _ _)
   = pR
-
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-bar = runST $ do
-  e  <- mNewList [1..10] :: ST s (MLinkedList Int s)
-  accessNode 7 e
-  f  <- mDelete 9 e
-  let MLinkedList _ _ _ cR = e
-  nd <- readSTRef cR
-  b  <- nodeElem nd
-  el <- mToList e
-  return (f, b, el)

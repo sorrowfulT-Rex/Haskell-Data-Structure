@@ -274,7 +274,7 @@ accessUNode index (MULinkedList lR hR iR cR) = do
         | otherwise                = back' (l - index) hR
   i   <- readMURef iR
   nd' <- access' i l
-  writeMURef iR $ if inBound then index else (-1)
+  writeMURef iR $ if inBound then index else -1
   writeSTRef cR nd'
 
 -- | Utility Function.

@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables#-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.MUArrayList where
+module MMZKDS.Unboxed.MUArrayList where
 
 import           Control.Monad (forM_, liftM2)
 import           Control.Monad.ST (ST(..), runST)
