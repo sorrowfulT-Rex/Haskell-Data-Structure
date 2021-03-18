@@ -361,18 +361,3 @@ prevUNRef (MUNode pR _ _)
 uNodeElem :: MU a s => MUNode a s -> ST s a
 uNodeElem (MUNode _ eR _)
   = readMURef eR
-
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-bar = runST $ do
-  e  <- mNewList [1..10] :: ST s (MULinkedList Int s)
-  accessUNode 2 e
-  f  <- mDelete 3 e
-  let MULinkedList _ _ _ cR = e
-  nd <- readSTRef cR
-  b  <- uNodeElem nd
-  el <- mToList e
-  return (f, b, el)
