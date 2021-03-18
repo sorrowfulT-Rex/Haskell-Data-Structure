@@ -1,5 +1,7 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.PriorityQueue where
 
@@ -38,7 +40,7 @@ class (DS (q e), DSCons [e] (q e)) => PriorityQueue q e where
   -- | Default method.
   -- Retrieves the element at the "front", but not removing it.
   peek :: q e -> Maybe e
-  peek = fst . pop
+  peek = fst . MMZKDS.PriorityQueue.pop
 
 -- | 'MPriorityQueue' is a type class for mutable priority queue structures.
 -- It provides methods of adding and removing element from the queue.
@@ -65,6 +67,6 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
   -- Retrieves the element at the "front", but not removing it.
   mPeek :: q e s -> m s (Maybe e)
   mPeek q = do
-    me <- mPop q
-    when (isJust me) $ mAdd (fromJust me) q
+    me <- MMZKDS.PriorityQueue.mPop q
+    when (isJust me) $ MMZKDS.PriorityQueue.mAdd (fromJust me) q
     return me

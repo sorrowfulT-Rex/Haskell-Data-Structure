@@ -1,6 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.ArrayList where
 
@@ -10,6 +12,7 @@ import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
+import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -144,6 +147,15 @@ instance ArrayBased ArrayList a where
 
   resize :: Int -> ArrayList a -> ArrayList a
   resize = (. L.toList) . newWithSize
+
+
+--------------------------------------------------------------------------------
+-- Queue Instance
+--------------------------------------------------------------------------------
+
+instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
+  add = L.push
+  pop = L.pop
 
 
 --------------------------------------------------------------------------------

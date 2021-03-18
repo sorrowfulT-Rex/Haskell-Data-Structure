@@ -5,7 +5,7 @@
 
 module MMZKDS.List where
 
-import           Control.Monad (ap, forM, join, liftM2, (<=<))
+import           Control.Monad (ap, forM, join, liftM2)
 import           Data.List as L (foldl', maximumBy, sort, sortOn)
 import           Data.Maybe (Maybe(..), fromJust, isJust, maybe)
 

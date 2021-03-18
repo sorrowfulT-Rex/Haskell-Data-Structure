@@ -13,6 +13,7 @@ import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
+import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -149,6 +150,15 @@ instance IArray UArray a => ArrayBased UArrayList a where
 
   resize :: Int -> UArrayList a -> UArrayList a
   resize = (. L.toList) . newWithSize
+
+
+--------------------------------------------------------------------------------
+-- Queue Instance
+--------------------------------------------------------------------------------
+
+instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
+  add = L.push
+  pop = L.pop
 
 
 --------------------------------------------------------------------------------

@@ -5,12 +5,7 @@
 
 module MMZKDS.Queue where
 
-import           Control.Monad (when)
-import           Data.Maybe (fromJust, isJust)
-
 import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.List as L 
-  (List(push, pop), MList(mAppend, mPush, mPop))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
@@ -54,25 +49,3 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
 
   -- | Removes the element at the "front" of the queue, returning the element.
   mPop :: q e s -> m s (Maybe e)
-
-
---------------------------------------------------------------------------------
--- List -> Queue
---------------------------------------------------------------------------------
-
--- A 'List' is by default a 'Queue' that adds in the front and pops in the rear.
-
-instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
-  add   = push
-  pop   = L.pop
-
-instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
-  => MQueue l a m s where
-  mAdd = mPush
-  
-  mPeek m = do
-    e <- L.mPop m
-    when (isJust e) $ mAppend (fromJust e) m
-    return e
-
-  mPop = L.mPop

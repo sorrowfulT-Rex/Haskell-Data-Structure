@@ -2,20 +2,23 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.MArrayList where
 
-import           Control.Monad (forM_, liftM2)
+import           Control.Monad (forM_, liftM2, when)
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Array.ST
   (STArray(..), freeze, getBounds, newArray_, readArray, thaw, writeArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
+import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
-import           MMZKDS.List (List(newList, toList), MList(..))
+import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unboxed.MURef
   (MURef(..), newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
@@ -245,6 +248,22 @@ instance MArrayBased MArrayList a ST s where
 
 
 --------------------------------------------------------------------------------
+-- MQueue Instance
+--------------------------------------------------------------------------------
+
+instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
+  => MQueue l a m s where
+  mAdd = mPush
+  
+  mPeek m = do
+    e <- L.mPop m
+    when (isJust e) $ mAppend (fromJust e) m
+    return e
+
+  mPop = L.mPop
+
+
+--------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
@@ -275,4 +294,3 @@ instance MDSCons [a] (MArrayList a) ST s where
 
   new :: [a] -> ST s (MArrayList a s)
   new = arrayListThaw . newList
-

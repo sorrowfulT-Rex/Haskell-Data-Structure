@@ -8,7 +8,7 @@
 
 module MMZKDS.Unboxed.MUArrayList where
 
-import           Control.Monad (forM_, liftM2)
+import           Control.Monad (forM_, liftM2, when)
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Array.ST
   (STUArray(..), MArray(..), freeze, getBounds, newArray_, readArray, thaw,
@@ -16,14 +16,16 @@ import           Data.Array.ST
   )
 import           Data.Array.Unboxed (IArray(..), UArray(..))
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
+import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.Unboxed.MURef
   (MURef(..), newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
-import           MMZKDS.List (List(newList, toList), MList(..))
+import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -261,6 +263,22 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
 
 --------------------------------------------------------------------------------
+-- MQueue Instance
+--------------------------------------------------------------------------------
+
+instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
+  => MQueue l a m s where
+  mAdd = mPush
+  
+  mPeek m = do
+    e <- L.mPop m
+    when (isJust e) $ mAppend (fromJust e) m
+    return e
+
+  mPop = L.mPop
+
+
+--------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
@@ -293,21 +311,3 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
   new :: [a] -> ST s (MUArrayList a s)
   new = uArrayListThaw . newList
-
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-data D = forall a. Show a => D a
-
-instance Show D where
-  show (D a) = show a
-
-foom :: IO ()
-foom = do
-  print $ runST $ do
-    mal <- mNewList [100,99..1] :: ST s (MUArrayList Int s)
-    mSort mal
-    al  <- mToList mal
-    return [D al]

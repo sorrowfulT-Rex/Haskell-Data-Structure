@@ -10,12 +10,13 @@ import           Control.Monad (forM, forM_, when, (<=<))
 import           Control.Monad.ST (ST(..), runST)
 import           Data.Foldable as F (toList)
 import           Data.List (elemIndex, sortOn)
-import           Data.Maybe (Maybe(..), isJust)
+import           Data.Maybe (fromJust, isJust)
 import           Data.STRef
   (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.List (MList(..))
+import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unboxed.MURef
   (MU(..), MURef(..), modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
@@ -205,8 +206,23 @@ instance MU a s => MList MULinkedList a ST s where
     modifyMURef lR succ
     i   <- readMURef iR
     when (i >= 0) $ modifyMURef iR succ
-    
 
+
+--------------------------------------------------------------------------------
+-- MQueue Instance
+--------------------------------------------------------------------------------
+
+instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
+  => MQueue l a m s where
+  mAdd = mPush
+  
+  mPeek m = do
+    e <- L.mPop m
+    when (isJust e) $ mAppend (fromJust e) m
+    return e
+
+  mPop = L.mPop
+  
 
 --------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
