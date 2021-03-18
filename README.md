@@ -30,8 +30,13 @@ See the [Haddocks](MMZKDS/List.hs) for full documentation.
 
 # [MMZKDS/Queue.hs](MMZKDS/Queue.hs)
 This file provides type classes for both immutable and mutable queue structures.  
-There are two classes, namely `Queue` and `MQueue`, for immutable and mutable lists, respectively.  
+There are two classes, namely `Queue` and `MQueue`, for immutable and mutable queues, respectively.  
 See the [Haddocks](MMZKDS/Queue.hs) for full documentation.  
+
+# [MMZKDS/PriorityQueue.hs](MMZKDS/PriorityQueue.hs)
+This file provides type classes for both immutable and mutable priority queues.  
+There are two classes, namely `PriorityQueue` and `MPriorityQueue`, for immutable and mutable priority queues, respectively.  
+See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation.  
 
 # [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
@@ -42,8 +47,9 @@ See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.
 `MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
 See the [Haddocks](MMZKDS/MArrayList.hs) for full documentation.  
 
-# [MMZKDS/MLinkedList.hs](MMZKDS/MArrayList.hs)
+# [MMZKDS/MLinkedList.hs](MMZKDS/MLinkedList.hs)
 `MLinkedList` is a doubly-linked circular list implementing the `MList` class.  
+It remembers the last element (node) been visited, and enjoys fast access to the elements in its vicinity.  
 See the [Haddocks](MMZKDS/MLinkedList.hs) for full documentation.  
 
 # [MMZKDS/UnBoxed](MMZKDS/Unboxed/)
