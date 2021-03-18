@@ -3,12 +3,12 @@
 module MMZKDS.Unsafe where
 
 import           Control.Monad (forM_)
-import           Control.Monad.ST (ST(..), runST)
+import           Control.Monad.ST (ST, runST)
 import           Control.Monad.ST.Unsafe (unsafeIOToST, unsafeSTToIO)
-import           Data.Array.ST (MArray(..), STArray(..), readArray, writeArray)
-import           Data.STRef (STRef(..))
+import           Data.Array.ST (MArray, STArray, readArray, writeArray)
+import           Data.STRef (STRef)
 import           System.IO.Unsafe (unsafePerformIO)
-import           System.Random (Random(..), StdGen(..), newStdGen, randomR)
+import           System.Random (Random, StdGen, newStdGen, randomR)
 
 -- | Unsafe: Does not conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index

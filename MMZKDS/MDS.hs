@@ -3,7 +3,7 @@
 module MMZKDS.MDS where
 
 import           Control.Monad ((<=<))
-import           Control.Monad.ST (ST(..))
+import           Control.Monad.ST (ST)
 
 -- | The 'MDS' class is a type class for mutable data structures living in the 
 -- ST monad.

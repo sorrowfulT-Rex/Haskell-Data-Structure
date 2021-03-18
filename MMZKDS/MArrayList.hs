@@ -7,12 +7,12 @@
 module MMZKDS.MArrayList where
 
 import           Control.Monad (forM_, liftM2, when)
-import           Control.Monad.ST (ST(..), runST)
+import           Control.Monad.ST (ST, runST)
 import           Data.Array.ST
-  (STArray(..), freeze, getBounds, newArray_, readArray, thaw, writeArray)
+  (STArray, freeze, getBounds, newArray_, readArray, thaw, writeArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Maybe (fromJust, isJust)
-import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
+import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList (ArrayList(..))
@@ -20,7 +20,7 @@ import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unboxed.MURef
-  (MURef(..), newMURef, readMURef, writeMURef)
+  (MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities

@@ -8,7 +8,7 @@ module MMZKDS.Unboxed.UArrayList where
 
 import           Control.Monad (join)
 import           Data.Array.Unboxed
-  (IArray(..), UArray(..), accum, array, bounds, (!))
+  (IArray, UArray, accum, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))

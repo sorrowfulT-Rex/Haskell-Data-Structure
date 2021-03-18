@@ -9,19 +9,19 @@
 module MMZKDS.Unboxed.MUArrayList where
 
 import           Control.Monad (forM_, liftM2, when)
-import           Control.Monad.ST (ST(..), runST)
+import           Control.Monad.ST (ST, runST)
 import           Data.Array.ST
-  (STUArray(..), MArray(..), freeze, getBounds, newArray_, readArray, thaw,
+  (STUArray, MArray, freeze, getBounds, newArray_, readArray, thaw,
    writeArray
   )
-import           Data.Array.Unboxed (IArray(..), UArray(..))
+import           Data.Array.Unboxed (IArray, UArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Maybe (fromJust, isJust)
-import           Data.STRef (STRef(..), newSTRef, readSTRef, writeSTRef)
+import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.Unboxed.MURef
-  (MURef(..), newMURef, readMURef, writeMURef)
+  (MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))

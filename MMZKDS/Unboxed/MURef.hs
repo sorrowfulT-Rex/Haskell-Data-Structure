@@ -3,10 +3,9 @@
 
 module MMZKDS.Unboxed.MURef where
 
-import           Control.Monad.ST
-import           Data.Array.Base
+import           Control.Monad.ST (ST)
 import           Data.Array.ST
-import           Data.Array.Unboxed
+    (MArray(newArray), STUArray, readArray, writeArray)
 
 -- | Type alias for the constraint MArray (STUArray) s e (ST s), which forces
 -- e to be a primitive.

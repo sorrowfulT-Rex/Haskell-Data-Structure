@@ -7,7 +7,7 @@ module MMZKDS.List where
 
 import           Control.Monad (ap, forM, join, liftM2)
 import           Data.List as L (foldl', maximumBy, sort, sortOn)
-import           Data.Maybe (Maybe(..), fromJust, isJust, maybe)
+import           Data.Maybe (fromJust, isJust, maybe)
 
 import           MMZKDS.DS as DS (DS(..), DSCons(..))
 import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))

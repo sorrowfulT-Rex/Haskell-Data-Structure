@@ -7,7 +7,7 @@
 module MMZKDS.ArrayList where
 
 import           Control.Monad (join)
-import           Data.Array (Array(..), accumArray, array, bounds, (!))
+import           Data.Array (Array, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))

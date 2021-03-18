@@ -7,18 +7,18 @@
 module MMZKDS.Unboxed.MULinkedList where
 
 import           Control.Monad (forM, forM_, when, (<=<))
-import           Control.Monad.ST (ST(..), runST)
+import           Control.Monad.ST (ST, runST)
 import           Data.Foldable as F (toList)
 import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (fromJust, isJust)
 import           Data.STRef
-  (STRef(..), modifySTRef', newSTRef, readSTRef, writeSTRef)
+  (STRef, modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unboxed.MURef
-  (MU(..), MURef(..), modifyMURef, newMURef, readMURef, writeMURef)
+  (MU, MURef, modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 

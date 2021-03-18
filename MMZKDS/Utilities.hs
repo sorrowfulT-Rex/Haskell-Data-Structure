@@ -1,6 +1,6 @@
 module MMZKDS.Utilities where
 
-import           Control.Monad.ST (ST(..))
+import           Control.Monad.ST (ST)
 import           Data.Bits (shiftL)
 
 
