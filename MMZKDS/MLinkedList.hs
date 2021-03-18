@@ -131,10 +131,6 @@ instance MList MLinkedList a ST s where
         let MNode _ eR _ = cur
         writeSTRef eR e
 
-  mSize :: MLinkedList a s -> ST s Int
-  mSize (MLinkedList lR _ _ _)
-    = readMURef lR
-
   mSortOn :: Ord b => (a -> b) -> MLinkedList a s -> ST s ()
   mSortOn f mll@(MLinkedList _ hR iR cR) = do
     i    <- readMURef iR
@@ -152,7 +148,7 @@ instance MList MLinkedList a ST s where
 
   mSubList :: Int -> Int -> MLinkedList a s -> ST s (MLinkedList a s)
   mSubList inf sup mll@(MLinkedList _ _ _ cR) = do
-    ls <- mSize mll
+    ls <- size mll
     forM [(max inf 0)..(min sup ls - 1)]
       ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= mNewList
 
@@ -184,7 +180,7 @@ instance MList MLinkedList a ST s where
   -- Overwritten default method
   mLastIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mll e = do
-    l <- mSize mll
+    l <- size mll
     let mLastIndexOf' i node = do
         if isHead node
           then return Nothing
@@ -225,6 +221,10 @@ instance MDS (MLinkedList a) ST s where
 
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
   copy = new <=< mToList
+
+  size :: MLinkedList a s -> ST s Int
+  size (MLinkedList lR _ _ _)
+    = readMURef lR
 
 instance MDSCons [a] (MLinkedList a) ST s where
   finish :: MLinkedList a s -> ST s [a]

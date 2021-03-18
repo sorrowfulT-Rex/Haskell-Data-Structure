@@ -8,7 +8,7 @@ Next to come: AVL; Red-Black Tree.
 
 # [MMZKDS/DS.hs](MMZKDS/DS.hs)
 This file provides type classes for immutable data structures.  
-It contains class `DS` providing a way of clearing data, and class `DSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
+It contains class `DS` providing methods for clearing data and size checking, and class `DSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
 See the [Haddocks](MMZKDS/DS.hs) for full documentation (TODO).  
 
 # [MMZKDS/MDS.hs](MMZKDS/MDS.hs)

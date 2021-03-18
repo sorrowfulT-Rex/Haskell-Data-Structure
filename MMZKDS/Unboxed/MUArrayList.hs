@@ -100,13 +100,13 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MList MUArrayList a ST s where
   mGet :: MUArrayList a s -> Int -> ST s a
   mGet mal@(MUArrayList lR arrR) index = do
-    l <- mSize mal
+    l <- size mal
     if index >= l || index < 0
       then return $ outOfBoundError index
       else readSTRef arrR >>= flip readArray index
 
   mIndicesOf :: Eq a => MUArrayList a s -> a -> ST s [Int]
-  mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
+  mIndicesOf mal e = size mal >>= mIndicesOf' 0
     where
       mIndicesOf' i l
         | i >= l = return []
@@ -118,7 +118,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
   mDelete :: Int -> MUArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MUArrayList lR arrR) = do
-    ls <- mSize mal
+    ls <- size mal
     ps <- mPhysicalSize mal
     if index < 0 || index >= ls
       then return Nothing
@@ -131,7 +131,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
   mInsert :: Int -> a -> MUArrayList a s -> ST s ()
   mInsert index e mal@(MUArrayList lR arrR) = do
-    ls <- mSize mal
+    ls <- size mal
     ps <- mPhysicalSize mal
     if index < 0 || index > ls
       then return $ outOfBoundError index
@@ -151,27 +151,23 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
   mSet :: MUArrayList a s -> Int -> a -> ST s ()
   mSet mal@(MUArrayList _ arrR) index e = do
-    ls <- mSize mal
+    ls <- size mal
     if index < 0 || index >= ls
       then return $ outOfBoundError index
       else do
         arrST <- readSTRef arrR
         writeArray arrST index e
 
-  mSize :: MUArrayList a s -> ST s Int
-  mSize (MUArrayList lR _)
-    = readMURef lR
-
   {-# INLINE mSortOn #-}
   mSortOn :: Ord b => (a -> b) -> MUArrayList a s -> ST s ()
   mSortOn f mal@(MUArrayList _ arrR) = do
     arrST <- readSTRef arrR
-    l     <- mSize mal
+    l     <- size mal
     unsafeQuickSort f 0 l arrST
 
   mSubList :: Int -> Int -> MUArrayList a s -> ST s (MUArrayList a s)
   mSubList inf sup mal = do
-    ls <- mSize mal
+    ls <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
     let len' = sup' - inf'
@@ -189,7 +185,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   -- Overwritten default method
   mIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = do
-     l <- mSize mal
+     l <- size mal
      mIndexOf' 0 l
     where
       mIndexOf' i l
@@ -203,7 +199,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   -- Overwritten default method
   mLastIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mal e = do
-     l <- mSize mal
+     l <- size mal
      mLastIndexOf' (l - 1) l
     where
       mLastIndexOf' (-1) _ = return Nothing
@@ -254,7 +250,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 
   trueCopy :: MUArrayList a s -> ST s (MUArrayList a s)
   trueCopy mal@(MUArrayList _ arrR) = do
-    ls    <- mSize mal
+    ls    <- size mal
     ps    <- mPhysicalSize mal
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
@@ -283,6 +279,10 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
     rlR   <- newMURef l
     resR  <- newSTRef resST
     return $ MUArrayList rlR resR
+
+  size :: MUArrayList a s -> ST s Int
+  size (MUArrayList lR _)
+    = readMURef lR
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MDSCons [a] (MUArrayList a) ST s where

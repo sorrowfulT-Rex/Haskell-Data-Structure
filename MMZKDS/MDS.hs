@@ -2,12 +2,15 @@
 
 module MMZKDS.MDS where
 
+import           Control.Monad ((<=<))
 import           Control.Monad.ST (ST(..))
 
 -- | The 'MDS' class is a type class for mutable data structures living in the 
 -- ST monad.
 -- It provides ways to copy the data structure and to clear all elements.
--- Minimum implementation reqires @clear@ and @copy@.
+-- It can also check for emptiness and return the size of the structure.
+-- Minimum implementation reqires @clear@, @copy@ and @size@.
+-- Default method is @isNull@.
 --
 class Monad (m s) => MDS d m s where
   -- | Makes the data structure empty, i.e. remove all elements.
@@ -23,6 +26,16 @@ class Monad (m s) => MDS d m s where
   -- reference only.
   --
   copy :: d s -> m s (d s)
+
+  -- | Returns the size (length) of the list structure.
+  --
+  size :: d s -> m s Int
+
+  -- | Default method.
+  -- Returns @True@ if and only if the list structure is empty.
+  --
+  isNull :: d s -> m s Bool
+  isNull = (return . (== 0)) <=< size
 
 -- | The 'MDSCons' class defines how to initialise the mutable data structure
 -- from or to a potentially different immutable data structure.

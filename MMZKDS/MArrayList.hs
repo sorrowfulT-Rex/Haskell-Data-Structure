@@ -85,13 +85,13 @@ unsafeArrayListThaw (ArrayList l arr) = do
 instance MList MArrayList a ST s where
   mGet :: MArrayList a s -> Int -> ST s a
   mGet mal@(MArrayList lR arrR) index = do
-    l <- mSize mal
+    l <- size mal
     if index >= l || index < 0
       then outOfBoundError index
       else readSTRef arrR >>= flip readArray index
 
   mIndicesOf :: Eq a => MArrayList a s -> a -> ST s [Int]
-  mIndicesOf mal e = mSize mal >>= mIndicesOf' 0
+  mIndicesOf mal e = size mal >>= mIndicesOf' 0
     where
       mIndicesOf' i l
         | i >= l = return []
@@ -103,7 +103,7 @@ instance MList MArrayList a ST s where
 
   mInsert :: Int -> a -> MArrayList a s -> ST s ()
   mInsert index e mal@(MArrayList lR arrR) = do
-    ls <- mSize mal
+    ls <- size mal
     ps <- mPhysicalSize mal
     if index < 0 || index > ls
       then outOfBoundError index
@@ -123,7 +123,7 @@ instance MList MArrayList a ST s where
 
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MArrayList lR arrR) = do
-    ls <- mSize mal
+    ls <- size mal
     ps <- mPhysicalSize mal
     if index < 0 || index >= ls
       then return Nothing
@@ -136,27 +136,23 @@ instance MList MArrayList a ST s where
 
   mSet :: MArrayList a s -> Int -> a -> ST s ()
   mSet mal@(MArrayList _ arrR) index e = do
-    ls <- mSize mal
+    ls <- size mal
     if index < 0 || index >= ls
       then outOfBoundError index
       else do
         arrST <- readSTRef arrR
         writeArray arrST index e
 
-  mSize :: MArrayList a s -> ST s Int
-  mSize (MArrayList lR _)
-    = readMURef lR
-
   {-# INLINE mSortOn #-}
   mSortOn :: Ord b => (a -> b) -> MArrayList a s -> ST s ()
   mSortOn f mal@(MArrayList _ arrR) = do
     arrST <- readSTRef arrR
-    l     <- mSize mal
+    l     <- size mal
     unsafeQuickSort f 0 l arrST
 
   mSubList :: Int -> Int -> MArrayList a s -> ST s (MArrayList a s)
   mSubList inf sup mal = do
-    ls <- mSize mal
+    ls <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
     let len' = sup' - inf'
@@ -174,7 +170,7 @@ instance MList MArrayList a ST s where
   -- Overwritten default method
   mIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
   mIndexOf mal e = do
-     l <- mSize mal
+     l <- size mal
      mIndexOf' 0 l
     where
       mIndexOf' i l
@@ -188,7 +184,7 @@ instance MList MArrayList a ST s where
   -- Overwritten default method
   mLastIndexOf :: Eq a => MArrayList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mal e = do
-     l <- mSize mal
+     l <- size mal
      mLastIndexOf' (l - 1) l
     where
       mLastIndexOf' (-1) _ = return Nothing
@@ -238,7 +234,7 @@ instance MArrayBased MArrayList a ST s where
 
   trueCopy :: MArrayList a s -> ST s (MArrayList a s)
   trueCopy mal@(MArrayList _ arrR) = do
-    ls    <- mSize mal
+    ls    <- size mal
     ps    <- mPhysicalSize mal
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
@@ -266,6 +262,10 @@ instance MDS (MArrayList a) ST s where
     rlR   <- newMURef l
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
+
+  size :: MArrayList a s -> ST s Int
+  size (MArrayList lR _)
+    = readMURef lR
 
 instance MDSCons [a] (MArrayList a) ST s where
   finish :: MArrayList a s -> ST s [a]

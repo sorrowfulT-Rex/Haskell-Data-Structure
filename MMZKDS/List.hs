@@ -23,7 +23,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires  @delete@, @get@, @indicesOf@, @insert@,
--- @set@, @size@ and @subList@.
+-- @set@, and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
 -- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@,
 -- @removeLast@, @sort@, @sortOn@, @toList@, @update@ and @update'@.
@@ -70,10 +70,6 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   --
   set :: l e -> Int -> e -> l e
 
-  -- | Returns the size (length) of the list structure.
-  --
-  size :: l e -> Int
-
   -- | Returns a sub-list of the list structure from the first argument 
   -- (inclusive) to the second argument (exclusive).
   --
@@ -83,7 +79,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- Insert an element to the end of the list structure.
   --
   append :: e -> l e -> l e
-  append = flip (join (flip . insert . size))
+  append = flip (join (flip . insert . DS.size))
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
@@ -105,12 +101,6 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
     where
       notFound = null indices
       indices  = indicesOf l e
-
-  -- | Default method.
-  -- Returns @True@ if and only if the list structure is empty.
-  --
-  isNull :: l e -> Bool
-  isNull = (== 0) . size
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the
@@ -139,7 +129,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   --
   pop :: l e -> (Maybe e, l e)
-  pop = join (delete . (+ (-1)) . size)
+  pop = join (delete . (+ (-1)) . DS.size)
 
   -- | Default method.
   -- Removes the fisrt element from the list structure.
@@ -273,10 +263,6 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   --
   mSet :: l e s -> Int -> e -> m s ()
 
-  -- | Returns the size (length) of the list structure.
-  --
-  mSize :: l e s -> m s Int
-
   -- | Sort the list structure by a ordering function.
   --
   mSortOn :: Ord o => (e -> o) -> l e s -> m s ()
@@ -290,7 +276,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Insert an element to the end of the list structure.
   --
   mAppend :: e -> l e s -> m s ()
-  mAppend = liftM2 (>>=) mSize . flip . flip mInsert
+  mAppend = liftM2 (>>=) MDS.size . flip . flip mInsert
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
@@ -332,19 +318,13 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   mNewList = MDS.new
 
   -- | Default method.
-  -- Returns @True@ if and only if the list structure is empty.
-  --
-  mIsNull :: l e s -> m s Bool
-  mIsNull = (return . (== 0)) <=< mSize
-
-  -- | Default method.
   -- Removes the last element from the list structure.
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   --
   mPop :: l e s -> m s (Maybe e)
   mPop ml = do
-    l <- mSize ml
+    l <- MDS.size ml
     mDelete (l - 1) ml
 
   -- | Default method.
@@ -432,5 +412,5 @@ instance {-# OVERLAPPABLE #-} (Eq a, List l a) => Eq (l a) where
   l == l'
     = ls == ls' && all (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)]
     where
-      ls  = size l
-      ls' = size l'
+      ls  = DS.size l
+      ls' = DS.size l'

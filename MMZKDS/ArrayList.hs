@@ -94,10 +94,6 @@ instance List ArrayList a where
         | i == index = e
         | otherwise  = arr ! i
 
-  size :: ArrayList a -> Int
-  size (ArrayList l _)
-    = l
-
   subList :: Int -> Int -> ArrayList a -> ArrayList a
   subList inf sup al
     | sup' <= inf' = deepClear al
@@ -158,6 +154,10 @@ instance DS (ArrayList a) where
   clear :: ArrayList a -> ArrayList a
   clear (ArrayList _ arr)
     = ArrayList 0 arr
+
+  size :: ArrayList a -> Int
+  size (ArrayList l _)
+    = l
 
 instance DSCons [a] (ArrayList a) where
   finish :: ArrayList a -> [a]

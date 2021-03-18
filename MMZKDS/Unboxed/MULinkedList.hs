@@ -132,10 +132,6 @@ instance MU a s => MList MULinkedList a ST s where
         let MUNode _ eR _ = cur
         writeMURef eR e
 
-  mSize :: MULinkedList a s -> ST s Int
-  mSize (MULinkedList lR _ _ _)
-    = readMURef lR
-
   mSortOn :: Ord b => (a -> b) -> MULinkedList a s -> ST s ()
   mSortOn f mll@(MULinkedList _ hR iR cR) = do
     i    <- readMURef iR
@@ -153,7 +149,7 @@ instance MU a s => MList MULinkedList a ST s where
 
   mSubList :: Int -> Int -> MULinkedList a s -> ST s (MULinkedList a s)
   mSubList inf sup mll@(MULinkedList _ _ _ cR) = do
-    ls <- mSize mll
+    ls <- size mll
     forM [(max inf 0)..(min sup ls - 1)]
       ((>> (readSTRef cR >>= uNodeElem)) . flip accessUNode mll) >>= mNewList
 
@@ -185,7 +181,7 @@ instance MU a s => MList MULinkedList a ST s where
   -- Overwritten default method
   mLastIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mll e = do
-    l <- mSize mll
+    l <- size mll
     let mLastIndexOf' i node = do
         if isHead node
           then return Nothing
@@ -227,6 +223,10 @@ instance MU a s => MDS (MULinkedList a) ST s where
 
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
   copy = new <=< mToList
+
+  size :: MULinkedList a s -> ST s Int
+  size (MULinkedList lR _ _ _)
+    = readMURef lR
 
 instance MU a s => MDSCons [a] (MULinkedList a) ST s where
   finish :: MULinkedList a s -> ST s [a]

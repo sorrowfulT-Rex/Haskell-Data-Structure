@@ -94,10 +94,6 @@ instance IArray UArray a => List UArrayList a where
         | i == index = e
         | otherwise  = arr ! i
 
-  size :: UArrayList a -> Int
-  size (UArrayList l _)
-    = l
-
   subList :: Int -> Int -> UArrayList a -> UArrayList a
   subList inf sup al@(UArrayList _ arr)
     | sup' <= inf' = deepClear al
@@ -163,6 +159,10 @@ instance IArray UArray a => DS (UArrayList a) where
   clear :: UArrayList a -> UArrayList a
   clear (UArrayList _ arr)
     = UArrayList 0 arr
+
+  size :: UArrayList a -> Int
+  size (UArrayList l _)
+    = l
 
 instance IArray UArray a => DSCons [a] (UArrayList a) where
   finish :: UArrayList a -> [a]
