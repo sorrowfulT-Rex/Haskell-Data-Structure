@@ -53,6 +53,19 @@ unsafeCopyArray arrST resST (inf, sup) = do
 unsafeGenST :: ST s StdGen
 unsafeGenST = unsafeIOToST newStdGen
 
+-- | Unsafe: Does not bound check.
+-- Used for a heap implemented with an array.
+-- Takes the index of the current node and the size of the heap, returns the 
+-- index of the current node's left child.
+-- Pre: The index is within bound and the length is non-negative.
+-- 
+unsafeLeftChild :: Int -> Int -> Maybe Int
+unsafeLeftChild i l
+  | lc >= l   = Nothing
+  | otherwise = Just lc
+  where
+    lc = 2 * i + 1
+
 -- -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- -- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
 -- -- array, sorts the array with heap-sort.
@@ -167,6 +180,19 @@ unsafeRemoveST index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)
     writeArray arrST i v
+
+-- | Unsafe: Does not bound check.
+-- Used for a heap implemented with an array.
+-- Takes the index of the current node and the size of the heap, returns the 
+-- index of the current node's right child.
+-- Pre: The index is within bound and the length is non-negative.
+-- 
+unsafeRightChild :: Int -> Int -> Maybe Int
+unsafeRightChild i l
+  | rc >= l   = Nothing
+  | otherwise = Just rc
+  where
+    rc = 2 * i + 2
 
 -- | Unsafe: It is safe, but is not recommended to use.
 -- Compare if two references are equal based on the values they refer to.
