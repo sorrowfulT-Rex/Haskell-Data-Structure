@@ -139,10 +139,6 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
       else if ls == ps
         then do
           mResize (expandedSize ls) mal
-          rl      <- readMURef lR
-          writeMURef lR rl
-          resST   <- readSTRef arrR
-          writeSTRef arrR resST
           mInsert index e mal
         else do
           arrST <- readSTRef arrR

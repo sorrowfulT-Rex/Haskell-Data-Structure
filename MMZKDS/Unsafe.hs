@@ -53,7 +53,7 @@ unsafeCopyArray arrST resST (inf, sup) = do
 unsafeGenST :: ST s StdGen
 unsafeGenST = unsafeIOToST newStdGen
 
--- | Unsafe: Does not bound check.
+-- | Unsafe: Does not check bound and validity of indices.
 -- Used for a heap implemented with an array.
 -- Takes the index of the current node and the size of the heap, returns the 
 -- index of the current node's left child.
@@ -65,6 +65,15 @@ unsafeLeftChild i l
   | otherwise = Just lc
   where
     lc = 2 * i + 1
+
+-- | Unsafe: Does not bound check and does not check if the node is the root.
+-- Used for a heap implemented with an array.
+-- Takes the index of the current node and the size of the heap, returns the 
+-- index of the parent of the current node.
+-- Pre: The index is within bound and is not the root.
+unsafeParent :: Int -> Int
+unsafeParent
+  = (`div` 2) . (+ (-1))
 
 -- -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- -- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
@@ -181,7 +190,7 @@ unsafeRemoveST index lastIndexOf arrST
     v <- readArray arrST (i + 1)
     writeArray arrST i v
 
--- | Unsafe: Does not bound check.
+-- | Unsafe: Does not check bound and validity of indices.
 -- Used for a heap implemented with an array.
 -- Takes the index of the current node and the size of the heap, returns the 
 -- index of the current node's right child.
