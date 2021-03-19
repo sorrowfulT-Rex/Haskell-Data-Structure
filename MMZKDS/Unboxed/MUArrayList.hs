@@ -138,13 +138,12 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
       then return $ outOfBoundError index
       else if ls == ps
         then do
-          resized <- mResize (expandedSize ls) mal
-          let MUArrayList rlR resR = resized
-          rl      <- readMURef rlR
+          mResize (expandedSize ls) mal
+          rl      <- readMURef lR
           writeMURef lR rl
-          resST   <- readSTRef resR
+          resST   <- readSTRef arrR
           writeSTRef arrR resST
-          mInsert index e resized
+          mInsert index e mal
         else do
           arrST <- readSTRef arrR
           writeMURef lR (ls + 1)
@@ -234,7 +233,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
-  mResize :: Int -> MUArrayList a s -> ST s (MUArrayList a s)
+  mResize :: Int -> MUArrayList a s -> ST s ()
   mResize s _
     | s < 0 = return arrayLengthOverflowError
   mResize s (MUArrayList lR arrR) = do
@@ -246,8 +245,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
     forM_ [0..(l - 1)] $ \i -> do
       v <- readArray arrST i
       writeArray resST i v
-    resR     <- newSTRef resST
-    return $ MUArrayList lR resR
+    writeSTRef arrR resST
 
   trueCopy :: MUArrayList a s -> ST s (MUArrayList a s)
   trueCopy mal@(MUArrayList _ arrR) = do

@@ -112,13 +112,12 @@ instance MList MArrayList a ST s where
       then outOfBoundError index
       else if ls == ps
         then do
-          resized <- mResize (expandedSize ls) mal
-          let MArrayList rlR resR = resized
-          rl      <- readMURef rlR
+          mResize (expandedSize ls) mal
+          rl      <- readMURef lR
           writeMURef lR rl
-          resST   <- readSTRef resR
+          resST   <- readSTRef arrR
           writeSTRef arrR resST
-          mInsert index e resized
+          mInsert index e mal
         else do
           arrST <- readSTRef arrR
           writeMURef lR $! ls + 1
@@ -220,7 +219,7 @@ instance MArrayBased MArrayList a ST s where
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
-  mResize :: Int -> MArrayList a s -> ST s (MArrayList a s)
+  mResize :: Int -> MArrayList a s -> ST s ()
   mResize s _
     | s < 0 = arrayLengthOverflowError
   mResize s (MArrayList lR arrR) = do
@@ -232,8 +231,7 @@ instance MArrayBased MArrayList a ST s where
     forM_ [0..(l - 1)] $ \i -> do
       v <- readArray arrST i
       writeArray resST i v
-    resR     <- newSTRef resST
-    return $ MArrayList lR resR
+    writeSTRef arrR resST
 
   trueCopy :: MArrayList a s -> ST s (MArrayList a s)
   trueCopy mal@(MArrayList _ arrR) = do

@@ -70,7 +70,7 @@ class (Monad (m s), MDS (a e) m s, MDSCons [e] (a e) m s)
   -- | Takes an @Int@ as length and a structure, modifies the structure such that
   -- it has at least the length specified by the argument.
   --
-  mResize :: Int -> a e s -> m s (a e s)
+  mResize :: Int -> a e s -> m s ()
 
   -- | Create a new mutable data structure from the given mutable data 
   -- structure, retaining the physical size.
