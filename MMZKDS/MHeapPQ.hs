@@ -30,6 +30,7 @@ import           MMZKDS.Utilities
 -- It is expected that the type of its elements is an instance of 'Ord'.
 -- It may adds an element to anywhere in the array, but it always pops the 
 -- "smallest" element.
+-- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
 -- 
 data MHeapPQ e s = MHeapPQ {
   mHeapS :: MURef s Int,
@@ -78,9 +79,17 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
         writeMURef lR lastI
         return $ Just popE
 
+  -- Overwritten default method
+  mPeek :: MHeapPQ a s -> ST s (Maybe a)
+  mPeek mh@(MHeapPQ _ arrR) = do
+    empty <- isNull mh
+    if empty
+      then return Nothing
+      else Just <$> (readSTRef arrR >>= flip readArray 0)
+
 
 --------------------------------------------------------------------------------
--- MArrayBased Instances
+-- MArrayBased Instance
 --------------------------------------------------------------------------------
 
 instance Ord a => MArrayBased MHeapPQ a ST s where
@@ -175,7 +184,13 @@ instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
 -- | Unsafe function: Does not the validity of childrens.
 -- Turns the heap into a min-heap starting from the given index.
 -- Pre: The indices of childrens are valid.  
-fixHead :: Ord a => STArray s Int a -> Int -> Int -> Maybe Int -> Maybe Int -> ST s ()
+fixHead :: Ord a 
+        => STArray s Int a -- ^ The @STArray@
+        -> Int -- ^ The logic length
+        -> Int -- ^ The index
+        -> Maybe Int -- ^ The index of the left child
+        -> Maybe Int -- ^ The index of the right child
+        -> ST s ()
 fixHead arrST l i mlc mrc = do
   let glc = flip unsafeLeftChild l
   let grc = flip unsafeRightChild l
@@ -206,8 +221,6 @@ fixHead arrST l i mlc mrc = do
 
 foo = runST $ do
   let n = 15
-  mh <- new [n, (n - 1)..1 :: Int] :: ST s (MHeapPQ Int s)
-  mAdd (-1) mh
-  mAdd (-3) mh
-  mAdd (-2) mh
-  (finish :: MHeapPQ Int s -> ST s [Int]) mh
+  mh <- new [n, (n - 1)..5 :: Int] :: ST s (MHeapPQ Int s)
+  mPeek mh
+  -- (finish :: MHeapPQ Int s -> ST s [Int]) mh
