@@ -2,16 +2,17 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.MHeapPQ where
+module MMZKDS.Unboxed.MUHeapPQ where
 
 import           Control.Monad (forM_, when)
 import           Control.Monad.ST (ST, runST)
-import           Data.Array (Array)
 import           Data.Array.ST
-  (STArray, getBounds, freeze, newArray_, newListArray, thaw, readArray,
+  (STUArray, getBounds, freeze, newArray_, newListArray, thaw, readArray,
   writeArray
   )
+import           Data.Array.Unboxed (IArray, UArray, (!))
 import           Data.Foldable (toList)
 import           Data.Maybe (fromJust, isNothing)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
@@ -19,22 +20,23 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import           MMZKDS.ArrayBased (MArrayBased(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
-import           MMZKDS.Unboxed.MURef (MURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.MURef 
+  (MU, MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
   (unsafeCopyArray, unsafeLeftChild, unsafeParent, unsafeRightChild)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
 
--- | 'MHeapPQ' is a min-heap implementing the 'MPriorityQueue' class.
--- The heap is implemented with an internal @STArray@.
--- It is expected that the type of its elements is an instance of 'Ord'.
+-- | 'MUHeapPQ' is a min-heap implementing the 'MPriorityQueue' class with
+-- unboxed elements.
+-- The heap is implemented with an internal @STUArray@.
 -- It may adds an element to anywhere in the array, but it always pops the 
 -- "smallest" element.
 -- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
 -- 
-data MHeapPQ e s = MHeapPQ {
+data MUHeapPQ e s = MUHeapPQ {
   mHeapS :: MURef s Int,
-  mHeapA :: STRef s (STArray s Int e)
+  mHeapA :: STRef s (STUArray s Int e)
   }
 
 
@@ -42,9 +44,10 @@ data MHeapPQ e s = MHeapPQ {
 -- MPriorityQueue Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => MPriorityQueue MHeapPQ a ST s where
-  mAdd :: a -> MHeapPQ a s -> ST s ()
-  mAdd e mh@(MHeapPQ lR arrR) = do
+instance (Ord a, IArray UArray a, MU a s) 
+  => MPriorityQueue MUHeapPQ a ST s where
+  mAdd :: a -> MUHeapPQ a s -> ST s ()
+  mAdd e mh@(MUHeapPQ lR arrR) = do
     ls <- size mh
     ps <- mPhysicalSize mh
     if ls == ps
@@ -61,8 +64,8 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
               writeArray arrST i vp >> writeArray arrST pI vi >> bubbleUp pI
         bubbleUp ls
 
-  mPop :: MHeapPQ a s -> ST s (Maybe a)
-  mPop mh@(MHeapPQ lR arrR) = do
+  mPop :: MUHeapPQ a s -> ST s (Maybe a)
+  mPop mh@(MUHeapPQ lR arrR) = do
     l <- size mh
     if l == 0
       then return Nothing
@@ -80,8 +83,8 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
         return $ Just popE
 
   -- Overwritten default method
-  mPeek :: MHeapPQ a s -> ST s (Maybe a)
-  mPeek mh@(MHeapPQ _ arrR) = do
+  mPeek :: MUHeapPQ a s -> ST s (Maybe a)
+  mPeek mh@(MUHeapPQ _ arrR) = do
     empty <- isNull mh
     if empty
       then return Nothing
@@ -92,17 +95,23 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => MArrayBased MHeapPQ a ST s where
-  mDeepClear :: MHeapPQ a s -> ST s ()
+instance (Ord a, IArray UArray a, MU a s) => MArrayBased MUHeapPQ a ST s where
+  mDeepClear :: MUHeapPQ a s -> ST s ()
   mDeepClear mh =
-    (newArray_ (0, initialSize 0 - 1) :: ST s (STArray s Int a)) >>=
+    (newArray_  :: MU a s 
+                => (Int, Int) 
+                -> ST s (STUArray s Int a)
+    ) (0, initialSize 0 - 1) >>=
       writeSTRef (mHeapA mh) >> writeMURef (mHeapS mh) 0
 
-  mNewWithSize :: Foldable f => Int -> f a -> ST s (MHeapPQ a s)
+  mNewWithSize :: Foldable f => Int -> f a -> ST s (MUHeapPQ a s)
   mNewWithSize s fd = do
     let l = length fd
-    arrST <- (newListArray :: (Int, Int) -> [a] -> ST s (STArray s Int a))
-      (0, max s $ initialSize l - 1) $ toList fd
+    arrST <- (newListArray :: MU a s 
+                           => (Int, Int) 
+                           -> [a] 
+                           -> ST s (STUArray s Int a)
+             ) (0, max s $ initialSize l - 1) $ toList fd
     lR    <- newMURef l
     aR    <- newSTRef arrST
     let toMinHeap mi
@@ -114,17 +123,17 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
             mlc = unsafeLeftChild i l
             mrc = unsafeRightChild i l
     toMinHeap $ Just 0
-    return $ MHeapPQ lR aR
+    return $ MUHeapPQ lR aR
 
-  mPhysicalSize :: MHeapPQ a s -> ST s Int
+  mPhysicalSize :: MUHeapPQ a s -> ST s Int
   mPhysicalSize mh = do
     (_, sup) <- readSTRef (mHeapA mh) >>= getBounds
     return (sup + 1)
 
-  mResize :: Int -> MHeapPQ a s -> ST s ()
+  mResize :: Int -> MUHeapPQ a s -> ST s ()
   mResize s _
     | s < 0 = arrayLengthOverflowError
-  mResize s (MHeapPQ lR arrR) = do
+  mResize s (MUHeapPQ lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readMURef lR
     (_, sup) <- getBounds arrST
@@ -134,7 +143,7 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
       writeArray resST i v
     writeSTRef arrR resST
 
-  trueCopy :: MHeapPQ a s -> ST s (MHeapPQ a s)
+  trueCopy :: MUHeapPQ a s -> ST s (MUHeapPQ a s)
   trueCopy mh = do
     l     <- readMURef (mHeapS mh)
     lR    <- newMURef l
@@ -142,18 +151,18 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
     resST <- getBounds arrST >>= newArray_
     unsafeCopyArray arrST resST (0, l - 1)
     aR    <- newSTRef resST
-    return $ MHeapPQ lR aR
+    return $ MUHeapPQ lR aR
 
 
 --------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance Ord a => MDS (MHeapPQ a) ST s where
-  clear :: MHeapPQ a s -> ST s ()
+instance (Ord a, MU a s) => MDS (MUHeapPQ a) ST s where
+  clear :: MUHeapPQ a s -> ST s ()
   clear = flip writeMURef 0 . mHeapS
 
-  copy :: MHeapPQ a s -> ST s (MHeapPQ a s)
+  copy :: MUHeapPQ a s -> ST s (MUHeapPQ a s)
   copy mh = do
     l     <- readMURef (mHeapS mh)
     lR    <- newMURef l
@@ -161,19 +170,27 @@ instance Ord a => MDS (MHeapPQ a) ST s where
     resST <- newArray_ (0, initialSize l - 1)
     unsafeCopyArray arrST resST (0, l - 1)
     aR    <- newSTRef resST
-    return $ MHeapPQ lR aR
+    return $ MUHeapPQ lR aR
 
-  size :: MHeapPQ a s -> ST s Int
+  size :: MUHeapPQ a s -> ST s Int
   size = readMURef . mHeapS
 
-instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
-  finish :: MHeapPQ a s -> ST s [a]
-  finish mh = do
-    let freeze' = freeze :: STArray s Int a -> ST s (Array Int a)
-    readMURef (mHeapS mh) >>=
-      flip fmap (readSTRef (mHeapA mh) >>= freeze') . (. toList) . take
+instance (Ord a, IArray UArray a, MU a s) => MDSCons [a] (MUHeapPQ a) ST s where
+  finish :: MUHeapPQ a s -> ST s [a]
+  finish mh@(MUHeapPQ _ arrR) = do
+    l <- size mh
+    arrST <- readSTRef arrR
+    let freeze' = freeze :: (IArray UArray a, MU a s) 
+                         => STUArray s Int a 
+                         -> ST s (UArray Int a)
+    arr   <- freeze' arrST
+    return $ take l $ toList' arr 0 l
+    where
+      toList' arr i l
+        | i == l    = []
+        | otherwise = (arr ! i) : toList' arr (i + 1) l
 
-  new :: [a] -> ST s (MHeapPQ a s)
+  new :: [a] -> ST s (MUHeapPQ a s)
   new = mNewWithSize 0
 
 
@@ -184,8 +201,8 @@ instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
 -- | Unsafe function: Does not the validity of childrens.
 -- Turns the heap into a min-heap starting from the given index.
 -- Pre: The indices of childrens are valid.  
-fixHead :: Ord a 
-        => STArray s Int a -- ^ The @STArray@
+fixHead :: (Ord a, MU a s)
+        => STUArray s Int a -- ^ The @STUArray@
         -> Int -- ^ The logic length
         -> Int -- ^ The index
         -> Maybe Int -- ^ The index of the left child
@@ -194,7 +211,12 @@ fixHead :: Ord a
 fixHead arrST l i mlc mrc = do
   let glc = flip unsafeLeftChild l
   let grc = flip unsafeRightChild l
-  let wt' = (writeArray :: STArray s Int a -> Int -> a -> ST s ()) arrST
+  let wt' = (writeArray :: MU a s 
+                        => STUArray s Int a 
+                        -> Int 
+                        -> a 
+                        -> ST s ()
+            ) arrST
   let fixHead' i mlc mrc
           | isNothing mlc = return ()
           | isNothing mrc = do
@@ -221,6 +243,6 @@ fixHead arrST l i mlc mrc = do
 
 foo = runST $ do
   let n = 15
-  mh <- new [n, (n - 1)..5 :: Int] :: ST s (MHeapPQ Int s)
-  mPeek mh
-  -- (finish :: MHeapPQ Int s -> ST s [Int]) mh
+  mh <- new [n, (n - 1)..1 :: Int] :: ST s (MUHeapPQ Int s)
+  -- mPeek mh
+  (finish :: MUHeapPQ Int s -> ST s [Int]) mh

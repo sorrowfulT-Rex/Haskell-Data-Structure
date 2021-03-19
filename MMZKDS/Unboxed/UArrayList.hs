@@ -177,12 +177,10 @@ instance IArray UArray a => DS (UArrayList a) where
 instance IArray UArray a => DSCons [a] (UArrayList a) where
   finish :: UArrayList a -> [a]
   finish (UArrayList l arr)
-    = toList' lb
+    = toList' 0
     where
-      (lb, _) = bounds arr
-      sup     = lb + l
       toList' i
-        | i == sup  = []
+        | i == l    = []
         | otherwise = (arr ! i) : toList' (i + 1)
 
   new :: [a] -> UArrayList a

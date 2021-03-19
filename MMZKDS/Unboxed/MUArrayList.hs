@@ -20,7 +20,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.Unboxed.MURef
-  (MURef, newMURef, readMURef, writeMURef)
+  (MU, MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
@@ -68,7 +68,7 @@ uArrayListThaw (UArrayList l arr) = do
 -- The original mutable list should not be used ever since.
 --
 unsafeUArrayListFreeze :: 
-  forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+  forall a s. (IArray UArray a, MU a s)
   => MUArrayList a s
   -> ST s (UArrayList a)
 unsafeUArrayListFreeze (MUArrayList lR arrR) = do
@@ -83,7 +83,7 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 -- The original immutable list should not be used ever since.
 --
 unsafeUArrayListThaw :: 
-  forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+  forall a s. (IArray UArray a, MU a s)
   => UArrayList a
   -> ST s (MUArrayList a s)
 unsafeUArrayListThaw (UArrayList l arr) = do
@@ -97,8 +97,7 @@ unsafeUArrayListThaw (UArrayList l arr) = do
 -- MList Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MArray (STUArray s) a (ST s))
-  => MList MUArrayList a ST s where
+instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
   mGet :: MUArrayList a s -> Int -> ST s a
   mGet mal@(MUArrayList lR arrR) index = do
     l <- size mal
@@ -210,8 +209,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MArray (STUArray s) a (ST s))
-  => MArrayBased MUArrayList a ST s where
+instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
   mDeepClear :: MUArrayList a s -> ST s ()
   mDeepClear (MUArrayList lR arrR) = do
     MUArrayList rlR resR <- mNewList []
@@ -275,8 +273,7 @@ instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s)
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MArray (STUArray s) a (ST s)) =>
-  MDS (MUArrayList a) ST s where
+instance (IArray UArray a, MU a s) => MDS (MUArrayList a) ST s where
   clear :: MUArrayList a s -> ST s ()
   clear (MUArrayList lR _)
     = writeMURef lR 0
