@@ -247,14 +247,14 @@ instance MArrayBased MArrayList a ST s where
 
 instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
   => MQueue l a m s where
-  mAdd = mPush
+  mDequeue = mPop
+
+  mEnqueue = mPush
   
   mPeek m = do
-    e <- L.mPop m
+    e <- mPop m
     when (isJust e) $ mAppend (fromJust e) m
     return e
-
-  mPop = L.mPop
 
 
 --------------------------------------------------------------------------------

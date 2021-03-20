@@ -154,8 +154,8 @@ instance ArrayBased ArrayList a where
 --------------------------------------------------------------------------------
 
 instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
-  add = L.push
-  pop = L.pop
+  dequeue = pop
+  enqueue = push
 
 
 --------------------------------------------------------------------------------

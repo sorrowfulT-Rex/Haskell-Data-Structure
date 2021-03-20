@@ -22,7 +22,7 @@ import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.Unboxed.MURef
   (MU, MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
-import           MMZKDS.List as L (List(newList, toList), MList(..))
+import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
 import           MMZKDS.Unsafe
@@ -259,14 +259,14 @@ instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
 
 instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
   => MQueue l a m s where
-  mAdd = mPush
+  mDequeue = mPop
+
+  mEnqueue = mPush
   
   mPeek m = do
-    e <- L.mPop m
+    e <- mPop m
     when (isJust e) $ mAppend (fromJust e) m
     return e
-
-  mPop = L.mPop
 
 
 --------------------------------------------------------------------------------
