@@ -248,8 +248,7 @@ instance MU a s => MDSCons [a] (MULinkedList a) ST s where
     let mToList' node = if isHead node
         then return []
         else liftM2 (:) (uNodeElem node) (nextUN node >>= mToList')
-    hd <- getHead mll
-    nextUN hd >>= mToList'
+    getHead mll >>= nextUN >>= mToList'
 
   new :: [a] -> ST s (MULinkedList a s)
   new xs = do

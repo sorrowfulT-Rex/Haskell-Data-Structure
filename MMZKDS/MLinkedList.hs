@@ -248,8 +248,7 @@ instance MDSCons [a] (MLinkedList a) ST s where
     let mToList' node = if isHead node
         then return []
         else liftM2 (:) (nodeElem node) (nextN node >>= mToList')
-    hd <- getHead mll
-    nextN hd >>= mToList'
+    getHead mll >>= nextN >>= mToList'
 
   new :: [a] -> ST s (MLinkedList a s)
   new xs = do

@@ -7,8 +7,7 @@
 module MMZKDS.Unboxed.UArrayList where
 
 import           Control.Monad (join)
-import           Data.Array.Unboxed
-  (IArray, UArray, accum, array, bounds, (!))
+import           Data.Array.Unboxed (IArray, UArray, accum, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
@@ -76,13 +75,6 @@ instance IArray UArray a => List UArrayList a where
         | i < index = arr ! i
         | i > index = arr ! (i - 1)
         | otherwise = e
-
-  newList :: Foldable f => f a -> UArrayList a
-  newList fl
-    = UArrayList l (array (0, l' - 1) $ zip [0..] $ F.toList fl)
-    where
-      l  = length fl
-      l' = initialSize l
 
   set :: UArrayList a -> Int -> a -> UArrayList a
   set al@(UArrayList l arr) index e
