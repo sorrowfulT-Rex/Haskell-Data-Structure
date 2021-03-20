@@ -40,7 +40,7 @@ class (DS (q e), DSCons [e] (q e)) => Queue q e where
 -- implementation, but it should follow a queue logic (FIFO). More specifically,
 -- it should always add element to the rear and delete element from the front.
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
--- Minimal implementation requires @mAdd@, @mPeek@ and @mPop@.
+-- Minimal implementation requires @mDequeue@, @mEnqueue@ and @mPeek@.
 class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s) 
   => MQueue q e m s where
   -- | Removes the element at the front of the queue, returning the element.
