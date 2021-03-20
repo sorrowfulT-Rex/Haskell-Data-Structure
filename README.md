@@ -31,6 +31,7 @@ See the [Haddocks](MMZKDS/List.hs) for full documentation.
 # [MMZKDS/Queue.hs](MMZKDS/Queue.hs)
 This file provides type classes for both immutable and mutable queue structures.  
 There are two classes, namely `Queue` and `MQueue`, for immutable and mutable queues, respectively.  
+The queue pushes elements on the front and pops elements on the rear.  
 See the [Haddocks](MMZKDS/Queue.hs) for full documentation.  
 
 # [MMZKDS/PriorityQueue.hs](MMZKDS/PriorityQueue.hs)

@@ -16,7 +16,8 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- | 'Queue' is a type class for immutable queue data structures.
 -- It provides methods of adding and removing element from the queue.
 -- The choice of the element being inserted or deleted is up to the 
--- implementation, but it should follow a queue logic (FIFO).
+-- implementation, but it should follow a queue logic (FIFO). More specifically,
+-- it should always push on the front and pop on the rear.
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- Minimal implementation requires @add@ and @pop@.
 -- Default method is @peek@.
@@ -36,7 +37,8 @@ class (DS (q e), DSCons [e] (q e)) => Queue q e where
 -- | 'MQueue' is a type class for mutable queue data structures.
 -- It provides methods of adding and removing element from the queue.
 -- The choice of the element being inserted or deleted is up to the 
--- implementation, but it should follow a queue logic (FIFO).
+-- implementation, but it should follow a queue logic (FIFO). More specifically,
+-- it should always push on the front and pop on the rear.
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- Minimal implementation requires @mAdd@, @mPeek@ and @mPop@.
 class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s) 
