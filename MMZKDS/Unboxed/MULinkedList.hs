@@ -6,7 +6,7 @@
 
 module MMZKDS.Unboxed.MULinkedList where
 
-import           Control.Monad (forM, forM_, when, (<=<))
+import           Control.Monad (forM, forM_, liftM2, when, (<=<))
 import           Control.Monad.ST (ST)
 import           Data.Foldable as F (toList)
 import           Data.List (elemIndex, sortOn)
@@ -170,12 +170,11 @@ instance MU a s => MList MULinkedList a ST s where
   -- Overwritten default method
   mIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
   mIndexOf mll e = do
-    let mIndexOf' i node = do
-        if isHead node
-          then return Nothing
-          else if uNodeElem node `unsafeSTEq` return e
-            then return $ Just i
-            else nextUN node >>= mIndexOf' (i + 1)
+    let mIndexOf' i node
+          | isHead node                          = return Nothing
+          | uNodeElem node `unsafeSTEq` return e = return $ Just i
+          | otherwise
+            = nextUN node >>= mIndexOf' (i + 1)
     hd <- getHead mll
     nextUN hd >>= mIndexOf' 0
 
@@ -183,12 +182,11 @@ instance MU a s => MList MULinkedList a ST s where
   mLastIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
   mLastIndexOf mll e = do
     l <- size mll
-    let mLastIndexOf' i node = do
-        if isHead node
-          then return Nothing
-          else if uNodeElem node `unsafeSTEq` return e
-            then return $ Just i
-            else prevUN node >>= mLastIndexOf' (i - 1)
+    let mLastIndexOf' i node
+          | isHead node                          = return Nothing
+          | uNodeElem node `unsafeSTEq` return e = return $ Just i
+          | otherwise 
+            = prevUN node >>= mLastIndexOf' (i - 1)
     hd <- getHead mll
     prevUN hd >>= mLastIndexOf' (l - 1)
 
@@ -212,17 +210,17 @@ instance MU a s => MList MULinkedList a ST s where
 -- MQueue Instance
 --------------------------------------------------------------------------------
 
-instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s) 
+instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s)
   => MQueue l a m s where
   mDequeue = mPop
 
   mEnqueue = mPush
-  
+
   mPeek m = do
     e <- mPop m
     when (isJust e) $ mAppend (fromJust e) m
     return e
-  
+
 
 --------------------------------------------------------------------------------
 -- MDS & MDSCons Instances
@@ -247,14 +245,9 @@ instance MU a s => MDS (MULinkedList a) ST s where
 instance MU a s => MDSCons [a] (MULinkedList a) ST s where
   finish :: MULinkedList a s -> ST s [a]
   finish mll = do
-    let mToList' node = do
-        if isHead node
-          then return []
-          else do
-            nxt <- nextUN node
-            e   <- uNodeElem node
-            rst <- mToList' nxt
-            return $ e : rst
+    let mToList' node = if isHead node
+        then return []
+        else liftM2 (:) (uNodeElem node) (nextUN node >>= mToList')
     hd <- getHead mll
     nextUN hd >>= mToList'
 
