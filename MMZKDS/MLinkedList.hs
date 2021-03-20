@@ -7,7 +7,7 @@
 module MMZKDS.MLinkedList where
 
 import           Control.Monad (forM, forM_, when, (<=<))
-import           Control.Monad.ST (ST, runST)
+import           Control.Monad.ST (ST)
 import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (fromJust, isJust)
 import           Data.STRef

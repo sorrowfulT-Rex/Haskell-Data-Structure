@@ -7,7 +7,7 @@
 module MMZKDS.MArrayList where
 
 import           Control.Monad (forM_, liftM2, when)
-import           Control.Monad.ST (ST, runST)
+import           Control.Monad.ST (ST)
 import           Data.Array.ST
   (STArray, freeze, getBounds, newArray_, readArray, thaw, writeArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)

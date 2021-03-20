@@ -6,7 +6,7 @@
 module MMZKDS.MHeapPQ where
 
 import           Control.Monad (forM_, when)
-import           Control.Monad.ST (ST, runST)
+import           Control.Monad.ST (ST)
 import           Data.Array (Array)
 import           Data.Array.ST
   (STArray, getBounds, freeze, newArray_, newListArray, thaw, readArray,
@@ -213,14 +213,3 @@ fixHead arrST l i mlc mrc = do
               then wt' i vlc >> wt' lc vi >> fixHead' lc (glc lc) (grc lc)
               else wt' i vrc >> wt' rc vi >> fixHead' rc (glc rc) (grc rc)
   fixHead' i mlc mrc
-
-
---------------------------------------------------------------------------------
--- Playground
---------------------------------------------------------------------------------
-
-foo = runST $ do
-  let n = 15
-  mh <- new [n, (n - 1)..5 :: Int] :: ST s (MHeapPQ Int s)
-  mPeek mh
-  -- (finish :: MHeapPQ Int s -> ST s [Int]) mh

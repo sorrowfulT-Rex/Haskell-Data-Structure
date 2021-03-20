@@ -7,7 +7,7 @@
 module MMZKDS.Unboxed.MULinkedList where
 
 import           Control.Monad (forM, forM_, when, (<=<))
-import           Control.Monad.ST (ST, runST)
+import           Control.Monad.ST (ST)
 import           Data.Foldable as F (toList)
 import           Data.List (elemIndex, sortOn)
 import           Data.Maybe (fromJust, isJust)
