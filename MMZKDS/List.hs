@@ -214,6 +214,11 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   update' :: l e -> Int -> (e -> e) -> l e
   update' = ap (ap . (((.) . ($!)) .) . set) ((flip id .) . get)
 
+
+--------------------------------------------------------------------------------
+-- MList Type Class
+--------------------------------------------------------------------------------
+
 -- | 'MList' is a type class for mutable sequential data structures based on the
 -- @ST@-monad, with methods including random access, addition, deletion, finding 
 -- index and so on.

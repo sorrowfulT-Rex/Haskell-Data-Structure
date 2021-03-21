@@ -34,6 +34,11 @@ class (DS (q e), DSCons [e] (q e)) => Queue q e where
   peek :: q e -> Maybe e
   peek = fst . MMZKDS.Queue.dequeue
 
+
+--------------------------------------------------------------------------------
+-- MQueue Type Class
+--------------------------------------------------------------------------------
+
 -- | 'MQueue' is a type class for mutable queue data structures.
 -- It provides methods of adding and removing element from the queue.
 -- The choice of the element being inserted or deleted is up to the 

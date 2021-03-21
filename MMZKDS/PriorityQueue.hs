@@ -13,7 +13,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------
--- Priority Queue Type Class
+-- PriorityQueue Type Class
 --------------------------------------------------------------------------------
 
 -- | 'PriorityQueue' is a type class for immutable priority queue structures.
@@ -41,6 +41,11 @@ class (DS (q e), DSCons [e] (q e)) => PriorityQueue q e where
   -- Retrieves the element at the front but not removing it.
   peek :: q e -> Maybe e
   peek = fst . MMZKDS.PriorityQueue.pop
+
+
+--------------------------------------------------------------------------------
+-- MPriorityQueue Type Class
+--------------------------------------------------------------------------------
 
 -- | 'MPriorityQueue' is a type class for mutable priority queue structures.
 -- It provides methods of adding and removing element from the queue.

@@ -41,6 +41,11 @@ class (DS (a e), DSCons [e] (a e)) => ArrayBased a e where
   --
   resize :: Int -> a e -> a e
 
+
+--------------------------------------------------------------------------------
+-- MArrayBased Type Class
+--------------------------------------------------------------------------------
+
 -- | 'MArrayBased' is a type class for mutable @STArray@-based data structure.
 -- It provides methods to allocate new arrays for length adjustment, and to copy
 -- the structure that retains it's physical size.

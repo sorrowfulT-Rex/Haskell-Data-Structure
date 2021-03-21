@@ -72,6 +72,11 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
   union :: forall c1. DSCons [e] (c1 e) => c e -> c1 e -> c e
   union = (. (DS.finish :: c1 e -> [e])) . foldl' (flip add)
 
+
+--------------------------------------------------------------------------------
+-- MSet Type Class
+--------------------------------------------------------------------------------
+
 -- | 'MSet' is a type class for mutable set structures based on the @ST@-monad
 -- where the elements are unique, with methods including addition, deletion,
 -- union, intersection and so on.
