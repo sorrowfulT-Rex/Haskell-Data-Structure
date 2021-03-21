@@ -22,7 +22,7 @@ The classes `ArrayBased` and `MArrayBased` provide methods for re-allocating arr
 See the [Haddocks](MMZKDS/ArrayBased.hs) for full documentation.  
 
 # [MMZKDS/List.hs](MMZKDS/List.hs)
-This file provides type classes for both immutable and mutable list structures, including random access, addition, deletion, finding indices *etc.*   
+This file provides type classes for both immutable and mutable list structures, including methods of random access, addition, deletion, finding indices *etc.*   
 There are two classes, namely `List` and `MList`, for immutable and mutable lists, respectively.  
 The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
 Instances of `List` is automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
@@ -40,7 +40,7 @@ There are two classes, namely `PriorityQueue` and `MPriorityQueue`, for immutabl
 See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation. 
 
 # [MMZKDS/Set.hs](MMZKDS/Set.hs)
-This file provides type classes for both immutable and mutable sets with unique elements.  
+This file provides type classes for both immutable and mutable sets with unique elements, including methods of addition, deletion, union, intersection *etc.*   
 There are two classes, namely `Set` and `MSet`, for immutable and mutable sets, respectively.  
 It is expected that the elements are instances of `Eq`.  
 See the [Haddocks](MMZKDS/Set.hs) for full documentation. 

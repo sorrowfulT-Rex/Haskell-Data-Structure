@@ -99,6 +99,23 @@ addGenericBinaryTree e tree = case gTree of
         in GBNode (max d $ 1 + depthGenericBinaryTree subT) l e' subT
       | otherwise = GBNode d l e r
 
+-- | Tests if the element is in the tree.
+-- 
+containsGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree) 
+                          => e 
+                          -> t e 
+                          -> Bool
+containsGenericBinaryTree e = contains' . coerce
+  where
+    contains' GBEmpty 
+      = False
+    contains' (GBLeaf e')
+      = e == e'
+    contains' (GBNode _ l e' r)
+      | e < e'    = contains' l
+      | e > e'    = contains' r
+      | otherwise = True
+
 -- | Returns the depth of the tree.
 -- 
 depthGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree) 

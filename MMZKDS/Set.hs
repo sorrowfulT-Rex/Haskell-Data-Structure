@@ -4,8 +4,9 @@
 
 module MMZKDS.Set where
 
-import           Control.Monad (liftM2)
+import           Control.Monad (liftM2, void, when)
 import           Data.List (foldl')
+import           Data.Maybe (isJust, fromJust)
 
 import           MMZKDS.DS as DS (DS(..), DSCons(..))
 import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
@@ -20,12 +21,12 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- and so on.
 -- It is expected that the elements are instances of 'Eq'.  
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
--- Minimal implementation requires @add@, @contains@ and @remove@.
--- Default methods include @difference@, @intersection@, @newSet@, @toList@
--- and @union@.
+-- Minimal implementation requires @add@, @contains@, @findAny@, and @remove@.
+-- Default methods include @difference@, @dropAny@, @intersection@, @newSet@,
+--  @toList@ and @union@.
 -- For functional operations, one can either create a 'Monad' instance, or
--- "stream" the list structure with @toList@, apply the functions, then 
--- "collect" it back with "@newList@".
+-- "stream" the set with @toList@, apply the functions, then "collect" it back 
+-- with "@newSet@".
 --
 class (DS (c e), DSCons [e] (c e)) => Set c e where
   -- | Adds an element into the set.
@@ -38,7 +39,12 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
   --
   contains :: e -> c e -> Bool
 
-  -- | Removes an element into the set.
+  -- | Returns an element from the set if it is non-empty.
+  -- Does not guarantee which element is returned.
+  -- 
+  findAny :: c e -> Maybe e
+
+  -- | Removes the given element from the set.
   -- Returns a tuple consisting of the removed element (or Nothing, if the
   -- element is not in the set), and the set without the element.
   --
@@ -49,6 +55,16 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
   --
   difference :: forall c1. DSCons [e] (c1 e) => c e -> c1 e -> c e
   difference = (. (DS.finish :: c1 e -> [e])) . foldl' ((snd .) . flip remove)
+
+  -- | Default method.
+  -- Removes an element from the set.
+  -- Returns a tuple consisting of the removed element (or Nothing, if the
+  -- element is not in the set), and the set without the element.
+  -- Does not guarantee which element is removed.
+  -- 
+  dropAny :: c e -> (Maybe e, c e)
+  dropAny s 
+    = maybe (Nothing, s) (`remove` s) (findAny s)
 
   -- | Default method.
   -- Computes the intersection of two sets.
@@ -84,9 +100,10 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
 -- union, intersection and so on.
 -- It is expected that the elements are instances of 'Eq'.  
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
--- Minimal implementation requires @mAdd@, @mContains@ and @mRemove@.
--- Default methods include @mDifference@, @mIntersection@, @mNewSet@, @mToList@
--- and @mUnion@.
+-- Minimal implementation requires @mAdd@, @mContains@, "mFindAny" and
+-- @mRemove@.
+-- Default methods include @mDifference@, @mDropAny@, @mIntersection@,
+-- @mNewSet@, @mToList @and @mUnion@.
 --
 class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   -- | Adds an element into the set.
@@ -98,6 +115,11 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   -- | Tests if the element is in the set.
   --
   mContains :: e -> c e s -> m s Bool
+
+  -- | Returns an element from the set if it is non-empty.
+  -- Does not guarantee which element is returned.
+  -- 
+  mFindAny :: c e s -> m s (Maybe e)
 
   -- | Removes an element into the set.
   -- Returns the removed element (or Nothing, if element is not in the set), and 
@@ -114,6 +136,12 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
               -> m s ()
   mDifference
     = flip ((>>=) . (MDS.finish :: c1 e s -> m s [e])) . mapM_ . flip mRemove
+
+  mDropAny :: c e s -> m s (Maybe e)
+  mDropAny s = do
+    me <- mFindAny s
+    when (isJust me) $ void $ mRemove (fromJust me) s
+    return me
 
   -- | Default method.
   -- Computes the intersection of two sets.
