@@ -57,7 +57,7 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
             let pI = unsafeParent i
             vi <- readArray arrST i
             vp <- readArray arrST pI
-            when (vi < vp) $ 
+            when (vi < vp) $
               writeArray arrST i vp >> writeArray arrST pI vi >> bubbleUp pI
         bubbleUp ls
 
@@ -102,7 +102,7 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
   mNewWithSize s fd = do
     let l = length fd
     arrST <- (newListArray :: (Int, Int) -> [a] -> ST s (STArray s Int a))
-      (0, max s $ initialSize l - 1) $ toList fd
+      (0, max s (initialSize l) - 1) $ toList fd
     lR    <- newMURef l
     aR    <- newSTRef arrST
     let toMinHeap mi
@@ -184,7 +184,7 @@ instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
 -- | Unsafe function: Does not the validity of childrens.
 -- Turns the heap into a min-heap starting from the given index.
 -- Pre: The indices of childrens are valid.  
-fixHead :: Ord a 
+fixHead :: Ord a
         => STArray s Int a -- ^ The @STArray@
         -> Int -- ^ The logic length
         -> Int -- ^ The index
