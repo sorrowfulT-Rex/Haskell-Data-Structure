@@ -148,8 +148,11 @@ instance IArray UArray a => ArrayBased UArrayList a where
 -- Queue Instance
 --------------------------------------------------------------------------------
 
-instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
+instance IArray UArray a => Queue UArrayList a where
+  dequeue :: UArrayList a -> (Maybe a, UArrayList a)
   dequeue = pop
+
+  enqueue :: a -> UArrayList a -> UArrayList a
   enqueue = push
 
 

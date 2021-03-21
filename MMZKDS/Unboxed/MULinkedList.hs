@@ -210,16 +210,19 @@ instance MU a s => MList MULinkedList a ST s where
 -- MQueue Instance
 --------------------------------------------------------------------------------
 
-instance (Monad (m s), MList l a m s, MDS (l a) m s, MDSCons [a] (l a) m s)
-  => MQueue l a m s where
+instance MU a s => MQueue MULinkedList a ST s where
+  mDequeue :: MULinkedList a s -> ST s (Maybe a)
   mDequeue = mPop
 
+  mEnqueue :: a -> MULinkedList a s -> ST s ()
   mEnqueue = mPush
 
+  mPeek :: MULinkedList a s -> ST s (Maybe a)
   mPeek m = do
-    e <- mPop m
-    when (isJust e) $ mAppend (fromJust e) m
-    return e
+    l <- size m
+    if l == 0
+      then return Nothing
+      else Just <$> m `mGet` (l - 1)
 
 
 --------------------------------------------------------------------------------

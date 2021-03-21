@@ -13,6 +13,7 @@ import           Data.Array.ST
   writeArray
   )
 import           Data.Array.Unboxed (IArray, UArray, (!))
+import           Data.Bool (bool)
 import           Data.Foldable (toList)
 import           Data.Maybe (fromJust, isNothing)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
@@ -84,11 +85,9 @@ instance (Ord a, IArray UArray a, MU a s)
 
   -- Overwritten default method
   mPeek :: MUHeapPQ a s -> ST s (Maybe a)
-  mPeek mh@(MUHeapPQ _ arrR) = do
-    empty <- isNull mh
-    if empty
-      then return Nothing
-      else fmap Just $ readSTRef arrR >>= flip readArray 0
+  mPeek mh@(MUHeapPQ _ arrR)
+    = isNull mh >>= 
+      bool (fmap Just $ readSTRef arrR >>= flip readArray 0) (return Nothing)
 
 
 --------------------------------------------------------------------------------

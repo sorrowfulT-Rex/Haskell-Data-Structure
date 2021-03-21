@@ -143,8 +143,11 @@ instance ArrayBased ArrayList a where
 -- Queue Instance
 --------------------------------------------------------------------------------
 
-instance (List l a, DS (l a), DSCons [a] (l a)) => Queue l a where
+instance Queue ArrayList a where
+  dequeue :: ArrayList a -> (Maybe a, ArrayList a)
   dequeue = pop
+
+  enqueue :: a -> ArrayList a -> ArrayList a
   enqueue = push
 
 

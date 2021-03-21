@@ -28,7 +28,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
 -- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@,
 -- @removeLast@, @sort@, @sortOn@, @toList@, @update@ and @update'@.
--- For functional operations, one can either create an 'Monad' instance, or
+-- For functional operations, one can either create a 'Monad' instance, or
 -- "stream" the list structure with @toList@, apply the functions, then 
 -- "collect" it back with "@newList@".
 -- For methods that involves indices or elements, if the method changes the size
