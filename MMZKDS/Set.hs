@@ -30,7 +30,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 class (DS (c e), DSCons [e] (c e)) => Set c e where
   -- | Adds an element into the set.
   -- If the element is not already in the set, returns a new set with this
-  -- element, otherwise returns the same set.
+  -- element, otherwise replaces the old element in the set with the new one.
   --
   add :: e -> c e -> c e
 
@@ -58,11 +58,13 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
 
   -- | Default method.
   -- Returns a new set from @[]@.
+  -- 
   newSet :: [e] -> c e
   newSet = DS.new
 
   -- | Default method.
   -- Return the list representation of the set.
+  -- 
   toList :: c e -> [e]
   toList = DS.finish
 
@@ -89,7 +91,7 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
 class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   -- | Adds an element into the set.
   -- If the element is not already in the set, adds it to the set, otherwise
-  -- it does nothing.
+  -- it replaces the old element in the set with the new one.
   --
   mAdd :: e -> c e s -> m s ()
 
@@ -127,11 +129,13 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
 
   -- | Default method.
   -- Returns a new set from @[]@.
+  -- 
   mNewSet :: [e] -> m s (c e s)
   mNewSet = MDS.new
 
   -- | Default method.
   -- Return the list representation of the set.
+  -- 
   mToList :: c e s -> m s [e]
   mToList = MDS.finish
 
