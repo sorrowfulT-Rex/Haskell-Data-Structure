@@ -19,11 +19,12 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 --------------------------------------------------------------------------------
 
 -- | 'List' is a type class for immutable sequential (list) data structures, 
--- with methods including random access, addition, deletion and so on.
+-- with methods including random access, addition, deletion, finding index and 
+-- so on.
 -- It is based on the Java List Interface.
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- The list structure should have consecutive index from 0 to its size - 1.
--- Minimal implementation requires  @delete@, @get@, @indicesOf@, @insert@,
+-- Minimal implementation requires @delete@, @get@, @indicesOf@, @insert@,
 -- @set@, and @subList@.
 -- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
 -- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@,
@@ -214,8 +215,8 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   update' = ap (ap . (((.) . ($!)) .) . set) ((flip id .) . get)
 
 -- | 'MList' is a type class for mutable sequential data structures based on the
--- @ST@-monad, with 
--- methods including random access, addition, deletion, find index and so on.
+-- @ST@-monad, with methods including random access, addition, deletion, finding 
+-- index and so on.
 -- It is based on the Java List Interface.  
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- The list structure should have consecutive index from 0 to its size - 1.

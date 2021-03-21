@@ -37,7 +37,13 @@ See the [Haddocks](MMZKDS/Queue.hs) for full documentation.
 # [MMZKDS/PriorityQueue.hs](MMZKDS/PriorityQueue.hs)
 This file provides type classes for both immutable and mutable priority queues.  
 There are two classes, namely `PriorityQueue` and `MPriorityQueue`, for immutable and mutable priority queues, respectively.  
-See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation.  
+See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation. 
+
+# [MMZKDS/Set.hs](MMZKDS/Set.hs)
+This file provides type classes for both immutable and mutable sets with unique elements.  
+There are two classes, namely `Set` and `MSet`, for immutable and mutable sets, respectively.  
+It is expected that the elements are instances of `Eq`.  
+See the [Haddocks](MMZKDS/Set.hs) for full documentation. 
 
 # [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
