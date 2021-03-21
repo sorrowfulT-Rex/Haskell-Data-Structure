@@ -9,10 +9,6 @@ import           Data.Array.ST (MArray, STArray, readArray, writeArray)
 import           Data.STRef (STRef)
 import           System.IO.Unsafe (unsafePerformIO)
 import           System.Random (Random, StdGen, newStdGen, randomR)
-import           Unsafe.Coerce (unsafeCoerce)
-
-import           MMZKDS.Utilities 
-  (GenericBinaryTree, addGenericBinaryTree, depthGenericBinaryTree)
 
 
 --------------------------------------------------------------------------------
@@ -211,32 +207,6 @@ unsafeRemoveST index lastIndexOf arrST
   = forM_ [index..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + 1)
     writeArray arrST i v
-
-
---------------------------------------------------------------------------------
--- Binary Tree
---------------------------------------------------------------------------------
-
--- | Unsafe Function.
--- Adds an element to a binary search tree without self-balancing.
--- If the element exists already, replace it.
--- Pre: The type of the tree **MUST** be in the following form:
--- @ SomeTree e = SomeEmpty 
---              | SomeLeaf e 
---              | SomeNode {-# UNPACK #-} !Int (SomeLeaf e) e (SomeLeaf e) @
-unsafeAddBinaryTree :: Ord e => e -> t e -> t e
-unsafeAddBinaryTree e t 
-  = unsafeCoerce (addGenericBinaryTree e (unsafeCoerce t))
-
--- | Unsafe Function.
--- Returns the depth of the tree.
--- Pre: The type of the tree **MUST** be in the following form:
--- @ SomeTree e = SomeEmpty 
---              | SomeLeaf e 
---              | SomeNode {-# UNPACK #-} !Int (SomeLeaf e) e (SomeLeaf e) @
-unsafeDepthBinaryTree :: t e -> Int
-unsafeDepthBinaryTree t 
-  = unsafeCoerce (depthGenericBinaryTree (unsafeCoerce t))
 
 
 --------------------------------------------------------------------------------
