@@ -9,6 +9,55 @@ import           Data.Array.ST (MArray, STArray, readArray, writeArray)
 import           Data.STRef (STRef)
 import           System.IO.Unsafe (unsafePerformIO)
 import           System.Random (Random, StdGen, newStdGen, randomR)
+import           Unsafe.Coerce (unsafeCoerce)
+
+import           MMZKDS.Utilities 
+  (GenericBinaryTree, addGenericBinaryTree, depthGenericBinaryTree)
+
+
+--------------------------------------------------------------------------------
+-- Pure
+--------------------------------------------------------------------------------
+
+-- | Unsafe: Does not check bound and validity of indices.
+-- Used for a heap implemented with an array.
+-- Takes the index of the current node and the size of the heap, returns the 
+-- index of the current node's left child.
+-- Pre: The index is within bound and the length is non-negative.
+-- 
+unsafeLeftChild :: Int -> Int -> Maybe Int
+unsafeLeftChild i l
+  | lc >= l   = Nothing
+  | otherwise = Just lc
+  where
+    lc = 2 * i + 1
+
+-- | Unsafe: Does not bound check and does not check if the node is the root.
+-- Used for a heap implemented with an array.
+-- Takes the index of the current node and the size of the heap, returns the 
+-- index of the parent of the current node.
+-- Pre: The index is within bound and is not the root.
+unsafeParent :: Int -> Int
+unsafeParent
+  = (`div` 2) . (+ (-1))
+
+-- | Unsafe: Does not check bound and validity of indices.
+-- Used for a heap implemented with an array.
+-- Takes the index of the current node and the size of the heap, returns the 
+-- index of the current node's right child.
+-- Pre: The index is within bound and the length is non-negative.
+-- 
+unsafeRightChild :: Int -> Int -> Maybe Int
+unsafeRightChild i l
+  | rc >= l   = Nothing
+  | otherwise = Just rc
+  where
+    rc = 2 * i + 2
+
+
+--------------------------------------------------------------------------------
+-- STArray
+--------------------------------------------------------------------------------
 
 -- | Unsafe: Does not conduct bound check for array.
 -- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
@@ -47,33 +96,6 @@ unsafeCopyArray :: (MArray r a m)
 unsafeCopyArray arrST resST (inf, sup) = do
   forM_ (zip [0..] [inf..sup]) $ 
     \(i, i') -> readArray arrST i >>= writeArray resST i'
-
--- | Unsafe Function.
--- Random generator in @ST@.
-unsafeGenST :: ST s StdGen
-unsafeGenST = unsafeIOToST newStdGen
-
--- | Unsafe: Does not check bound and validity of indices.
--- Used for a heap implemented with an array.
--- Takes the index of the current node and the size of the heap, returns the 
--- index of the current node's left child.
--- Pre: The index is within bound and the length is non-negative.
--- 
-unsafeLeftChild :: Int -> Int -> Maybe Int
-unsafeLeftChild i l
-  | lc >= l   = Nothing
-  | otherwise = Just lc
-  where
-    lc = 2 * i + 1
-
--- | Unsafe: Does not bound check and does not check if the node is the root.
--- Used for a heap implemented with an array.
--- Takes the index of the current node and the size of the heap, returns the 
--- index of the parent of the current node.
--- Pre: The index is within bound and is not the root.
-unsafeParent :: Int -> Int
-unsafeParent
-  = (`div` 2) . (+ (-1))
 
 -- -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- -- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
@@ -190,20 +212,45 @@ unsafeRemoveST index lastIndexOf arrST
     v <- readArray arrST (i + 1)
     writeArray arrST i v
 
--- | Unsafe: Does not check bound and validity of indices.
--- Used for a heap implemented with an array.
--- Takes the index of the current node and the size of the heap, returns the 
--- index of the current node's right child.
--- Pre: The index is within bound and the length is non-negative.
--- 
-unsafeRightChild :: Int -> Int -> Maybe Int
-unsafeRightChild i l
-  | rc >= l   = Nothing
-  | otherwise = Just rc
-  where
-    rc = 2 * i + 2
 
--- | Unsafe: It is safe, but is not recommended to use.
+--------------------------------------------------------------------------------
+-- Binary Tree
+--------------------------------------------------------------------------------
+
+-- | Unsafe Function.
+-- Adds an element to a binary search tree without self-balancing.
+-- If the element exists already, replace it.
+-- Pre: The type of the tree **MUST** be in the following form:
+-- @ SomeTree e = SomeEmpty 
+--              | SomeLeaf e 
+--              | SomeNode {-# UNPACK #-} !Int (SomeLeaf e) e (SomeLeaf e) @
+unsafeAddBinaryTree :: Ord e => e -> t e -> t e
+unsafeAddBinaryTree e t 
+  = unsafeCoerce (addGenericBinaryTree e (unsafeCoerce t))
+
+-- | Unsafe Function.
+-- Returns the depth of the tree.
+-- Pre: The type of the tree **MUST** be in the following form:
+-- @ SomeTree e = SomeEmpty 
+--              | SomeLeaf e 
+--              | SomeNode {-# UNPACK #-} !Int (SomeLeaf e) e (SomeLeaf e) @
+unsafeDepthBinaryTree :: t e -> Int
+unsafeDepthBinaryTree t 
+  = unsafeCoerce (depthGenericBinaryTree (unsafeCoerce t))
+
+
+--------------------------------------------------------------------------------
+-- Misc.
+--------------------------------------------------------------------------------
+
+-- | Unsafe Function.
+-- Random generator in @ST@.
+-- 
+unsafeGenST :: ST s StdGen
+unsafeGenST = unsafeIOToST newStdGen
+
+-- | It is safe; wraps unsafe operations.
 -- Compare if two references are equal based on the values they refer to.
+-- 
 unsafeSTEq :: Eq a => ST s a -> ST s a -> Bool
 unsafeSTEq = let p = unsafePerformIO . unsafeSTToIO in (. p) . (==) . p

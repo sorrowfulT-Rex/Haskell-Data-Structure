@@ -1,9 +1,7 @@
 module MMZKDS.Utilities where
 
-import           Control.Monad.ST (ST)
 import           Data.Bits (shiftL)
 import           Data.Foldable (toList)
-
 
 --------------------------------------------------------------------------------
 -- Array & STArray
@@ -39,46 +37,61 @@ outOfBoundError i
 
 
 --------------------------------------------------------------------------------
--- Binary Tree
+-- Generic Binary Tree
 --------------------------------------------------------------------------------
 
--- | Generic data type for binary tree.
+-- | Generic binary tree data type, mainly used for BST-based structures.
 -- 
-data BinaryTree e = BEmpty | BLeaf e | BNode (BinaryTree e) e (BinaryTree e)
+data GenericBinaryTree e 
+  = GBEmpty 
+  | GBLeaf e 
+  | GBNode {-# UNPACK #-} !Int (GenericBinaryTree e) e (GenericBinaryTree e)
   deriving (Eq, Show)
 
--- | Add an element to a binary search tree without self-balancing.
--- 
-addBinaryTree :: Ord e => e -> BinaryTree e -> BinaryTree e
-addBinaryTree e BEmpty
-  = BLeaf e
-addBinaryTree e (BLeaf e')
-  | e < e'    = BNode (BLeaf e) e' BEmpty
-  | e > e'    = BNode BEmpty e' (BLeaf e)
-  | otherwise = BLeaf e
-addBinaryTree e (BNode l e' r)
-  | e < e'    = BNode (addBinaryTree e l) e' r
-  | e > e'    = BNode l e' (addBinaryTree e r)
-  | otherwise = BNode l e r
-
-instance Foldable BinaryTree where
-  foldr _ e BEmpty 
+instance Foldable GenericBinaryTree where
+  foldr _ e GBEmpty 
     = e
-  foldr f e (BLeaf e') 
+  foldr f e (GBLeaf e') 
     = f e' e
-  foldr f e (BNode l e' r)
+  foldr f e (GBNode _ l e' r)
     = foldr f (f e' (foldr f e r)) l
 
-  toList bt
-    = toList' bt []
+  toList
+    = toList' []
     where
-      toList' BEmpty []
+      toList' [] GBEmpty
         = []
-      toList' BEmpty ((BNode _ e r) : stack)
-        = e : toList' r stack
-      toList' (BLeaf e) []
+      toList' ((GBNode _ _ e r) : stack) GBEmpty
+        = e : toList' stack r
+      toList'  [] (GBLeaf e)
         = [e]
-      toList' (BLeaf e) ((BNode _ e' r) : stack)
-        = e : e' : toList' r stack
-      toList' bt@(BNode l e' r) stack
-        = toList' l $ bt : stack
+      toList' ((GBNode _ _ e' r) : stack) (GBLeaf e) 
+        = e : e' : toList' stack r
+      toList' stack bt@(GBNode _ l e' r)
+        = toList' (bt : stack) l
+
+
+-- | Adds an element to a binary search tree without self-balancing.
+-- If the element exists already, replace it.
+-- 
+addGenericBinaryTree :: Ord e => e -> GenericBinaryTree e -> GenericBinaryTree e
+addGenericBinaryTree e GBEmpty
+  = GBLeaf e
+addGenericBinaryTree e (GBLeaf e')
+  | e < e'    = GBNode 1 (GBLeaf e) e' GBEmpty
+  | e > e'    = GBNode 1 GBEmpty e' (GBLeaf e)
+  | otherwise = GBLeaf e
+addGenericBinaryTree e (GBNode d l e' r)
+  | e < e'    = let subT = addGenericBinaryTree e l 
+    in GBNode (max d $ 1 + depthGenericBinaryTree subT) subT e' r
+  | e > e'    = let subT = addGenericBinaryTree e r 
+    in GBNode (max d $ 1 + depthGenericBinaryTree subT) l e' subT
+  | otherwise = GBNode d l e r
+
+-- | Returns the depth of the tree.
+-- 
+depthGenericBinaryTree :: GenericBinaryTree e -> Int
+depthGenericBinaryTree (GBNode d _ _ _)
+  = d
+depthGenericBinaryTree _
+  = 0
