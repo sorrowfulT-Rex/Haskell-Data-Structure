@@ -6,6 +6,7 @@
 module MMZKDS.List where
 
 import           Control.Monad (ap, forM, join, liftM2)
+import           Data.Foldable (toList)
 import           Data.List as L (foldl', maximumBy, sort, sortOn)
 import           Data.Maybe (fromJust, isJust, maybe)
 
@@ -189,13 +190,13 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- Sort the list structure in the default ordering of its elements.
   --
   sort :: Ord e => l e -> l e
-  sort = newList . L.sort . toList
+  sort = newList . L.sort . MMZKDS.List.toList
 
   -- | Default method.
   -- Sort the list structure by a ordering function.
   --
   sortOn :: Ord o => (e -> o) -> l e -> l e
-  sortOn = (. toList) . (newList .) . L.sortOn
+  sortOn = (. MMZKDS.List.toList) . (newList .) . L.sortOn
 
   -- | Default method.
   -- Takes a list structure, an Int as index, and a function updating an

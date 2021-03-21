@@ -55,7 +55,7 @@ See the [Haddocks](MMZKDS/MLinkedList.hs) for full documentation.
 
 # [MMZKDS/MHeapPQ.hs](MMZKDS/MHeapPQ.hs)
 `MHeapPQ` is a mutable priority queue implementing the `MPriorityQueue` class through a min-heap, which is implemented with an internal @STArray@.  
-It pops the minimum element within, thus the type of its elements must be an instance of 'Ord'.  
+It pops its minimum element, thus the type of its elements must be an instance of 'Ord'.  
 See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.  
 
 # [MMZKDS/UnBoxed](MMZKDS/Unboxed/)

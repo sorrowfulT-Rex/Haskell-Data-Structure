@@ -27,17 +27,7 @@ import           MMZKDS.Utilities
 data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 
 instance Show a => Show (ArrayList a) where
-  show = ("ArrayList: " ++) . show . F.toList
-
-instance Foldable ArrayList where
-  foldr f b al
-    = foldr f b $ F.toList al
-
-  length (ArrayList l _)
-    = l
-
-  toList (ArrayList l arr)
-    = take l $ F.toList arr
+  show = ("ArrayList: " ++) . show . L.toList
 
 
 --------------------------------------------------------------------------------
@@ -110,8 +100,8 @@ instance List ArrayList a where
         worker _ i
           = al `get` (i + inf')
 
-  toList :: ArrayList a -> [a]
-  toList = F.toList
+  toList (ArrayList l arr)
+    = take l $ F.toList arr
 
   -- Overwritten default methods
   lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int

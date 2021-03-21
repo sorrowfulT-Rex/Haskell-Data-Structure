@@ -12,6 +12,7 @@ import           Data.Array.ST
   (STArray, getBounds, freeze, newArray_, newListArray, thaw, readArray,
   writeArray
   )
+import           Data.Bool (bool)
 import           Data.Foldable (toList)
 import           Data.Maybe (fromJust, isNothing)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
@@ -81,11 +82,9 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
 
   -- Overwritten default method
   mPeek :: MHeapPQ a s -> ST s (Maybe a)
-  mPeek mh@(MHeapPQ _ arrR) = do
-    empty <- isNull mh
-    if empty
-      then return Nothing
-      else fmap Just $ readSTRef arrR >>= flip readArray 0
+  mPeek mh@(MHeapPQ _ arrR)
+    = isNull mh >>= 
+      bool (fmap Just $ readSTRef arrR >>= flip readArray 0) (return Nothing)
 
 
 --------------------------------------------------------------------------------
@@ -183,7 +182,8 @@ instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
 
 -- | Unsafe function: Does not the validity of childrens.
 -- Turns the heap into a min-heap starting from the given index.
--- Pre: The indices of childrens are valid.  
+-- Pre: The indices of childrens are valid. 
+--  
 fixHead :: Ord a
         => STArray s Int a -- ^ The @STArray@
         -> Int -- ^ The logic length
