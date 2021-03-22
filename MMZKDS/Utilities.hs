@@ -48,20 +48,36 @@ outOfBoundError i
 
 -- | Generic binary tree data type, mainly used for BST-based structures.
 -- 
-data GenericBinaryTree e
+data GBT e 
+  = GBT
+    {-# UNPACK #-} !Int  -- ^ Size of the tree
+    (GBTN e)  -- ^ Root of the tree
+
+-- | Node for @GBT@.
+-- 
+data GBTN e
   = GBEmpty
   | GBLeaf e
-  | GBNode {-# UNPACK #-} !Int (GenericBinaryTree e) e (GenericBinaryTree e)
+  | GBNode {-# UNPACK #-} !Int (GBTN e) e (GBTN e)
   deriving (Eq, Show)
 
-instance {-# OVERLAPPABLE #-} (Coercible t GenericBinaryTree)
-  => Foldable t where
-  foldr f e tree = case (coerce :: t e -> GenericBinaryTree e) tree of
+instance {-# OVERLAPPABLE #-} Coercible t GBT => Foldable t where
+  foldr f e set
+    = let GBT _ tree = (coerce :: t a -> GBT a) set in foldr f e tree
+
+  length set
+    = let GBT n _ = (coerce :: t a -> GBT a) set in n
+
+  toList set 
+    = let GBT _ tree = (coerce :: t a -> GBT a) set in toList tree
+
+instance Foldable GBTN where
+  foldr f e tree = case tree of
     GBEmpty         -> e
     GBLeaf e'       -> f e' e
     GBNode _ l e' r -> foldr f (f e' (foldr f e r)) l
 
-  toList = toList' [] . (coerce :: t e -> GenericBinaryTree e)
+  toList = toList' []
     where
       toList' [] GBEmpty
         = []
@@ -78,100 +94,104 @@ instance {-# OVERLAPPABLE #-} (Coercible t GenericBinaryTree)
 -- | Adds an element to a binary search tree without self-balancing.
 -- If the element exists already, the function replaces it and returns @False@.
 -- Otherwise returns @True@.
--- The tree data type must be coercible with @GenericBinaryTree@.
+-- The tree data type must be coercible with @GBT@.
 -- 
-addGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree)
-                     => e
-                     -> t e
-                     -> (Bool, t e)
-addGenericBinaryTree e tree = case gTree of
-  GBEmpty   -> (True, coerce $ GBLeaf e)
-  GBLeaf e' -> addLeaf e'
-  _         -> addNode gTree
+addBT :: (Ord a, Coercible t GBT) 
+      => a 
+      -> t a 
+      -> t a
+addBT e set
+  | isNotIn   = coerce $ GBT (n + 1) tree'
+  | otherwise = set
   where
-    gTree = coerce tree
+    GBT n tree       = coerce set
+    (isNotIn, tree') = addGBTN e tree
+    addGBTN e tree   = case tree of
+      GBEmpty   -> (True, GBLeaf e)
+      GBLeaf e' -> addLeaf e'
+      _         -> addNode tree
     addLeaf e'
-      | e < e'    = (True, coerce $ GBNode 1 (GBLeaf e) e' GBEmpty)
-      | e > e'    = (True, coerce $ GBNode 1 GBEmpty e' (GBLeaf e))
-      | otherwise = (False, coerce $ GBLeaf e)
+      | e < e'    = (True, GBNode 1 (GBLeaf e) e' GBEmpty)
+      | e > e'    = (True, GBNode 1 GBEmpty e' (GBLeaf e))
+      | otherwise = (False, GBLeaf e)
     addNode (GBNode d l e' r)
-      | e < e'    = let (b, subT) = addGenericBinaryTree e l
-        in (b, coerce $
-          GBNode (max d $ 1 + depthGenericBinaryTree subT) subT e' r)
-      | e > e'    = let (b, subT) = addGenericBinaryTree e r
-        in (b, coerce $
-          GBNode (max d $ 1 + depthGenericBinaryTree subT) l e' subT)
-      | otherwise = (False, coerce $ GBNode d l e r)
+      | e < e'    = let (b, subT) = addGBTN e l
+        in (b, GBNode (max d $ 1 + depthGBTN subT) subT e' r)
+      | e > e'    = let (b, subT) = addGBTN e r
+        in (b, GBNode (max d $ 1 + depthGBTN subT) l e' subT)
+      | otherwise = (False, GBNode d l e r)
 
 -- | Tests if the element is in the tree.
--- The tree data type must be coercible with @GenericBinaryTree@.
+-- The tree data type must be coercible with @GBTN@.
 -- 
-containsGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree)
-                          => t e
-                          -> e
-                          -> Bool
-containsGenericBinaryTree t e = case searchGenericBinaryTree e t of
+containsBT :: forall t e. (Ord e, Coercible t GBT)
+           => t e
+           -> e
+           -> Bool
+containsBT set e = let GBT _ tree = coerce set in case searchGBTN e tree of
   GBEmpty -> False
   _       -> True
 
 -- | Returns the depth of the tree.
--- The tree data type must be coercible with @GenericBinaryTree@.
+-- Works for the Generic Binary Tree Node data type @GBTN@.
 -- 
-depthGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree)
-                       => t e
-                       -> Int
-depthGenericBinaryTree tree = case coerce tree :: GenericBinaryTree e of
+depthGBTN :: GBTN e -> Int
+depthGBTN tree = case tree of
   GBNode d _ _ _ -> d
   _              -> 0
+
+-- | Returns an empty @GBT@.
+-- 
+emptyGBT :: GBT e
+emptyGBT = GBT 0 GBEmpty
 
 -- | Removes the given element from the tree.
 -- Returns a tuple consisting of the removed element (or Nothing, if the
 -- element is not in the tree), and the tree without the element.
--- The tree data type must be coercible with @GenericBinaryTree@.
+-- The tree data type must be coercible with @GBTN@.
 --
-removeGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree)
-                        => e
-                        -> t e
-                        -> (Maybe e, t e)
-removeGenericBinaryTree e tree = case gTree of
-  GBEmpty   -> (Nothing, tree)
-  GBLeaf e' -> removeLeaf e'
-  _         -> removeNode gTree
+removeBT :: forall t e. (Ord e, Coercible t GBT)
+         => e
+         -> t e
+         -> (Maybe e, t e)
+removeBT e set
+  | isJust me = (me, coerce $ GBT (n - 1) tree')
+  | otherwise = (me, set)
   where
-    gTree = coerce tree
+    GBT n tree  = coerce set
+    (me, tree') = removeGBTN e tree
+    removeGBTN e tree = case tree of
+      GBEmpty   -> (Nothing, tree)
+      GBLeaf e' -> removeLeaf e'
+      _         -> removeNode tree
     removeLeaf e'
-      | e == e'   = (Just e', coerce (GBEmpty :: GenericBinaryTree e)) 
+      | e == e'   = (Just e', GBEmpty) 
       | otherwise = (Nothing, tree) 
     removeNode (GBNode d l e' r)
-      | e < e'       = let (me, subT) = removeGenericBinaryTree e l
-        in (me, coerce $
-          GBNode (max d $ 1 + depthGenericBinaryTree subT) subT e' r)
-      | e > e'       = let (me, subT) = removeGenericBinaryTree e r
-        in (me, coerce $
-          GBNode (max d $ 1 + depthGenericBinaryTree subT) l e' subT)
-      | GBEmpty <- l = (Just e', coerce r)
-      | GBEmpty <- r = (Just e', coerce l)
+      | e < e'       = let (me, subT) = removeGBTN e l
+        in (me, GBNode (max d $ 1 + depthGBTN subT) subT e' r)
+      | e > e'       = let (me, subT) = removeGBTN e r
+        in (me, GBNode (max d $ 1 + depthGBTN subT) l e' subT)
+      | GBEmpty <- l = (Just e', r)
+      | GBEmpty <- r = (Just e', l)
 
 -- | Returns the root of the tree.
--- The tree data type must be coercible with @GenericBinaryTree@.
+-- The tree data type must be coercible with @GBTN@.
 -- 
-rootGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree)
-                      => t e
-                      -> Maybe e
-rootGenericBinaryTree tree = case coerce tree :: GenericBinaryTree e of
+rootBT :: forall t e. (Ord e, Coercible t GBT)
+       => t e
+       -> Maybe e
+rootBT set = let GBT _ tree = coerce set in case tree of
   GBEmpty        -> Nothing
   GBLeaf e       -> Just e
   GBNode _ _ e _ -> Just e
 
 -- | Searches for the sub-tree with the given element as the root.
--- The tree data type must be coercible with @GenericBinaryTree@.
+-- Works for the Generic Binary Tree Node data type @GBTN@.
 -- 
-searchGenericBinaryTree :: forall t e. (Ord e, Coercible t GenericBinaryTree)
-                        => e
-                        -> t e
-                        -> GenericBinaryTree e
-searchGenericBinaryTree e tree
-  = search' (coerce tree)
+searchGBTN :: Ord e => e -> GBTN e -> GBTN e
+searchGBTN e
+  = search'
   where
     search' GBEmpty
       = GBEmpty
