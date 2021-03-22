@@ -1,5 +1,5 @@
 # Haskell-Data-Structure
-This repo serves as a practice of writing both functional and mutable data strucutures in Haskell.  
+This repo serves as a practice of writing both functional and mutable strict data strucutures in Haskell.  
 
 My aim is to make a wide range of data structures that ideally would satisfy not performance-sensitive purposes. However, since it is a practice code instead of a library, there is no guarantee of correctness and stability. Moreover, efficiency was not an design objective. Therefore, any performance-sensitive task should not be relied on this.  
 

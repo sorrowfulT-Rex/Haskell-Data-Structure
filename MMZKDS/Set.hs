@@ -37,7 +37,7 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
 
   -- | Tests if the element is in the set.
   --
-  contains :: e -> c e -> Bool
+  contains :: c e -> e -> Bool
 
   -- | Returns an element from the set if it is non-empty.
   -- Does not guarantee which element is returned.
@@ -114,7 +114,7 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
 
   -- | Tests if the element is in the set.
   --
-  mContains :: e -> c e s -> m s Bool
+  mContains :: c e s -> e -> m s Bool
 
   -- | Returns an element from the set if it is non-empty.
   -- Does not guarantee which element is returned.
