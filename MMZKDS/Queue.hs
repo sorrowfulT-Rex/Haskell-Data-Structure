@@ -32,7 +32,7 @@ class (DS (q e), DSCons [e] (q e)) => Queue q e where
   -- | Default method.
   -- Retrieves the element at the front, but not removing it.
   peek :: q e -> Maybe e
-  peek = fst . MMZKDS.Queue.dequeue
+  peek = fst . dequeue
 
 
 --------------------------------------------------------------------------------
