@@ -21,9 +21,10 @@ import           MMZKDS.Utilities
 -- union and intersection, and O(n * log n) construction from list.
 -- 
 newtype AVLSet e = AVLSet (GBT e)
+  deriving Show
 
-instance forall a. (Ord a, Show a) => Show (AVLSet a) where
-  show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
+-- instance forall a. (Ord a, Show a) => Show (AVLSet a) where
+--   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
 
 
 --------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ instance Ord a => DSCons [a] (AVLSet a) where
   finish = F.toList
 
   new :: [a] -> AVLSet a
-  new = foldl' (flip add) (clear undefined)
+  new = foldl' (flip add) $ coerce (emptyGBT :: GBT a)
 
 
 --------------------------------------------------------------------------------

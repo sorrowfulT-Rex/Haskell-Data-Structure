@@ -9,6 +9,7 @@ import           Data.Coerce (Coercible, coerce)
 import           Data.Foldable (toList)
 import           Data.Maybe (isJust)
 
+ 
 --------------------------------------------------------------------------------
 -- Array & STArray
 --------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ data GBT e
   = GBT
     {-# UNPACK #-} !Int  -- ^ Size of the tree
     (GBTN e)  -- ^ Root of the tree
+    deriving (Eq, Show)
 
 -- | Node for @GBT@.
 -- 
@@ -111,14 +113,14 @@ addBT e set
       GBLeaf e' -> addLeaf e'
       _         -> addNode tree
     addLeaf e'
-      | e < e'    = (True, GBNode 1 (GBLeaf e) e' GBEmpty)
-      | e > e'    = (True, GBNode 1 GBEmpty e' (GBLeaf e))
+      | e < e'    = (True, GBNode 2 (GBLeaf e) e' GBEmpty)
+      | e > e'    = (True, GBNode 2 GBEmpty e' (GBLeaf e))
       | otherwise = (False, GBLeaf e)
     addNode (GBNode d l e' r)
       | e < e'    = let (b, subT) = addGBTN e l
-        in (b, GBNode (max d $ 1 + depthGBTN subT) subT e' r)
+        in (b, GBNode (1 + max (depthGBTN r) (depthGBTN subT)) subT e' r)
       | e > e'    = let (b, subT) = addGBTN e r
-        in (b, GBNode (max d $ 1 + depthGBTN subT) l e' subT)
+        in (b, GBNode (1 + max (depthGBTN l) (depthGBTN subT)) l e' subT)
       | otherwise = (False, GBNode d l e r)
 
 -- | Tests if the element is in the tree.
@@ -138,12 +140,22 @@ containsBT set e = let GBT _ tree = coerce set in case searchGBTN e tree of
 depthGBTN :: GBTN e -> Int
 depthGBTN tree = case tree of
   GBNode d _ _ _ -> d
+  GBLeaf _       -> 1
   _              -> 0
 
 -- | Returns an empty @GBT@.
 -- 
 emptyGBT :: GBT e
 emptyGBT = GBT 0 GBEmpty
+
+-- | Reduce a @GBNode@ to @GBLeaf@ if both children are @GBEmpty@.
+-- Works for the Generic Binary Tree Node data type @GBTN@.
+-- 
+normGBTN :: GBTN e -> GBTN e
+normGBTN (GBNode _ GBEmpty e GBEmpty)
+  = GBLeaf e
+normGBTN tree 
+  = tree
 
 -- | Removes the given element from the tree.
 -- Returns a tuple consisting of the removed element (or Nothing, if the
@@ -167,13 +179,34 @@ removeBT e set
     removeLeaf e'
       | e == e'   = (Just e', GBEmpty) 
       | otherwise = (Nothing, tree) 
+    removeNode (GBNode d GBEmpty e' GBEmpty) 
+      = removeGBTN e (GBLeaf e')
     removeNode (GBNode d l e' r)
-      | e < e'       = let (me, subT) = removeGBTN e l
-        in (me, GBNode (max d $ 1 + depthGBTN subT) subT e' r)
-      | e > e'       = let (me, subT) = removeGBTN e r
-        in (me, GBNode (max d $ 1 + depthGBTN subT) l e' subT)
+      | e < e'       
+        = let (me, subT) = removeGBTN e l
+              d' = 1 + max (depthGBTN r) (depthGBTN subT)
+          in (me, normGBTN $ GBNode d' subT e' r)
+      | e > e' 
+        = let (me, subT) = removeGBTN e r
+              d' = 1 + max (depthGBTN l) (depthGBTN subT)
+          in (me, normGBTN $ GBNode d' l e' subT)
       | GBEmpty <- l = (Just e', r)
       | GBEmpty <- r = (Just e', l)
+      | otherwise    
+        = let (Just eSucc, subT) = removeMinGBTN r
+              d' = 1 + max (depthGBTN l) (depthGBTN subT)
+          in (Just e', normGBTN $ GBNode d' l eSucc subT)
+
+removeMinGBTN :: GBTN e -> (Maybe e, GBTN e)
+removeMinGBTN (GBNode d GBEmpty e r)
+  = (Just e, r)
+removeMinGBTN (GBNode d l e r)
+  = let (me, subT) = removeMinGBTN l 
+    in (me, normGBTN $ GBNode (1 + max (depthGBTN r) (depthGBTN subT)) subT e r)
+removeMinGBTN (GBLeaf e)
+  = (Just e, GBEmpty)
+removeMinGBTN _ 
+  = (Nothing, GBEmpty)
 
 -- | Returns the root of the tree.
 -- The tree data type must be coercible with @GBTN@.
