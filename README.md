@@ -60,7 +60,7 @@ It remembers the last element (node) been visited, and enjoys fast access to the
 See the [Haddocks](MMZKDS/MLinkedList.hs) for full documentation.  
 
 # [MMZKDS/MHeapPQ.hs](MMZKDS/MHeapPQ.hs)
-`MHeapPQ` is a mutable priority queue implementing the `MPriorityQueue` class through a min-heap, which is implemented with an internal @STArray@.  
+`MHeapPQ` is a mutable priority queue implementing the `MPriorityQueue` class through a min-heap, which is implemented with an internal `STArray`.  
 It pops its minimum element, thus the type of its elements must be an instance of 'Ord'.  
 See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.  
 
@@ -68,5 +68,5 @@ See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.
 Contains the unboxed version of (some of) the data structures.  
 
 # [MMZKDS/UnBoxed/MURef.hs](MMZKDS/Unboxed/MURef.hs)
-The strict unboxed equivalence for @STRef@.  
+The strict unboxed equivalence for `STRef`.  
 See the [Haddocks](MMZKDS/Unboxed/MURef.hs) for full documentation.  
