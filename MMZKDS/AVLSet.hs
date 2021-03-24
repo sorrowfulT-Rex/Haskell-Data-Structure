@@ -6,14 +6,16 @@
 module MMZKDS.AVLSet where
 
 import           Data.Coerce (coerce)
-import           Data.Foldable as F (toList)
+import           Data.Foldable (toList)
 import           Data.List (foldl')
 import           Data.Maybe (isJust)
 
 import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.Set (Set(..))
+import           MMZKDS.Set (Set(add, contains, findAny, remove))
 import           MMZKDS.Utilities
-  (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, rotateRightGBTN, rotateLeftGBTN)
+  (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, 
+   rotateLeftGBTN, rotateRightGBTN
+  )
 
 -- | An immutable set structure implemented with an internal AVL-tree.
 -- It is expected that the type of its elements is an instance of 'Ord'.
@@ -58,7 +60,7 @@ instance DS (AVLSet a) where
 
 instance Ord a => DSCons [a] (AVLSet a) where
   finish :: AVLSet a -> [a]
-  finish = F.toList
+  finish = toList
 
   new :: [a] -> AVLSet a
   new = foldl' (flip add) $ coerce (emptyGBT :: GBT a)
@@ -68,6 +70,10 @@ instance Ord a => DSCons [a] (AVLSet a) where
 -- AVL-Tree Specific Functions
 --------------------------------------------------------------------------------
 
+-- | Utility Function.
+-- A balancing function that re-balances the tree. It will be called by @add@
+-- and @remove@.
+-- 
 balanceAVL :: Ord a => GBTN a -> GBTN a
 balanceAVL tree@(GBNode _ l e r)
   | abs (depthBTN l - depthBTN r) <= 1 = tree
