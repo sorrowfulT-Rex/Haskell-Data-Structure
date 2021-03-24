@@ -55,7 +55,7 @@ data GBT e
     (GBTN e)  -- ^ Root of the tree
     deriving Eq
 
-instance forall a. (Ord a, Show a) => Show (GBT a) where
+instance Show a => Show (GBT a) where
   show = ("Set: " ++) . show . toList
 
 -- | Node for @GBT@.

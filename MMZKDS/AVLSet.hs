@@ -13,7 +13,7 @@ import           Data.Maybe (isJust)
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.Set (Set(..))
 import           MMZKDS.Utilities
-  (GBT(..), addBT, containsBT, emptyGBT, rootBT, removeBT)
+  (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, rotateRightGBTN, rotateLeftGBTN)
 
 -- | An immutable set structure implemented with an internal AVL-tree.
 -- It is expected that the type of its elements is an instance of 'Ord'.
@@ -21,7 +21,10 @@ import           MMZKDS.Utilities
 -- union and intersection, and O(n * log n) construction from list.
 -- 
 newtype AVLSet e = AVLSet (GBT e)
-  deriving Show
+
+instance Show a => Show (AVLSet a) where
+  show (AVLSet tree)
+    = show tree
 
 
 --------------------------------------------------------------------------------
@@ -30,7 +33,7 @@ newtype AVLSet e = AVLSet (GBT e)
 
 instance Ord a => Set AVLSet a where
   add :: a -> AVLSet a -> AVLSet a
-  add = addBT id
+  add = addBT balanceAVL
 
   contains :: AVLSet a -> a -> Bool
   contains = containsBT
@@ -39,7 +42,7 @@ instance Ord a => Set AVLSet a where
   findAny = rootBT
 
   remove :: a -> AVLSet a -> (Maybe a, AVLSet a)
-  remove = removeBT id
+  remove = removeBT balanceAVL
 
 
 --------------------------------------------------------------------------------
@@ -64,3 +67,21 @@ instance Ord a => DSCons [a] (AVLSet a) where
 --------------------------------------------------------------------------------
 -- AVL-Tree Specific Functions
 --------------------------------------------------------------------------------
+
+balanceAVL :: Ord a => GBTN a -> GBTN a
+balanceAVL tree@(GBNode _ l e r)
+  | abs (depthBTN l - depthBTN r) <= 1 = tree
+balanceAVL tree@(GBNode d l@(GBNode ld ll le lr) e r)
+  | leftImb && llImb = rotateRightGBTN tree
+  | leftImb          = rotateRightGBTN $ GBNode d (rotateLeftGBTN ll) e r
+  where
+    leftImb = ld > depthBTN r
+    llImb   = depthBTN ll >= depthBTN lr
+balanceAVL tree@(GBNode d l e r@(GBNode rd rl re rr))
+  | rightImb && rrImb = rotateLeftGBTN tree
+  | rightImb          = rotateLeftGBTN $ GBNode d l e (rotateRightGBTN r)
+  where
+    rightImb = rd > depthBTN l
+    rrImb    = depthBTN rr >= depthBTN rl
+balanceAVL tree
+  = tree

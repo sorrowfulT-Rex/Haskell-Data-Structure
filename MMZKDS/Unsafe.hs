@@ -3,7 +3,7 @@
 module MMZKDS.Unsafe where
 
 import           Control.Monad (forM, forM_)
-import           Control.Monad.Trans.State
+import           Control.Monad.Trans.State (evalState, state)
 import           Control.Monad.ST (ST, runST)
 import           Control.Monad.ST.Unsafe (unsafeIOToST, unsafeSTToIO)
 import           Data.Array.ST (MArray, STArray, readArray, writeArray)
@@ -35,8 +35,7 @@ unsafeLeftChild i l
 -- index of the parent of the current node.
 -- Pre: The index is within bound and is not the root.
 unsafeParent :: Int -> Int
-unsafeParent
-  = (`div` 2) . (+ (-1))
+unsafeParent = (`div` 2) . (+ (-1))
 
 -- | Unsafe: Does not check bound and validity of indices.
 -- Used for a heap implemented with an array.
@@ -85,67 +84,14 @@ unsafeAddST index e lastIndexOf arrST = do
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
 --
-unsafeCopyArray :: (MArray r a m)
+unsafeCopyArray :: MArray r a m
                 => r Int a 
                 -> r Int a 
                 -> (Int, Int) 
                 -> m ()
-unsafeCopyArray arrST resST (inf, sup) = do
+unsafeCopyArray arrST resST (inf, sup) = 
   forM_ (zip [0..] [inf..sup]) $ 
     \(i, i') -> readArray arrST i >>= writeArray resST i'
-
--- -- | Unsafe: Does not check if the array satisfies the pre-condition.
--- -- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
--- -- array, sorts the array with heap-sort.
--- -- Pre: The array must be @Int@-indexed from 0.
--- --
--- {-# INLINE unsafeHeapSort #-}
--- unsafeHeapSort :: (Ord b, MArray r a m) 
---                => (a -> b) 
---                -> Int 
---                -> r Int a 
---                -> m ()
--- unsafeHeapSort f sup arrST
---   = toMaxHeap 0 >> forM_ [sup, sup - 1..1] heapSort
---   where
---     toMaxHeap i
---       | lc > sup = return ()
---       | otherwise 
---         = toMaxHeap lc >> toMaxHeap (lc + 1) >> fixMaxHeap i sup
---         where
---           lc = 2 * i + 1
---     fixMaxHeap i l = do
---       let lc = 2 * i + 1
---       let rc = 2 * i + 2
---       cv <- readArray arrST i
---       let swapper
---             | lc > l   = return (False, undefined, undefined)
---             | rc > l   = do
---               lv <- readArray arrST lc
---               if f cv >= f lv
---                 then return (False, undefined, undefined)
---                 else return (True, lc, lv)
---             | otherwise = do
---               lv <- readArray arrST lc
---               rv <- readArray arrST rc
---               if f cv >= f lv && f cv >= f rv
---                 then return (False, undefined, undefined)
---                 else if f lv >= f rv 
---                     then return (True, lc, lv)
---                     else return (True, rc, rv)
---       s <- swapper
---       case s of
---         (False, _, _) -> return ()
---         (True, lo, v) -> do
---           writeArray arrST i v
---           writeArray arrST lo cv
---           fixMaxHeap lo l
---     heapSort i = do
---       v0 <- readArray arrST 0
---       vi <- readArray arrST i
---       writeArray arrST 0 vi
---       writeArray arrST i v0
---       fixMaxHeap 0 (i - 1)
 
 -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- Takes a ordering function, an index lower bound, an index upper bound, and 
@@ -234,3 +180,61 @@ unsafeRandRanges range
 -- 
 unsafeSTEq :: Eq a => ST s a -> ST s a -> Bool
 unsafeSTEq = let p = unsafePerformIO . unsafeSTToIO in (. p) . (==) . p
+
+
+--------------------------------------------------------------------------------
+-- Discarded
+--------------------------------------------------------------------------------
+
+-- -- | Unsafe: Does not check if the array satisfies the pre-condition.
+-- -- Takes a ordering function, an index upper bound, and an @Int@-indexed mutable
+-- -- array, sorts the array with heap-sort.
+-- -- Pre: The array must be @Int@-indexed from 0.
+-- --
+-- {-# INLINE unsafeHeapSort #-}
+-- unsafeHeapSort :: (Ord b, MArray r a m) 
+--                => (a -> b) 
+--                -> Int 
+--                -> r Int a 
+--                -> m ()
+-- unsafeHeapSort f sup arrST
+--   = toMaxHeap 0 >> forM_ [sup, sup - 1..1] heapSort
+--   where
+--     toMaxHeap i
+--       | lc > sup = return ()
+--       | otherwise 
+--         = toMaxHeap lc >> toMaxHeap (lc + 1) >> fixMaxHeap i sup
+--         where
+--           lc = 2 * i + 1
+--     fixMaxHeap i l = do
+--       let lc = 2 * i + 1
+--       let rc = 2 * i + 2
+--       cv <- readArray arrST i
+--       let swapper
+--             | lc > l   = return (False, undefined, undefined)
+--             | rc > l   = do
+--               lv <- readArray arrST lc
+--               if f cv >= f lv
+--                 then return (False, undefined, undefined)
+--                 else return (True, lc, lv)
+--             | otherwise = do
+--               lv <- readArray arrST lc
+--               rv <- readArray arrST rc
+--               if f cv >= f lv && f cv >= f rv
+--                 then return (False, undefined, undefined)
+--                 else if f lv >= f rv 
+--                     then return (True, lc, lv)
+--                     else return (True, rc, rv)
+--       s <- swapper
+--       case s of
+--         (False, _, _) -> return ()
+--         (True, lo, v) -> do
+--           writeArray arrST i v
+--           writeArray arrST lo cv
+--           fixMaxHeap lo l
+--     heapSort i = do
+--       v0 <- readArray arrST 0
+--       vi <- readArray arrST i
+--       writeArray arrST 0 vi
+--       writeArray arrST i v0
+--       fixMaxHeap 0 (i - 1)
