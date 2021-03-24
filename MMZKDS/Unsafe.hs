@@ -2,7 +2,8 @@
 
 module MMZKDS.Unsafe where
 
-import           Control.Monad (forM_)
+import           Control.Monad (forM, forM_)
+import           Control.Monad.Trans.State
 import           Control.Monad.ST (ST, runST)
 import           Control.Monad.ST.Unsafe (unsafeIOToST, unsafeSTToIO)
 import           Data.Array.ST (MArray, STArray, readArray, writeArray)
@@ -218,6 +219,15 @@ unsafeRemoveST index lastIndexOf arrST
 -- 
 unsafeGenST :: ST s StdGen
 unsafeGenST = unsafeIOToST newStdGen
+
+-- | Unsafe Function.
+-- Generates an infinite list of random numbers.
+-- 
+unsafeRandRanges :: Random a => (a, a) -> [a]
+unsafeRandRanges range
+  = evalState (forM [1..] $ const $ randomRS range) (unsafePerformIO newStdGen)
+  where
+    randomRS = state . randomR
 
 -- | It is safe; wraps unsafe operations.
 -- Compare if two references are equal based on the values they refer to.

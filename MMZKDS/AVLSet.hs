@@ -23,9 +23,6 @@ import           MMZKDS.Utilities
 newtype AVLSet e = AVLSet (GBT e)
   deriving Show
 
--- instance forall a. (Ord a, Show a) => Show (AVLSet a) where
---   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
-
 
 --------------------------------------------------------------------------------
 -- Set Instance
@@ -33,7 +30,7 @@ newtype AVLSet e = AVLSet (GBT e)
 
 instance Ord a => Set AVLSet a where
   add :: a -> AVLSet a -> AVLSet a
-  add = addBT
+  add = addBT id
 
   contains :: AVLSet a -> a -> Bool
   contains = containsBT
@@ -42,7 +39,7 @@ instance Ord a => Set AVLSet a where
   findAny = rootBT
 
   remove :: a -> AVLSet a -> (Maybe a, AVLSet a)
-  remove = removeBT
+  remove = removeBT id
 
 
 --------------------------------------------------------------------------------

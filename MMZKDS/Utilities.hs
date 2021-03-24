@@ -53,7 +53,10 @@ data GBT e
   = GBT
     {-# UNPACK #-} !Int  -- ^ Size of the tree
     (GBTN e)  -- ^ Root of the tree
-    deriving (Eq, Show)
+    deriving Eq
+
+instance forall a. (Ord a, Show a) => Show (GBT a) where
+  show = ("Set: " ++) . show . toList
 
 -- | Node for @GBT@.
 -- 
@@ -61,7 +64,7 @@ data GBTN e
   = GBEmpty
   | GBLeaf e
   | GBNode {-# UNPACK #-} !Int (GBTN e) e (GBTN e)
-  deriving (Eq, Show)
+    deriving (Eq, Show)
 
 instance {-# OVERLAPPABLE #-} Coercible t GBT => Foldable t where
   foldr f e set
@@ -93,16 +96,13 @@ instance Foldable GBTN where
         = toList' (bt : stack) l
 
 
--- | Adds an element to a binary search tree without self-balancing.
+-- | Adds an element to a binary search tree with a balancing function.
 -- If the element exists already, the function replaces it and returns @False@.
 -- Otherwise returns @True@.
 -- The tree data type must be coercible with @GBT@.
 -- 
-addBT :: (Ord a, Coercible t GBT) 
-      => a 
-      -> t a 
-      -> t a
-addBT e set
+addBT :: (Ord a, Coercible t GBT) => (GBTN a -> GBTN a) -> a -> t a -> t a
+addBT f e set
   | isNotIn   = coerce $ GBT (n + 1) tree'
   | otherwise = set
   where
@@ -118,55 +118,51 @@ addBT e set
       | otherwise = (False, GBLeaf e)
     addNode (GBNode d l e' r)
       | e < e'    = let (b, subT) = addGBTN e l
-        in (b, GBNode (1 + max (depthGBTN r) (depthGBTN subT)) subT e' r)
+        in (b, f $ GBNode (1 + max (depthBTN r) (depthBTN subT)) subT e' r)
       | e > e'    = let (b, subT) = addGBTN e r
-        in (b, GBNode (1 + max (depthGBTN l) (depthGBTN subT)) l e' subT)
+        in (b, f $ GBNode (1 + max (depthBTN l) (depthBTN subT)) l e' subT)
       | otherwise = (False, GBNode d l e r)
 
 -- | Tests if the element is in the tree.
 -- The tree data type must be coercible with @GBTN@.
 -- 
-containsBT :: forall t e. (Ord e, Coercible t GBT)
-           => t e
-           -> e
-           -> Bool
+containsBT :: forall t e. (Ord e, Coercible t GBT) => t e -> e -> Bool
 containsBT set e = let GBT _ tree = coerce set in case searchGBTN e tree of
   GBEmpty -> False
   _       -> True
 
 -- | Returns the depth of the tree.
--- Works for the Generic Binary Tree Node data type @GBTN@.
+-- The tree node data type must be coercible with @GBTN@.
 -- 
-depthGBTN :: GBTN e -> Int
-depthGBTN tree = case tree of
+depthBTN :: forall t a. (Ord a, Coercible t GBTN) => t a -> Int
+depthBTN tree = case coerce tree :: GBTN a of
   GBNode d _ _ _ -> d
   GBLeaf _       -> 1
   _              -> 0
 
 -- | Returns an empty @GBT@.
 -- 
-emptyGBT :: GBT e
+emptyGBT :: GBT a
 emptyGBT = GBT 0 GBEmpty
 
 -- | Reduce a @GBNode@ to @GBLeaf@ if both children are @GBEmpty@.
 -- Works for the Generic Binary Tree Node data type @GBTN@.
 -- 
-normGBTN :: GBTN e -> GBTN e
+normGBTN :: GBTN a -> GBTN a
 normGBTN (GBNode _ GBEmpty e GBEmpty)
   = GBLeaf e
 normGBTN tree 
   = tree
 
--- | Removes the given element from the tree.
+-- | Removes the given element from the tree with a balancing function.
 -- Returns a tuple consisting of the removed element (or Nothing, if the
 -- element is not in the tree), and the tree without the element.
--- The tree data type must be coercible with @GBTN@.
+-- The tree data type must be coercible with @GBT@.
 --
-removeBT :: forall t e. (Ord e, Coercible t GBT)
-         => e
-         -> t e
-         -> (Maybe e, t e)
-removeBT e set
+removeBT :: forall t a. (Ord a, Coercible t GBT) 
+         => (GBTN a -> GBTN a) 
+         -> a -> t a -> (Maybe a, t a)
+removeBT f e set
   | isJust me = (me, coerce $ GBT (n - 1) tree')
   | otherwise = (me, set)
   where
@@ -184,45 +180,74 @@ removeBT e set
     removeNode (GBNode d l e' r)
       | e < e'       
         = let (me, subT) = removeGBTN e l
-              d' = 1 + max (depthGBTN r) (depthGBTN subT)
-          in (me, normGBTN $ GBNode d' subT e' r)
+              d' = 1 + max (depthBTN r) (depthBTN subT)
+          in (me, f $ normGBTN $ GBNode d' subT e' r)
       | e > e' 
         = let (me, subT) = removeGBTN e r
-              d' = 1 + max (depthGBTN l) (depthGBTN subT)
-          in (me, normGBTN $ GBNode d' l e' subT)
+              d' = 1 + max (depthBTN l) (depthBTN subT)
+          in (me, f $ normGBTN $ GBNode d' l e' subT)
       | GBEmpty <- l = (Just e', r)
       | GBEmpty <- r = (Just e', l)
       | otherwise    
-        = let (Just eSucc, subT) = removeMinGBTN r
-              d' = 1 + max (depthGBTN l) (depthGBTN subT)
-          in (Just e', normGBTN $ GBNode d' l eSucc subT)
+        = let (Just eSucc, subT) = removeMinGBTN f r
+              d' = 1 + max (depthBTN l) (depthBTN subT)
+          in (Just e', f $ normGBTN $ GBNode d' l eSucc subT)
 
-removeMinGBTN :: GBTN e -> (Maybe e, GBTN e)
-removeMinGBTN (GBNode d GBEmpty e r)
+-- | Removing the minimum (most left) element from the tree with a balancing
+-- function.
+-- Works for the Generic Binary Tree Node data type @GBTN@.
+-- 
+removeMinGBTN :: Ord a => (GBTN a -> GBTN a) -> GBTN a -> (Maybe a, GBTN a)
+removeMinGBTN f (GBNode d GBEmpty e r)
   = (Just e, r)
-removeMinGBTN (GBNode d l e r)
-  = let (me, subT) = removeMinGBTN l 
-    in (me, normGBTN $ GBNode (1 + max (depthGBTN r) (depthGBTN subT)) subT e r)
-removeMinGBTN (GBLeaf e)
+removeMinGBTN f (GBNode d l e r)
+  = let (me, subT) = removeMinGBTN f l 
+        d' = 1 + max (depthBTN r) (depthBTN subT)
+    in (me, f $ normGBTN $ GBNode d' subT e r)
+removeMinGBTN _ (GBLeaf e)
   = (Just e, GBEmpty)
-removeMinGBTN _ 
+removeMinGBTN _ _ 
   = (Nothing, GBEmpty)
 
 -- | Returns the root of the tree.
--- The tree data type must be coercible with @GBTN@.
+-- The tree data type must be coercible with @GBT@.
 -- 
-rootBT :: forall t e. (Ord e, Coercible t GBT)
-       => t e
-       -> Maybe e
+rootBT :: forall t a. (Ord a, Coercible t GBT) => t a -> Maybe a
 rootBT set = let GBT _ tree = coerce set in case tree of
   GBEmpty        -> Nothing
   GBLeaf e       -> Just e
   GBNode _ _ e _ -> Just e
 
+-- | Rotate the tree to the left with the given node as the root.
+-- Works for the Generic Binary Tree Node data type @GBTN@.
+-- 
+rotateLeftGBTN :: Ord a => GBTN a -> GBTN a
+rotateLeftGBTN (GBNode _ l e (GBNode d rl re rr))
+  = GBNode (1 + max (depthBTN ll) (depthBTN rr)) ll re rr
+  where
+    ll = GBNode (1 + max (depthBTN l) (depthBTN rl)) l e rl
+rotateLeftGBTN (GBNode _ l e (GBLeaf re))
+  = let dl = depthBTN l in GBNode (1 + dl) (GBNode dl l e GBEmpty) re GBEmpty
+rotateLeftGBTN tree
+  = tree
+
+-- | Rotate the tree to the right with the given node as the root.
+-- Works for the Generic Binary Tree Node data type @GBTN@.
+-- 
+rotateRightGBTN :: Ord a => GBTN a -> GBTN a
+rotateRightGBTN (GBNode _ (GBNode d ll le lr) e r)
+  = GBNode (1 + max (depthBTN ll) (depthBTN rr)) ll le rr
+  where
+    rr = GBNode (1 + max (depthBTN r) (depthBTN lr)) lr e r
+rotateRightGBTN (GBNode _ (GBLeaf le) e r)
+  = let dl = depthBTN r in GBNode (1 + dl) GBEmpty le (GBNode dl GBEmpty e r) 
+rotateRightGBTN tree
+  = tree
+
 -- | Searches for the sub-tree with the given element as the root.
 -- Works for the Generic Binary Tree Node data type @GBTN@.
 -- 
-searchGBTN :: Ord e => e -> GBTN e -> GBTN e
+searchGBTN :: Ord a => a -> GBTN a -> GBTN a
 searchGBTN e
   = search'
   where
