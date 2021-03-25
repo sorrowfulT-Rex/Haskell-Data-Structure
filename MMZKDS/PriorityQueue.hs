@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.PriorityQueue where
+module MMZKDS.PriorityQueue (PriorityQueue(..), MPriorityQueue(..)) where
 
 import           Control.Monad (when)
 import           Data.Maybe (fromJust, isJust)

@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module MMZKDS.MDS where
+module MMZKDS.MDS (MDS(..), MDSCons(..)) where
 
 import           Control.Monad ((<=<))
 import           Control.Monad.ST (ST)

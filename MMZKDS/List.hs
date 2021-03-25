@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.List where
+module MMZKDS.List (List(..), MList(..)) where
 
 import           Control.Monad (ap, forM, join, liftM2)
 import           Data.Foldable (toList)

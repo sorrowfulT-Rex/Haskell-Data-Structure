@@ -11,7 +11,7 @@ import           Data.List (foldl')
 import           Data.Maybe (isJust)
 
 import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.PriorityQueue as P (PriorityQueue(..))
+import           MMZKDS.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(add, contains, findAny, remove))
 import           MMZKDS.Utilities
   (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, 
@@ -49,7 +49,7 @@ instance Ord a => Set AVLSet a where
 
 
 --------------------------------------------------------------------------------
--- Set Instance
+-- PriorityQueue Instance
 --------------------------------------------------------------------------------
 
 instance Ord a => PriorityQueue AVLSet a where
@@ -80,7 +80,7 @@ instance Ord a => DSCons [a] (AVLSet a) where
 
 
 --------------------------------------------------------------------------------
--- AVL-Tree Specific Functions
+-- AVL-Tree Specific Function
 --------------------------------------------------------------------------------
 
 -- | Utility Function.

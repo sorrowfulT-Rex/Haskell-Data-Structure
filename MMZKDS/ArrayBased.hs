@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MMZKDS.ArrayBased where 
+module MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..)) where 
 
 import           Control.Monad (forM_)
 

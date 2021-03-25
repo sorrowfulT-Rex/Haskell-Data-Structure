@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.DS where
+module MMZKDS.DS (DS(..), DSCons(..)) where
 
 import           GHC.Exts (IsList(..))
 

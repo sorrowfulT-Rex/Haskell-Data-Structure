@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Queue where
+module MMZKDS.Queue (Queue(..), MQueue(..)) where
 
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))

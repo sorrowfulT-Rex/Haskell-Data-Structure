@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module MMZKDS.Set where
+module MMZKDS.Set (Set(..), MSet(..)) where
 
 import           Control.Monad (liftM2, void, when)
 import           Data.List (foldl')
