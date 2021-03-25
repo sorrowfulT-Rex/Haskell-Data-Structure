@@ -11,10 +11,11 @@ import           Data.List (foldl')
 import           Data.Maybe (isJust)
 
 import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.Set (Set(add, contains, findAny, remove))
+import           MMZKDS.PriorityQueue as P (PriorityQueue(..))
+import           MMZKDS.Set as S (Set(add, contains, findAny, remove))
 import           MMZKDS.Utilities
   (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, 
-   rotateLeftGBTN, rotateRightGBTN
+   removeMinBT, rotateLeftGBTN, rotateRightGBTN
   )
 
 -- | An immutable set structure implemented with an internal AVL-tree.
@@ -48,6 +49,18 @@ instance Ord a => Set AVLSet a where
 
 
 --------------------------------------------------------------------------------
+-- Set Instance
+--------------------------------------------------------------------------------
+
+instance Ord a => PriorityQueue AVLSet a where
+  add :: a -> AVLSet a -> AVLSet a
+  add = S.add
+
+  pop :: AVLSet a -> (Maybe a, AVLSet a)
+  pop = removeMinBT balanceAVL
+
+
+--------------------------------------------------------------------------------
 -- DS & DSCons Instances
 --------------------------------------------------------------------------------
 
@@ -63,7 +76,7 @@ instance Ord a => DSCons [a] (AVLSet a) where
   finish = toList
 
   new :: [a] -> AVLSet a
-  new = foldl' (flip add) $ coerce (emptyGBT :: GBT a)
+  new = foldl' (flip S.add) $ coerce (emptyGBT :: GBT a)
 
 
 --------------------------------------------------------------------------------

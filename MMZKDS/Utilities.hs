@@ -126,7 +126,7 @@ addBT f e set
 -- | Tests if the element is in the tree.
 -- The tree data type must be coercible with @GBTN@.
 -- 
-containsBT :: forall t e. (Ord e, Coercible t GBT) => t e -> e -> Bool
+containsBT :: (Ord a, Coercible t GBT) => t a -> a -> Bool
 containsBT set e = let GBT _ tree = coerce set in case searchGBTN e tree of
   GBEmpty -> False
   _       -> True
@@ -159,9 +159,11 @@ normGBTN tree
 -- element is not in the tree), and the tree without the element.
 -- The tree data type must be coercible with @GBT@.
 --
-removeBT :: forall t a. (Ord a, Coercible t GBT) 
+removeBT :: (Ord a, Coercible t GBT) 
          => (GBTN a -> GBTN a) 
-         -> a -> t a -> (Maybe a, t a)
+         -> a 
+         -> t a 
+         -> (Maybe a, t a)
 removeBT f e set
   | isJust me = (me, coerce $ GBT (n - 1) tree')
   | otherwise = (me, set)
@@ -195,6 +197,20 @@ removeBT f e set
 
 -- | Removing the minimum (most left) element from the tree with a balancing
 -- function.
+-- The tree data type must be coercible with @GBT@.
+-- 
+removeMinBT :: (Ord a, Coercible t GBT) 
+            => (GBTN a -> GBTN a) 
+            -> t a 
+            -> (Maybe a, t a)
+removeMinBT f set
+  = (me, coerce $ GBT (min 0 (n - 1)) tree')
+  where
+    GBT n tree  = coerce set
+    (me, tree') = removeMinGBTN f tree
+
+-- | Removing the minimum (most left) element from the tree with a balancing
+-- function.
 -- Works for the Generic Binary Tree Node data type @GBTN@.
 -- 
 removeMinGBTN :: Ord a => (GBTN a -> GBTN a) -> GBTN a -> (Maybe a, GBTN a)
@@ -212,7 +228,7 @@ removeMinGBTN _ _
 -- | Returns the root of the tree.
 -- The tree data type must be coercible with @GBT@.
 -- 
-rootBT :: forall t a. (Ord a, Coercible t GBT) => t a -> Maybe a
+rootBT :: (Ord a, Coercible t GBT) => t a -> Maybe a
 rootBT set = let GBT _ tree = coerce set in case tree of
   GBEmpty        -> Nothing
   GBLeaf e       -> Just e
