@@ -77,13 +77,13 @@ instance Ord a => DSCons [a] (AVLSet a) where
 balanceAVL :: Ord a => GBTN a -> GBTN a
 balanceAVL tree@(GBNode _ l e r)
   | abs (depthBTN l - depthBTN r) <= 1 = tree
-balanceAVL tree@(GBNode d l@(GBNode ld ll le lr) e r)
+balanceAVL tree@(GBNode d l@(GBNode ld ll _ lr) e r)
   | leftImb && llImb = rotateRightGBTN tree
-  | leftImb          = rotateRightGBTN $ GBNode d (rotateLeftGBTN ll) e r
+  | leftImb          = rotateRightGBTN $ GBNode d (rotateLeftGBTN l) e r
   where
     leftImb = ld > depthBTN r
     llImb   = depthBTN ll >= depthBTN lr
-balanceAVL tree@(GBNode d l e r@(GBNode rd rl re rr))
+balanceAVL tree@(GBNode d l e r@(GBNode rd rl _ rr))
   | rightImb && rrImb = rotateLeftGBTN tree
   | rightImb          = rotateLeftGBTN $ GBNode d l e (rotateRightGBTN r)
   where

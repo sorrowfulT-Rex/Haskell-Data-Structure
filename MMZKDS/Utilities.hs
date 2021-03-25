@@ -225,9 +225,10 @@ rotateLeftGBTN :: Ord a => GBTN a -> GBTN a
 rotateLeftGBTN (GBNode _ l e (GBNode d rl re rr))
   = GBNode (1 + max (depthBTN ll) (depthBTN rr)) ll re rr
   where
-    ll = GBNode (1 + max (depthBTN l) (depthBTN rl)) l e rl
+    ll = normGBTN $ GBNode (1 + max (depthBTN l) (depthBTN rl)) l e rl
 rotateLeftGBTN (GBNode _ l e (GBLeaf re))
-  = let dl = depthBTN l in GBNode (1 + dl) (GBNode dl l e GBEmpty) re GBEmpty
+  = let dl = depthBTN l 
+    in GBNode (1 + dl) (normGBTN $ GBNode dl l e GBEmpty) re GBEmpty
 rotateLeftGBTN tree
   = tree
 
@@ -238,9 +239,10 @@ rotateRightGBTN :: Ord a => GBTN a -> GBTN a
 rotateRightGBTN (GBNode _ (GBNode d ll le lr) e r)
   = GBNode (1 + max (depthBTN ll) (depthBTN rr)) ll le rr
   where
-    rr = GBNode (1 + max (depthBTN r) (depthBTN lr)) lr e r
+    rr = normGBTN $ GBNode (1 + max (depthBTN r) (depthBTN lr)) lr e r
 rotateRightGBTN (GBNode _ (GBLeaf le) e r)
-  = let dl = depthBTN r in GBNode (1 + dl) GBEmpty le (GBNode dl GBEmpty e r) 
+  = let dl = depthBTN r
+    in GBNode (1 + dl) GBEmpty le (normGBTN $ GBNode dl GBEmpty e r) 
 rotateRightGBTN tree
   = tree
 
