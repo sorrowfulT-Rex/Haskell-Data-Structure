@@ -4,27 +4,19 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.ArrayList where
+module MMZKDS.ArrayList (ArrayList) where
 
 import           Control.Monad (join)
 import           Data.Array (Array, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
+import           MMZKDS.Base (ArrayList(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
-
--- | @ArrayList@ is a data structure implementing the 'List' class with an
--- internal array.
--- All operations that requires mutation on the @ArrayList@ (exept @clear@ and
--- @deepClear@) requires generating a new @ArrayList@, which is very costly 
--- (always O(n)). Therefore it is recommended to use the mutable version
--- 'MArrayList' for frequent state updates.
---
-data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 
 instance Show a => Show (ArrayList a) where
   show = ("ArrayList: " ++) . show . L.toList

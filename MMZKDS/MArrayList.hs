@@ -4,7 +4,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.MArrayList where
+module MMZKDS.MArrayList 
+  (MArrayList, arrayListFreeze, arrayListThaw, unsafeArrayListFreeze,
+   unsafeArrayListThaw
+  ) where
 
 import           Control.Monad (forM_, liftM2, when)
 import           Control.Monad.ST (ST)
@@ -15,23 +18,16 @@ import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
-import           MMZKDS.ArrayList (ArrayList(..))
+import           MMZKDS.ArrayList ()
+import           MMZKDS.Base (ArrayList(..), MArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
-import           MMZKDS.Unboxed.MURef
-  (MURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.MURef (MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
-
--- | @MArrayList@ is a data structure implementing the 'MList' class with an
--- internal @STArray@.
--- It has O(1) random access, O(1) appending/popping, O(n) inserting/deleting,
--- O(n) searching, and O(n * log n) sorting.
---
-data MArrayList e s = MArrayList (MURef s Int) (STRef s (STArray s Int e))
 
 
 --------------------------------------------------------------------------------

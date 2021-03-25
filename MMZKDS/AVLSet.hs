@@ -3,13 +3,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module MMZKDS.AVLSet where
+module MMZKDS.AVLSet (AVLSet) where
 
 import           Data.Coerce (coerce)
 import           Data.Foldable (toList)
 import           Data.List (foldl')
 import           Data.Maybe (isJust)
 
+import           MMZKDS.Base (AVLSet(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(add, contains, findAny, remove))
@@ -17,13 +18,6 @@ import           MMZKDS.Utilities
   (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, 
    removeMinBT, rotateLeftGBTN, rotateRightGBTN
   )
-
--- | An immutable set structure implemented with an internal AVL-tree.
--- It is expected that the type of its elements is an instance of 'Ord'.
--- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
--- union and intersection, and O(n * log n) construction from list.
--- 
-newtype AVLSet e = AVLSet (GBT e)
 
 instance Show a => Show (AVLSet a) where
   show (AVLSet tree)

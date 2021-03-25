@@ -3,7 +3,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MMZKDS.MHeapPQ where
+module MMZKDS.MHeapPQ (MHeapPQ) where
 
 import           Control.Monad (forM_, when)
 import           Control.Monad.ST (ST)
@@ -18,6 +18,7 @@ import           Data.Maybe (fromJust, isNothing)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (MArrayBased(..))
+import           MMZKDS.Base (MHeapPQ(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
 import           MMZKDS.Unboxed.MURef (MURef, newMURef, readMURef, writeMURef)
@@ -25,18 +26,6 @@ import           MMZKDS.Unsafe
   (unsafeCopyArray, unsafeLeftChild, unsafeParent, unsafeRightChild)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
-
--- | 'MHeapPQ' is a min-heap implementing the 'MPriorityQueue' class.
--- The heap is implemented with an internal @STArray@.
--- It is expected that the type of its elements is an instance of 'Ord'.
--- It may adds an element to anywhere in the array, but it always pops the 
--- "smallest" element.
--- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
--- 
-data MHeapPQ e s = MHeapPQ {
-  mHeapS :: MURef s Int,
-  mHeapA :: STRef s (STArray s Int e)
-  }
 
 
 --------------------------------------------------------------------------------

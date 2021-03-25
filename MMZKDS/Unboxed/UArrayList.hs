@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Unboxed.UArrayList where
+module MMZKDS.Unboxed.UArrayList (UArrayList) where
 
 import           Control.Monad (join)
 import           Data.Array.Unboxed (IArray, UArray, accum, array, bounds, (!))
@@ -14,17 +14,9 @@ import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.Queue (Queue(..))
 import           MMZKDS.List as L (List(..))
+import           MMZKDS.Unboxed.Base (UArrayList(..))
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
-
--- | @UArrayList@ is a data structure implementing the 'List' class with an
--- internal array storing unboxed values.
--- All operations that requires mutation on the @UArrayList@ (exept @clear@ and
--- @deepClear@) requires generating a new @UArrayList@, which is very costly 
--- (always O(n)). Therefore it is recommended to use the mutable version
--- 'MUArrayList' for frequent state updates.
---
-data UArrayList e = UArrayList {-# UNPACK #-} !Int (UArray Int e)
 
 instance (Show a, IArray UArray a) => Show (UArrayList a) where
   show = ("ArrayList: " ++) . show . L.toList

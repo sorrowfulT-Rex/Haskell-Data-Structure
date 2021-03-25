@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Unboxed.MULinkedList where
+module MMZKDS.Unboxed.MULinkedList (MULinkedList) where
 
 import           Control.Monad (forM, forM_, liftM2, when, (<=<))
 import           Control.Monad.ST (ST)
@@ -17,31 +17,12 @@ import           Data.STRef
 import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
+import           MMZKDS.Unboxed.Base (MULinkedList(..), MUNode(..))
 import           MMZKDS.Unboxed.MURef
   (MU, MURef, modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 
--- | @MULinkedList@ is a doubly-linked circular list implementing the 'MList'
---  class, containing unboxed elements.
--- It has O(1) access to front and rear, O(1) insertion/deletion to front and
--- rear, O(n) random access, O(n) insertion/deletion in general, O(n) search,
--- and O(n * log n) sorting.
--- It remembers the node most recently accessed, and operating at the vicinity 
--- of this node is O(1).
---
-data MULinkedList e s
-  = MULinkedList
-    (MURef s Int)  -- ^ Length of the Linked-List
-    (STRef s (MUNode e s)) -- ^ Point to the head node
-    (MURef s Int)  -- ^ Index of the most recently accessed node
-    (STRef s (MUNode e s)) -- ^ Pointer to the most recently accessed node
-
--- | @MUNode@ represents a single node in @MULinkedList@.
---
-data MUNode e s
-  = MHead (STRef s (MUNode e s)) (STRef s (MUNode e s))
-  | MUNode (STRef s (MUNode e s)) (MURef s e) (STRef s (MUNode e s))
 
 --------------------------------------------------------------------------------
 -- List Instance

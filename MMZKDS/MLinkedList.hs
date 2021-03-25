@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.MLinkedList where
+module MMZKDS.MLinkedList (MLinkedList) where
 
 import           Control.Monad (forM, forM_, liftM2, when, (<=<))
 import           Control.Monad.ST (ST)
@@ -13,6 +13,7 @@ import           Data.Maybe (fromJust, isJust)
 import           Data.STRef
   (STRef, newSTRef, readSTRef, writeSTRef)
 
+import           MMZKDS.Base (MLinkedList(..), MNode(..))
 import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
@@ -20,27 +21,6 @@ import           MMZKDS.Unboxed.MURef
   (MURef, modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
-
--- | @MLinkedList@ is a doubly-linked circular list implementing the 'MList'
---  class.
--- It has O(1) access to front and rear, O(1) insertion/deletion to front and
--- rear, O(n) random access, O(n) insertion/deletion in general, O(n) search,
--- and O(n * log n) sorting.
--- It remembers the node most recently accessed, and operating at the vicinity 
--- of this node is O(1).
---
-data MLinkedList e s
-  = MLinkedList
-    (MURef s Int)  -- ^ Length of the Linked-List
-    (STRef s (MNode e s)) -- ^ Point to the head node
-    (MURef s Int)  -- ^ Index of the most recently accessed node
-    (STRef s (MNode e s)) -- ^ Pointer to the most recently accessed node
-
--- | @MNode@ represents a single node in @MLinkedList@.
---
-data MNode e s
-  = MHead (STRef s (MNode e s)) (STRef s (MNode e s))
-  | MNode (STRef s (MNode e s)) (STRef s e) (STRef s (MNode e s))
 
 
 --------------------------------------------------------------------------------

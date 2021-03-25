@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Unboxed.MUHeapPQ where
+module MMZKDS.Unboxed.MUHeapPQ (MUHeapPQ) where
 
 import           Control.Monad (forM_, when)
 import           Control.Monad.ST (ST)
@@ -21,24 +21,13 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import           MMZKDS.ArrayBased (MArrayBased(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
+import           MMZKDS.Unboxed.Base (MUHeapPQ(..))
 import           MMZKDS.Unboxed.MURef 
   (MU, MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
   (unsafeCopyArray, unsafeLeftChild, unsafeParent, unsafeRightChild)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
-
--- | 'MUHeapPQ' is a min-heap implementing the 'MPriorityQueue' class with
--- unboxed elements.
--- The heap is implemented with an internal @STUArray@.
--- It may adds an element to anywhere in the array, but it always pops the 
--- "smallest" element.
--- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
--- 
-data MUHeapPQ e s = MUHeapPQ {
-  mHeapS :: MURef s Int,
-  mHeapA :: STRef s (STUArray s Int e)
-  }
 
 
 --------------------------------------------------------------------------------

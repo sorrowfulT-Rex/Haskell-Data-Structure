@@ -5,7 +5,10 @@
 {-# LANGUAGE ScopedTypeVariables#-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Unboxed.MUArrayList where
+module MMZKDS.Unboxed.MUArrayList 
+  (MUArrayList, uArrayListFreeze, uArrayListThaw, unsafeUArrayListFreeze,
+   unsafeUArrayListThaw
+  ) where
 
 import           Control.Monad (forM_, liftM2, when)
 import           Control.Monad.ST (ST)
@@ -21,7 +24,8 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.Unboxed.MURef
   (MU, MURef, newMURef, readMURef, writeMURef)
-import           MMZKDS.Unboxed.UArrayList (UArrayList(..))
+import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
+import           MMZKDS.Unboxed.UArrayList ()
 import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MQueue(..))
@@ -29,11 +33,6 @@ import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
-
--- | @MUArrayList@ is a data structure implementing the 'MList' class with an
--- internal @STUArray@.
---
-data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 
 
 --------------------------------------------------------------------------------
