@@ -15,14 +15,15 @@ import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(add, contains, findAny, remove))
 import           MMZKDS.Utilities
-  (GBT(..), GBTN(..), addBT, containsBT, depthBTN, emptyGBT, rootBT, removeBT, 
-   removeMinBT, rotateLeftGBTN, rotateRightGBTN
+  (GBTN(..), addBT, containsBT, depthBTN, rootBT, removeBT, removeMinBT, 
+  rotateLeftGBTN, rotateRightGBTN
   )
 
-instance Show a => Show (AVLSet a) where
-  show (AVLSet tree)
-    = show tree
+-- instance (Ord a, Show a) => Show (AVLSet a) where
+--   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
 
+instance (Ord a, Show a) => Show (AVLSet a) where
+  show (AVLSet t) = show t
 
 --------------------------------------------------------------------------------
 -- Set Instance
@@ -60,17 +61,17 @@ instance Ord a => PriorityQueue AVLSet a where
 
 instance DS (AVLSet a) where
   clear :: AVLSet a -> AVLSet a
-  clear = const $ coerce (emptyGBT :: GBT a)
+  clear = const $ coerce (GBEmpty :: GBTN a)
 
   size :: AVLSet a -> Int
-  size = length
+  size = length . (coerce :: AVLSet a -> GBTN a)
 
 instance Ord a => DSCons [a] (AVLSet a) where
   finish :: AVLSet a -> [a]
-  finish = toList
+  finish = toList . (coerce :: AVLSet a -> GBTN a)
 
   new :: [a] -> AVLSet a
-  new = foldl' (flip S.add) $ coerce (emptyGBT :: GBT a)
+  new = foldl' (flip S.add) $ coerce (GBEmpty :: GBTN a)
 
 
 --------------------------------------------------------------------------------
@@ -82,17 +83,17 @@ instance Ord a => DSCons [a] (AVLSet a) where
 -- and @remove@.
 -- 
 balanceAVL :: Ord a => GBTN a -> GBTN a
-balanceAVL tree@(GBNode _ l e r)
+balanceAVL tree@(GBNode _ _ l e r)
   | abs (depthBTN l - depthBTN r) <= 1 = tree
-balanceAVL tree@(GBNode d l@(GBNode ld ll _ lr) e r)
+balanceAVL tree@(GBNode s d l@(GBNode _ ld ll _ lr) e r)
   | leftImb && llImb = rotateRightGBTN tree
-  | leftImb          = rotateRightGBTN $ GBNode d (rotateLeftGBTN l) e r
+  | leftImb          = rotateRightGBTN $ GBNode s d (rotateLeftGBTN l) e r
   where
     leftImb = ld > depthBTN r
     llImb   = depthBTN ll >= depthBTN lr
-balanceAVL tree@(GBNode d l e r@(GBNode rd rl _ rr))
+balanceAVL tree@(GBNode s d l e r@(GBNode _ rd rl _ rr))
   | rightImb && rrImb = rotateLeftGBTN tree
-  | rightImb          = rotateLeftGBTN $ GBNode d l e (rotateRightGBTN r)
+  | rightImb          = rotateLeftGBTN $ GBNode s d l e (rotateRightGBTN r)
   where
     rightImb = rd > depthBTN l
     rrImb    = depthBTN rr >= depthBTN rl

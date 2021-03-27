@@ -8,7 +8,7 @@ import           Data.Array.ST (STArray)
 import           Data.STRef (STRef)
 
 import           MMZKDS.Unboxed.MURef (MURef)
-import           MMZKDS.Utilities (GBT)
+import           MMZKDS.Utilities (GBTN)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
@@ -24,7 +24,7 @@ data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 -- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
 -- union and intersection, and O(n * log n) construction from list.
 -- 
-newtype AVLSet e = AVLSet (GBT e)
+newtype AVLSet e = AVLSet (GBTN e)
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.

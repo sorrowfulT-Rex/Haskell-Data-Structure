@@ -23,7 +23,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- Minimal implementation requires @add@, @contains@, @findAny@, and @remove@.
 -- Default methods include @difference@, @dropAny@, @intersection@, @newSet@,
---  @toList@ and @union@.
+-- @toList@ and @union@.
 -- For functional operations, one can either create a 'Monad' instance, or
 -- "stream" the set with @toList@, apply the functions, then "collect" it back 
 -- with "@newSet@".
