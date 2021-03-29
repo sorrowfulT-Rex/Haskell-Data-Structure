@@ -16,7 +16,7 @@ import           Data.STRef
 import           MMZKDS.Base (MLinkedList(..), MNode(..))
 import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Queue (MQueue(..))
+import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.MURef
   (MURef, modifyMURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
@@ -187,22 +187,21 @@ instance MList MLinkedList a ST s where
 
 
 --------------------------------------------------------------------------------
--- MQueue Instance
+-- MDeque Instance
 --------------------------------------------------------------------------------
 
-instance MQueue MLinkedList a ST s where
-  mDequeue :: MLinkedList a s -> ST s (Maybe a)
-  mDequeue = mPop
+instance MDeque MLinkedList a ST s where
+  mDequeueFront :: MLinkedList a s -> ST s (Maybe a)
+  mDequeueFront = mPopFront
 
-  mEnqueue :: a -> MLinkedList a s -> ST s ()
-  mEnqueue = mPush
+  mDequeueEnd :: MLinkedList a s -> ST s (Maybe a)
+  mDequeueEnd = mPop
 
-  mPeek :: MLinkedList a s -> ST s (Maybe a)
-  mPeek m = do
-    l <- size m
-    if l == 0
-      then return Nothing
-      else Just <$> m `mGet` (l - 1)
+  mEnqueueFront :: a -> MLinkedList a s -> ST s ()
+  mEnqueueFront = mPush
+
+  mEnqueueEnd :: a -> MLinkedList a s -> ST s ()
+  mEnqueueEnd = mAppend
 
 
 --------------------------------------------------------------------------------

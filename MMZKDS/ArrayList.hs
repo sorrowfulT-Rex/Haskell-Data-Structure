@@ -132,7 +132,7 @@ instance ArrayBased ArrayList a where
 
 
 --------------------------------------------------------------------------------
--- Queue Instance
+-- Deque Instance
 --------------------------------------------------------------------------------
 
 instance Deque ArrayList a where

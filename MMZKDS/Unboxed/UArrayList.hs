@@ -137,7 +137,7 @@ instance IArray UArray a => ArrayBased UArrayList a where
 
 
 --------------------------------------------------------------------------------
--- Queue Instance
+-- Deque Instance
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => Deque UArrayList a where

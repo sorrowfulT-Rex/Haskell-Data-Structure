@@ -238,7 +238,7 @@ instance MArrayBased MArrayList a ST s where
 
 
 --------------------------------------------------------------------------------
--- MQueue Instance
+-- MDeque Instance
 --------------------------------------------------------------------------------
 
 instance MDeque MArrayList a ST s where

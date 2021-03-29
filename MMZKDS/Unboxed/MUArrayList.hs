@@ -253,7 +253,7 @@ instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
 
 
 --------------------------------------------------------------------------------
--- MQueue Instance
+-- MDeque Instance
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, MU a s) => MDeque MUArrayList a ST s where
