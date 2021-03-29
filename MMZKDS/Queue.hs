@@ -5,6 +5,8 @@
 
 module MMZKDS.Queue (Queue(..), MQueue(..)) where
 
+import           Control.Monad (forM_)
+
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
@@ -15,22 +17,25 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 
 -- | 'Queue' is a type class for immutable queue data structures.
 -- It provides methods of adding and removing element from the queue.
--- The choice of the element being inserted or deleted is up to the 
--- implementation, but it should follow a queue logic (FIFO). More specifically,
--- it should always add element to the rear and delete element from the front.
+-- It should follow a queue logic (FIFO). More specifically, it should always 
+-- add element to the rear and delete element from the front.
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- Minimal implementation requires @dequeue@ and @enqueue@.
 -- Default method is @peek@.
+-- 
 class (DS (q e), DSCons [e] (q e)) => Queue q e where
   -- | Removes the element from the front of the queue, returning a tuple of the
   -- element and the rest of the queue.
+  -- 
   dequeue :: q e -> (Maybe e, q e)
 
   -- | Adds an element to the rear.
+  -- 
   enqueue :: e -> q e -> q e
 
   -- | Default method.
   -- Retrieves the element at the front, but not removing it.
+  -- 
   peek :: q e -> Maybe e
   peek = fst . dequeue
 
@@ -41,18 +46,109 @@ class (DS (q e), DSCons [e] (q e)) => Queue q e where
 
 -- | 'MQueue' is a type class for mutable queue data structures.
 -- It provides methods of adding and removing element from the queue.
--- The choice of the element being inserted or deleted is up to the 
--- implementation, but it should follow a queue logic (FIFO). More specifically,
--- it should always add element to the rear and delete element from the front.
+-- It should follow a queue logic (FIFO). More specifically, it should always 
+-- add element to the rear and delete element from the front.
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- Minimal implementation requires @mDequeue@, @mEnqueue@ and @mPeek@.
-class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s) 
+-- 
+class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
   => MQueue q e m s where
   -- | Removes the element at the front of the queue, returning the element.
+  -- 
   mDequeue :: q e s -> m s (Maybe e)
 
   -- | Adds an element to the rear.
+  -- 
   mEnqueue :: e -> q e s -> m s ()
 
   -- | Retrieves the element at the front, but not removing it.
+  -- 
   mPeek :: q e s -> m s (Maybe e)
+
+
+--------------------------------------------------------------------------------
+-- Deque Type Class
+--------------------------------------------------------------------------------
+
+-- | 'Deque' is a type class for immutable deque data structures.
+-- It provides methods of adding and removing element from both ends.
+-- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
+-- Minimal implementation requires @dequeueFront@, @dequeueEnd@, @enqueueFront@ 
+-- and @enqueueEnd@.
+-- Default method is @peekFront@ and @peekEnd@.
+-- 
+class (DS (q e), DSCons [e] (q e)) => Deque q e where
+  -- | Removes the element from the front of the queue, returning a tuple of the
+  -- element and the rest of the queue.
+  -- 
+  dequeueFront :: q e -> (Maybe e, q e)
+
+  -- | Removes the element from the rear of the queue, returning a tuple of the
+  -- element and the rest of the queue.
+  -- 
+  dequeueEnd :: q e -> (Maybe e, q e)
+
+  -- | Adds an element to the front.
+  -- 
+  enqueueFront :: e -> q e -> q e
+
+  -- | Adds an element to the rear.
+  -- 
+  enqueueRear :: e -> q e -> q e
+
+  -- | Default method.
+  -- Retrieves the element at the front, but not removing it.
+  -- 
+  peekFront :: q e -> Maybe e
+  peekFront = fst . dequeueFront
+
+  -- | Default method.
+  -- Retrieves the element at the rear, but not removing it.
+  -- 
+  peekEnd :: q e -> Maybe e
+  peekEnd = fst . dequeueEnd
+
+--------------------------------------------------------------------------------
+-- MQueue Type Class
+--------------------------------------------------------------------------------
+
+-- | 'MDeque' is a type class for mutable deque data structures.
+-- It provides methods of adding and removing element from both ends.
+-- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
+-- Minimal implementation requires @mDequeueFront@, @mDequeueEnd@, 
+-- @mEnqueueFront@ and @mEnqueueEnd@.
+class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
+  => MDeque q e m s where
+  -- | Removes the element at the front of the queue, returning the element.
+  -- 
+  mDequeueFront :: q e s -> m s (Maybe e)
+
+  -- | Removes the element at the rear of the queue, returning the element.
+  -- 
+  mDequeueEnd :: q e s -> m s (Maybe e)
+
+  -- | Adds an element to the front.
+  -- 
+  mEnqueueFront :: e -> q e s -> m s ()
+
+  -- | Adds an element to the rear.
+  -- 
+  mEnqueueEnd :: e -> q e s -> m s ()
+
+  -- | Default method.
+  -- Retrieves the element at the front, but not removing it.
+  -- 
+  mPeekFront :: q e s -> m s (Maybe e)
+  mPeekFront q = do
+    me <- mDequeueFront q
+    forM_ me (`mEnqueueFront` q)
+    return me
+
+  -- | Default method.
+  -- Retrieves the element at the rear, but not removing it.
+  -- 
+  mPeekEnd :: q e s -> m s (Maybe e)
+  mPeekEnd q = do
+    me <- mDequeueEnd q
+    forM_ me (`mEnqueueEnd` q)
+    return me

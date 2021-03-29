@@ -3,8 +3,8 @@ This repo serves as a practice of writing both functional and mutable strict dat
 
 My aim is to make a wide range of data structures that ideally would satisfy not performance-sensitive purposes. However, since it is a practice code instead of a library, there is no guarantee of correctness and stability. Moreover, efficiency was not an design objective. Therefore, any performance-sensitive task should not be relied on this.  
 
-Now working on: AVL; Red-Black Tree.  
-Next to come: Deque; List concatenation.  
+Now working on: Deque; Red-Black Tree.  
+Next to come: List concatenation; Unordered List.  
 
 # [MMZKDS/DS.hs](MMZKDS/DS.hs)
 This file provides type classes for immutable data structures.  
@@ -29,8 +29,9 @@ Instances of `List` is automatically instances of `Eq` if the elements are insta
 See the [Haddocks](MMZKDS/List.hs) for full documentation.  
 
 # [MMZKDS/Queue.hs](MMZKDS/Queue.hs)
-This file provides type classes for both immutable and mutable queue structures.  
-There are two classes, namely `Queue` and `MQueue`, for immutable and mutable queues, respectively.  
+This file provides type classes for both immutable and mutable queue and deque structures.  
+There are two classes for queue, namely `Queue` and `MQueue`, for immutable and mutable queues, respectively.  
+The other two classes are for deque, namely `Deque` and `MDeque`.  
 The queue adds elements to the rear and removes elements from the front.  
 See the [Haddocks](MMZKDS/Queue.hs) for full documentation.  
 
