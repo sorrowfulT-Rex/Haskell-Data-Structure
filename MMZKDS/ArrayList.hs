@@ -13,7 +13,7 @@ import           Data.Foldable as F (toList)
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.Base (ArrayList(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.Queue (Queue(..))
+import           MMZKDS.Queue (Deque(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities
   (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
@@ -135,12 +135,18 @@ instance ArrayBased ArrayList a where
 -- Queue Instance
 --------------------------------------------------------------------------------
 
-instance Queue ArrayList a where
-  dequeue :: ArrayList a -> (Maybe a, ArrayList a)
-  dequeue = pop
+instance Deque ArrayList a where
+  dequeueFront :: ArrayList a -> (Maybe a, ArrayList a)
+  dequeueFront = popFront
 
-  enqueue :: a -> ArrayList a -> ArrayList a
-  enqueue = push
+  dequeueEnd :: ArrayList a -> (Maybe a, ArrayList a)
+  dequeueEnd = pop
+
+  enqueueFront :: a -> ArrayList a -> ArrayList a
+  enqueueFront = push
+
+  enqueueEnd :: a -> ArrayList a -> ArrayList a
+  enqueueEnd = append
 
 
 --------------------------------------------------------------------------------

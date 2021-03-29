@@ -12,7 +12,7 @@ import           Data.Foldable as F (toList)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.Queue (Queue(..))
+import           MMZKDS.Queue (Deque(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Unboxed.Base (UArrayList(..))
 import           MMZKDS.Utilities
@@ -140,12 +140,18 @@ instance IArray UArray a => ArrayBased UArrayList a where
 -- Queue Instance
 --------------------------------------------------------------------------------
 
-instance IArray UArray a => Queue UArrayList a where
-  dequeue :: UArrayList a -> (Maybe a, UArrayList a)
-  dequeue = pop
+instance IArray UArray a => Deque UArrayList a where
+  dequeueFront :: UArrayList a -> (Maybe a, UArrayList a)
+  dequeueFront = popFront
 
-  enqueue :: a -> UArrayList a -> UArrayList a
-  enqueue = push
+  dequeueEnd :: UArrayList a -> (Maybe a, UArrayList a)
+  dequeueEnd = pop
+
+  enqueueFront :: a -> UArrayList a -> UArrayList a
+  enqueueFront = push
+
+  enqueueEnd :: a -> UArrayList a -> UArrayList a
+  enqueueEnd = append
 
 
 --------------------------------------------------------------------------------

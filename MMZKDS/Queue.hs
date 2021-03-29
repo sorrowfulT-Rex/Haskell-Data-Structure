@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Queue (Queue(..), MQueue(..)) where
+module MMZKDS.Queue (Queue(..), MQueue(..), Deque(..), MDeque(..)) where
 
 import           Control.Monad (forM_)
 
@@ -73,6 +73,7 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
 -- | 'Deque' is a type class for immutable deque data structures.
 -- It provides methods of adding and removing element from both ends.
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
+-- A 'Deque' is a 'Queue' by default.
 -- Minimal implementation requires @dequeueFront@, @dequeueEnd@, @enqueueFront@ 
 -- and @enqueueEnd@.
 -- Default method is @peekFront@ and @peekEnd@.
@@ -94,7 +95,7 @@ class (DS (q e), DSCons [e] (q e)) => Deque q e where
 
   -- | Adds an element to the rear.
   -- 
-  enqueueRear :: e -> q e -> q e
+  enqueueEnd :: e -> q e -> q e
 
   -- | Default method.
   -- Retrieves the element at the front, but not removing it.
@@ -108,13 +109,15 @@ class (DS (q e), DSCons [e] (q e)) => Deque q e where
   peekEnd :: q e -> Maybe e
   peekEnd = fst . dequeueEnd
 
+
 --------------------------------------------------------------------------------
--- MQueue Type Class
+-- MDeque Type Class
 --------------------------------------------------------------------------------
 
 -- | 'MDeque' is a type class for mutable deque data structures.
 -- It provides methods of adding and removing element from both ends.
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
+-- A 'MDeque' is a 'MQueue' by default.
 -- Minimal implementation requires @mDequeueFront@, @mDequeueEnd@, 
 -- @mEnqueueFront@ and @mEnqueueEnd@.
 class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
@@ -152,3 +155,25 @@ class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s)
     me <- mDequeueEnd q
     forM_ me (`mEnqueueEnd` q)
     return me
+
+
+--------------------------------------------------------------------------------
+-- Deque -> Queue
+--------------------------------------------------------------------------------
+
+instance {-# OVERLAPPABLE #-} (DS (q a), DSCons [a] (q a), (Deque q a)) 
+  => Queue q a where
+  dequeue = dequeueFront
+  enqueue = enqueueEnd
+
+
+--------------------------------------------------------------------------------
+-- MDeque -> MQueue
+--------------------------------------------------------------------------------
+
+instance {-# OVERLAPPABLE #-} 
+  (Monad (m s), MDS (q a) m s, MDSCons [a] (q a) m s, (MDeque q a m s)) 
+    => MQueue q a m s where
+  mDequeue = mDequeueFront
+  mEnqueue = mEnqueueEnd
+  mPeek = mPeekFront
