@@ -22,7 +22,7 @@ import           MMZKDS.ArrayList ()
 import           MMZKDS.Base (ArrayList(..), MArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Queue (MQueue(..))
+import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.MURef (MURef, newMURef, readMURef, writeMURef)
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
@@ -241,19 +241,18 @@ instance MArrayBased MArrayList a ST s where
 -- MQueue Instance
 --------------------------------------------------------------------------------
 
-instance MQueue MArrayList a ST s where
-  mDequeue :: MArrayList a s -> ST s (Maybe a)
-  mDequeue = mPop
+instance MDeque MArrayList a ST s where
+  mDequeueFront :: MArrayList a s -> ST s (Maybe a)
+  mDequeueFront = mPopFront
 
-  mEnqueue :: a -> MArrayList a s -> ST s ()
-  mEnqueue = mPush
+  mDequeueEnd :: MArrayList a s -> ST s (Maybe a)
+  mDequeueEnd = mPop
 
-  mPeek :: MArrayList a s -> ST s (Maybe a)
-  mPeek m = do
-    l <- size m
-    if l == 0
-      then return Nothing
-      else Just <$> m `mGet` (l - 1)
+  mEnqueueFront :: a -> MArrayList a s -> ST s ()
+  mEnqueueFront = mPush
+
+  mEnqueueEnd :: a -> MArrayList a s -> ST s ()
+  mEnqueueEnd = mAppend
 
 
 --------------------------------------------------------------------------------

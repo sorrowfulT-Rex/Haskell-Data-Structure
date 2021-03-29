@@ -28,7 +28,7 @@ import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
 import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.Queue (MQueue(..))
+import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -256,19 +256,18 @@ instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
 -- MQueue Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MU a s) => MQueue MUArrayList a ST s where
-  mDequeue :: MUArrayList a s -> ST s (Maybe a)
-  mDequeue = mPop
+instance (IArray UArray a, MU a s) => MDeque MUArrayList a ST s where
+  mDequeueFront :: MUArrayList a s -> ST s (Maybe a)
+  mDequeueFront = mPopFront
 
-  mEnqueue :: a -> MUArrayList a s -> ST s ()
-  mEnqueue = mPush
+  mDequeueEnd :: MUArrayList a s -> ST s (Maybe a)
+  mDequeueEnd = mPop
 
-  mPeek :: MUArrayList a s -> ST s (Maybe a)
-  mPeek m = do
-    l <- size m
-    if l == 0
-      then return Nothing
-      else Just <$> m `mGet` (l - 1)
+  mEnqueueFront :: a -> MUArrayList a s -> ST s ()
+  mEnqueueFront = mPush
+
+  mEnqueueEnd :: a -> MUArrayList a s -> ST s ()
+  mEnqueueEnd = mAppend
 
 
 --------------------------------------------------------------------------------
