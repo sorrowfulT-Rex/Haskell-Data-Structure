@@ -51,6 +51,10 @@ See the [Haddocks](MMZKDS/Set.hs) for full documentation.
 Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MMZKDS/MArrayList.hs) for frequent state updates.
 See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.  
 
+# [MMZKDS/FDQ.hs](MMZKDS/FDQ.hs)  
+`FDQ` is a purely functional deque structure with amortised O(1) operations. It is based on two internal lists storing the front and rear of the deque.  
+See the [Haddocks](MMZKDS/FDQ.hs) for full documentation.  
+
 # [MMZKDS/MArrayList.hs](MMZKDS/MArrayList.hs)
 `MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
 See the [Haddocks](MMZKDS/MArrayList.hs) for full documentation.  
