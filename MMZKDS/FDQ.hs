@@ -4,17 +4,9 @@
 
 module MMZKDS.FDQ (FDQ) where
 
+import          MMZKDS.Base (FDQ(..))
 import          MMZKDS.DS (DS(..), DSCons(..))
 import          MMZKDS.Queue (Deque(..))
-
--- | 'FDQ' is a purely functional efficient deque structure with amortised
--- O(1) frtertion/deletion from both ends.
--- 
-data FDQ e = FDQ {-# UNPACK #-} !Int [e] {-# UNPACK #-} !Int [e]
-
-instance Show a => Show (FDQ a) where
-  show (FDQ _ frt _ end)
-    = "Deque: " ++ show (frt ++ reverse end)
 
 
 --------------------------------------------------------------------------------

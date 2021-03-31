@@ -1,6 +1,6 @@
 module MMZKDS.Base 
-  (ArrayList(..), AVLSet(..), MArrayList(..), MHeapPQ(..), MLinkedList(..),
-   MNode(..)
+  (ArrayList(..), AVLSet(..), FDQ(..), MArrayList(..), MHeapPQ(..),
+   MLinkedList(..), MNode(..)
   ) where
 
 import           Data.Array (Array)
@@ -25,6 +25,15 @@ data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 -- union and intersection, and O(n * log n) construction from list.
 -- 
 newtype AVLSet e = AVLSet (GBTN e)
+
+-- | 'FDQ' is a purely functional efficient deque structure with amortised
+-- O(1) frtertion/deletion from both ends.
+-- 
+data FDQ e = FDQ {-# UNPACK #-} !Int [e] {-# UNPACK #-} !Int [e]
+
+instance Show a => Show (FDQ a) where
+  show (FDQ _ frt _ end)
+    = "Deque: " ++ show (frt ++ reverse end)
 
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.
