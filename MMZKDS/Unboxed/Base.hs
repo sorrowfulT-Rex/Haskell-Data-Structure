@@ -9,8 +9,8 @@ import           MMZKDS.Unboxed.MURef (MURef)
 
 -- | @MUArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STUArray@.
--- It has O(1) random access, O(1) appending/popping, O(n) inserting/deleting,
--- O(n) searching, and O(n * log n) sorting.
+-- It has O(1) random access, amortised O(1) appending/popping, O(n) 
+-- inserting/deleting, O(n) searching, and O(n * log n) sorting.
 --
 data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 

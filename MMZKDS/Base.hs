@@ -31,14 +31,10 @@ newtype AVLSet e = AVLSet (GBTN e)
 -- 
 data FDQ e = FDQ {-# UNPACK #-} !Int [e] {-# UNPACK #-} !Int [e]
 
-instance Show a => Show (FDQ a) where
-  show (FDQ _ frt _ end)
-    = "Deque: " ++ show (frt ++ reverse end)
-
 -- | @MArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STArray@.
--- It has O(1) random access, O(1) appending/popping, O(n) inserting/deleting,
--- O(n) searching, and O(n * log n) sorting.
+-- It has O(1) random access, amortised O(1) appending/popping, O(n) 
+-- inserting/deleting, O(n) searching, and O(n * log n) sorting.
 --
 data MArrayList e s = MArrayList (MURef s Int) (STRef s (STArray s Int e))
 

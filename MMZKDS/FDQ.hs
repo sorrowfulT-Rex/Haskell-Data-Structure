@@ -8,6 +8,10 @@ import          MMZKDS.Base (FDQ(..))
 import          MMZKDS.DS (DS(..), DSCons(..))
 import          MMZKDS.Queue (Deque(..))
 
+instance Show a => Show (FDQ a) where
+  show (FDQ _ frt _ end)
+    = "Deque: " ++ show (frt ++ reverse end)
+
 
 --------------------------------------------------------------------------------
 -- Deque Instance
