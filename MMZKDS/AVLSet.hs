@@ -19,11 +19,8 @@ import           MMZKDS.Utilities
   rotateLeftGBTN, rotateRightGBTN
   )
 
--- instance (Ord a, Show a) => Show (AVLSet a) where
---   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
-
 instance (Ord a, Show a) => Show (AVLSet a) where
-  show (AVLSet t) = show t
+  show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
 
 
 --------------------------------------------------------------------------------
