@@ -53,6 +53,8 @@ instance MList MLinkedList a ST s where
                 nxt <- readSTRef cR
                 cur <- prevN nxt
                 prv <- prevN cur
+                i   <- readMURef iR
+                when (i == index + 1) $ modifyMURef iR pred
                 return (prv, cur, nxt)
         let del prv cur nxt = do
             writeSTRef (prevNRef nxt) prv
@@ -165,7 +167,7 @@ instance MList MLinkedList a ST s where
     let mLastIndexOf' i node
           | isHead node                         = return Nothing
           | nodeElem node `unsafeSTEq` return e = return $ Just i
-          | otherwise 
+          | otherwise
             = prevN node >>= mLastIndexOf' (i - 1)
     hd <- getHead mll
     prevN hd >>= mLastIndexOf' (l - 1)

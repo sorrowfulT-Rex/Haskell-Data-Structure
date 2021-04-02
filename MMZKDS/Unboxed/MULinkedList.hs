@@ -54,6 +54,8 @@ instance MU a s => MList MULinkedList a ST s where
                 nxt <- readSTRef cR
                 cur <- prevUN nxt
                 prv <- prevUN cur
+                i   <- readMURef iR
+                when (i == index + 1) $ modifyMURef iR pred
                 return (prv, cur, nxt)
         let del prv cur nxt = do
             writeSTRef (prevUNRef nxt) prv
