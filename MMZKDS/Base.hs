@@ -1,6 +1,6 @@
 module MMZKDS.Base 
   (ArrayList(..), AVLSet(..), FDQ(..), MArrayList(..), MHeapPQ(..),
-   MLinkedList(..), MNode(..)
+   MLinkedList(..), MNode(..), RBColour(..), RBTSet(..)
   ) where
 
 import           Data.Array (Array)
@@ -19,7 +19,7 @@ import           MMZKDS.Utilities (GBTN)
 --
 data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 
--- | An immutable set structure implemented with an internal AVL-tree.
+-- | An immutable set structure implemented with an internal AVL Tree.
 -- It is expected that the type of its elements is an instance of 'Ord'.
 -- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
 -- union and intersection, and O(n * log n) construction from list.
@@ -70,3 +70,14 @@ data MLinkedList e s
 data MNode e s
   = MHead (STRef s (MNode e s)) (STRef s (MNode e s))
   | MNode (STRef s (MNode e s)) (STRef s e) (STRef s (MNode e s))
+
+-- | A data type specifying the colour of a node in a Red-Black Tree.
+-- 
+data RBColour e = Red e | Black e
+
+-- | An immutable set structure implemented with an internal Red-Black Tree.
+-- It is expected that the type of its elements is an instance of 'Ord'.
+-- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
+-- union and intersection, and O(n * log n) construction from list.
+-- 
+newtype RBTSet e = RBTSet (GBTN (RBColour e))

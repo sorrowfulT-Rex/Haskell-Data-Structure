@@ -49,7 +49,12 @@ See the [Haddocks](MMZKDS/Set.hs) for full documentation.
 # [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
 Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MMZKDS/MArrayList.hs) for frequent state updates.
-See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.  
+See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation. 
+
+# [MMZKDS/AVLSet.hs](MMZKDS/AVLSet.hs)  
+`AVLSet` is a purely functional set structure with O(n * log n) operations. It is based on an internal AVL Tree.  
+It is expected that the type of its elements is an instance of 'Ord'.  
+See the [Haddocks](MMZKDS/AVLSet.hs) for full documentation.  
 
 # [MMZKDS/FDQ.hs](MMZKDS/FDQ.hs)  
 `FDQ` is a purely functional deque structure with amortised O(1) operations. It is based on two internal lists storing the front and rear of the deque.  
