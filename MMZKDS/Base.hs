@@ -8,7 +8,6 @@ import           Data.Array.ST (STArray)
 import           Data.STRef (STRef)
 
 import           MMZKDS.Unboxed.MURef (MURef)
-import           MMZKDS.Utilities (GBTN)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
@@ -24,7 +23,12 @@ data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 -- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
 -- union and intersection, and O(n * log n) construction from list.
 -- 
-newtype AVLSet e = AVLSet (GBTN e)
+data AVLSet e 
+  = AVLEmpty
+  | AVLLeaf e
+  | AVLNode {-# UNPACK #-} !Int {-# UNPACK #-} !Int (AVLSet e) e (AVLSet e)
+    deriving (Eq)
+
 
 -- | 'FDQ' is a purely functional efficient deque structure with amortised
 -- O(1) frtertion/deletion from both ends.
@@ -73,11 +77,16 @@ data MNode e s
 
 -- | A data type specifying the colour of a node in a Red-Black Tree.
 -- 
-data RBColour e = Red e | Black e
+data RBColour = Red | Black
+  deriving (Eq, Show)
 
 -- | An immutable set structure implemented with an internal Red-Black Tree.
 -- It is expected that the type of its elements is an instance of 'Ord'.
 -- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
 -- union and intersection, and O(n * log n) construction from list.
 -- 
-newtype RBTSet e = RBTSet (GBTN (RBColour e))
+data RBTSet e 
+  = RBEmpty
+  | RBLeaf RBColour e
+  | RBNode RBColour {-# UNPACK #-} !Int (RBTSet e) e (RBTSet e)
+    deriving (Eq, Show)
