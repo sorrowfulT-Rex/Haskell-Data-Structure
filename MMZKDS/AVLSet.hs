@@ -295,4 +295,4 @@ sizeAVLSet :: AVLSet a -> Int
 sizeAVLSet tree = case tree of
   AVLNode s _ _ _ _ -> s
   AVLLeaf _         -> 1
-  _                -> 0
+  _                 -> 0
