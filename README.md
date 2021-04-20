@@ -3,7 +3,7 @@ This repo serves as a practice of writing both functional and mutable strict dat
 
 My aim is to make a wide range of data structures that ideally would satisfy not performance-sensitive purposes. However, since it is a practice code instead of a library, there is no guarantee of correctness and stability. Moreover, efficiency was not an design objective. Therefore, any performance-sensitive task should not be relied on this.  
 
-Now working on: Deque; Red-Black Tree.  
+Now working on: Mutable AVL-Tree; Red-Black Tree.  
 Next to come: List concatenation; Unordered List.  
 
 # [MMZKDS/DS.hs](MMZKDS/DS.hs)
