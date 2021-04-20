@@ -48,8 +48,8 @@ outOfBoundError i
 -- Generic Binary Tree
 --------------------------------------------------------------------------------
 
-
--- | Generic binary tree data type, mainly used for BST-based structures.
+-- | Generic binary tree data type based on depth, mainly used for BST-based 
+-- structures.
 -- 
 data GBTN e
   = GBEmpty
