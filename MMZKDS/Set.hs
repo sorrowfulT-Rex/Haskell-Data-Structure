@@ -128,7 +128,7 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   mRemove :: e -> c e s -> m s (Maybe e)
 
   -- | Default method.
-  -- Computes the difference of two sets.
+  -- Computes the difference of two sets, and update it to the first set.
   --
   mDifference :: forall c1. MDSCons [e] (c1 e) m s
               => c e s
@@ -144,7 +144,7 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
     return me
 
   -- | Default method.
-  -- Computes the intersection of two sets.
+  -- Computes the intersection of two sets, and update it to the first set.
   --
   mIntersection :: forall c1. MDSCons [e] (c1 e) m s
                 => c e s
@@ -168,7 +168,7 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   mToList = MDS.finish
 
   -- | Default method.
-  -- Computes the union of two sets.
+  -- Computes the union of two sets, and update it to the first set.
   --
   mUnion :: forall c1. MDSCons [e] (c1 e) m s
          => c e s

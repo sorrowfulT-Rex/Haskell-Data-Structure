@@ -90,7 +90,7 @@ instance Foldable AVLSet where
         = [e]
       toList' ((AVLNode _ _ _ e' r) : stack) (AVLLeaf e)
         = e : e' : toList' stack r
-      toList' stack bt@(AVLNode _ _ l e' r)
+      toList' stack bt@(AVLNode _ _ l _ _)
         = toList' (bt : stack) l
 
 -- | Adds an element to the AVL-tree with a balancing function.
