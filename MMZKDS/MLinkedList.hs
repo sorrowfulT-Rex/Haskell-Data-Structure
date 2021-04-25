@@ -167,8 +167,8 @@ instance MList MLinkedList a ST s where
     let mLastIndexOf' i node
           | isHead node                         = return Nothing
           | nodeElem node `unsafeSTEq` return e = return $ Just i
-          | otherwise
-            = prevN node >>= mLastIndexOf' (i - 1)
+          | otherwise                           = prevN node >>= 
+                                                  mLastIndexOf' (i - 1)
     hd <- getHead mll
     prevN hd >>= mLastIndexOf' (l - 1)
 

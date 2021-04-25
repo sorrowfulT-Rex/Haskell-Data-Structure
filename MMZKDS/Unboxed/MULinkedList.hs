@@ -168,8 +168,8 @@ instance MU a s => MList MULinkedList a ST s where
     let mLastIndexOf' i node
           | isHead node                          = return Nothing
           | uNodeElem node `unsafeSTEq` return e = return $ Just i
-          | otherwise 
-            = prevUN node >>= mLastIndexOf' (i - 1)
+          | otherwise                            = prevUN node >>= 
+                                                   mLastIndexOf' (i - 1)
     hd <- getHead mll
     prevUN hd >>= mLastIndexOf' (l - 1)
 

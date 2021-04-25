@@ -106,7 +106,7 @@ addBT f e set
     addAVLSet e tree   = case tree of
       AVLEmpty   -> (True, AVLLeaf e)
       AVLLeaf e' -> addLeaf e'
-      _         -> addNode tree
+      _          -> addNode tree
     addLeaf e'
       | e < e'    = (True, AVLNode 2 2 (AVLLeaf e) e' AVLEmpty)
       | e > e'    = (True, AVLNode 2 2 AVLEmpty e' (AVLLeaf e))
@@ -115,11 +115,11 @@ addBT f e set
       | e < e'    
         = let (b, subT) = addAVLSet e l
               d' = 1 + max (depthBTN r) (depthBTN subT)
-          in (b, f $ AVLNode (s + addSize b) d' subT e' r)
+          in  (b, f $ AVLNode (s + addSize b) d' subT e' r)
       | e > e'    
         = let (b, subT) = addAVLSet e r
               d' = 1 + max (depthBTN l) (depthBTN subT)
-          in (b, f $ AVLNode (s + addSize b) d' l e' subT)
+          in  (b, f $ AVLNode (s + addSize b) d' l e' subT)
       | otherwise = (False, AVLNode s d l e r)
 
 -- | Utility Function.
@@ -198,17 +198,17 @@ removeBT f e set
       | e < e'       
         = let (me, subT) = removeAVLSet l
               d' = 1 + max (depthBTN r) (depthBTN subT)
-          in (me, f $ normAVLSet $ AVLNode (s + delSize me) d' subT e' r)
+          in  (me, f $ normAVLSet $ AVLNode (s + delSize me) d' subT e' r)
       | e > e' 
         = let (me, subT) = removeAVLSet r
               d' = 1 + max (depthBTN l) (depthBTN subT)
-          in (me, f $ normAVLSet $ AVLNode (s + delSize me) d' l e' subT)
+          in  (me, f $ normAVLSet $ AVLNode (s + delSize me) d' l e' subT)
       | AVLEmpty <- l = (Just e', r)
       | AVLEmpty <- r = (Just e', l)
       | otherwise    
         = let (Just eSucc, subT) = removeMinAVLSet f r
               d' = 1 + max (depthBTN l) (depthBTN subT)
-          in (Just e', f $ normAVLSet $ AVLNode (s - 1) d' l eSucc subT)
+          in  (Just e', f $ normAVLSet $ AVLNode (s - 1) d' l eSucc subT)
 
 -- | Utility Function.
 -- Removing the minimum (most left) element from the the AVL-tree with a 
@@ -236,8 +236,8 @@ removeMinAVLSet f (AVLNode _ d AVLEmpty e r)
 removeMinAVLSet f (AVLNode s d l e r)
   = let (me, subT) = removeMinAVLSet f l 
         d' = 1 + max (depthBTN r) (depthBTN subT)
-    in (me, 
-      f $ normAVLSet $ AVLNode (s - if isJust me then 1 else 0) d' subT e r)
+    in  (me, 
+        f $ normAVLSet $ AVLNode (s - if isJust me then 1 else 0) d' subT e r)
 removeMinAVLSet _ (AVLLeaf e)
   = (Just e, AVLEmpty)
 removeMinAVLSet _ _ 
@@ -263,8 +263,8 @@ rotateLeftAVLSet (AVLNode s _ l e (AVLNode _ _ rl re rr))
     ll = normAVLSet $ AVLNode s' (1 + max (depthBTN l) (depthBTN rl)) l e rl
 rotateLeftAVLSet (AVLNode s _ l e (AVLLeaf re))
   = let dl = depthBTN l 
-    in AVLNode s (1 + dl) 
-      (normAVLSet $ AVLNode (s - 1) dl l e AVLEmpty) re AVLEmpty
+    in  AVLNode s (1 + dl) 
+        (normAVLSet $ AVLNode (s - 1) dl l e AVLEmpty) re AVLEmpty
 rotateLeftAVLSet tree
   = tree
 
@@ -280,8 +280,8 @@ rotateRightAVLSet (AVLNode s _ (AVLNode _ _ ll le lr) e r)
     rr = normAVLSet $ AVLNode s' (1 + max (depthBTN r) (depthBTN lr)) lr e r
 rotateRightAVLSet (AVLNode s _ (AVLLeaf le) e r)
   = let dl = depthBTN r
-    in AVLNode s (1 + dl) AVLEmpty le 
-      (normAVLSet $ AVLNode (s - 1) dl AVLEmpty e r) 
+    in  AVLNode s (1 + dl) AVLEmpty le 
+        (normAVLSet $ AVLNode (s - 1) dl AVLEmpty e r) 
 rotateRightAVLSet tree
   = tree
 
