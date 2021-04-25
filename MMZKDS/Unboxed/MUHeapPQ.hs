@@ -99,7 +99,7 @@ instance (Ord a, IArray UArray a, MU a s) => MArrayBased MUHeapPQ a ST s where
                            => (Int, Int) 
                            -> [a] 
                            -> ST s (STUArray s Int a)
-             ) (0, max s $ initialSize l - 1) $ toList fd
+             ) (0, max s (initialSize l) - 1) $ toList fd
     lR    <- newMURef l
     aR    <- newSTRef arrST
     let toMinHeap mi
