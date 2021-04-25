@@ -83,14 +83,26 @@ instance Ord a => MSet MAVLSet a ST s where
             e' <- readSTRef eR'
             if e == e'
               then writeSTRef eR' e
-              else do
-                if e < e'
-                  then add' lR
-                  else add' rR
-                modifyMURef sR succ
-                liftM2 max (depthBTN lR) (depthBTN rR) >>= writeMURef dR . succ
+              else if e < e' then add' lR else add' rR >>
+                   modifyMURef sR succ >>
+                   liftM2 max (depthBTN lR) (depthBTN rR) >>= 
+                   writeMURef dR . succ
 
-  -- mContains = _
+  mContains :: Eq a => MAVLSet a s -> a -> ST s Bool
+  mContains (MAVLSet tR) e = contains' tR
+    where
+      contains' tR = do
+        tree <- readSTRef tR
+        case tree of
+          MAVLEmpty             -> return False
+          MAVLLeaf eR           -> (== e) <$> readSTRef eR
+          MAVLNode _ _ lR eR rR -> do
+            e' <- readSTRef eR
+            if e == e'
+              then return True
+              else if e < e'
+                then contains' lR
+                else contains' rR
 
   mFindAny :: MAVLSet a s -> ST s (Maybe a)
   mFindAny (MAVLSet tR) = do
