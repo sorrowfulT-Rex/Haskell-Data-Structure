@@ -4,16 +4,56 @@
 
 module MMZKDS.MAVLSet (MAVLSet) where
 
-import           Control.Monad (forM_)
+import           Control.Monad (ap, forM_, liftM2)
 import           Control.Monad.ST (ST, runST)
-import           Data.STRef (newSTRef, readSTRef, writeSTRef)
+import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.Base (MAVLSet(..), MAVLTree(..))
+import           MMZKDS.Base (AVLSet(..), MAVLSet(..), MAVLTree(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
 import           MMZKDS.Set as S (MSet(..))
-import           MMZKDS.Unboxed.MURef (newMURef, readMURef)
+import           MMZKDS.Unboxed.MURef
+  (modifyMURef, newMURef, readMURef, writeMURef)
 
+
+--------------------------------------------------------------------------------
+-- Freeze & Thaw
+--------------------------------------------------------------------------------
+
+-- | Make an immutable @AVLSet@ from a @MAVLSet@.
+-- 
+avlSetFreeze :: MAVLSet a s -> ST s (AVLSet a)
+avlSetFreeze (MAVLSet tR) = freeze' tR
+  where
+    freeze' tR = do
+      tree <- readSTRef tR
+      case tree of
+        MAVLEmpty               -> return AVLEmpty
+        MAVLLeaf eR             -> AVLLeaf <$> readSTRef eR
+        MAVLNode sR dR lR eR rR -> do
+          s <- readMURef sR
+          d <- readMURef dR
+          e <- readSTRef eR
+          l <- freeze' lR
+          r <- freeze' rR
+          return $ AVLNode s d l e r
+
+-- | Make a mutable @MAVLSet@ from a @AVLSet@.
+--
+avlSetThaw :: AVLSet a -> ST s (MAVLSet a s)
+avlSetThaw set = MAVLSet <$> (thaw' set >>= newSTRef)
+  where
+    thaw' AVLEmpty            
+      = return MAVLEmpty
+    thaw' (AVLLeaf e)         
+      =  MAVLLeaf <$> newSTRef e
+    thaw' (AVLNode s d l e r) = do
+      sR <- newMURef s
+      dR <- newMURef d
+      lR <- thaw' l >>= newSTRef
+      eR <- newSTRef e
+      rR <- thaw' r >>= newSTRef
+      return $ MAVLNode sR dR lR eR rR
 
 --------------------------------------------------------------------------------
 -- MSet Instance
@@ -44,9 +84,12 @@ instance Ord a => MSet MAVLSet a ST s where
             e' <- readSTRef eR'
             if e == e'
               then writeSTRef eR' e
-              else if e < e'
-                then add' lR
-                else add' rR
+              else do
+                if e < e'
+                  then add' lR
+                  else add' rR
+                modifyMURef sR succ
+                liftM2 max (depthBTN lR) (depthBTN rR) >>= writeMURef dR . succ
 
   -- mContains = _
   -- mFindAny = _
@@ -109,20 +152,26 @@ instance Ord a => MDSCons [a] (MAVLSet a) ST s where
             if null stack
               then return [e]
               else let MAVLNode _ _ _ eR rR = head stack
-                   in  fmap (e :) $ 
+                   in  fmap (e :) $
                          readSTRef eR >>= (<$> finish' (tail stack) rR) . (:)
           MAVLNode _ _ lR _ _ -> finish' (tree : stack) lR
 
   new :: [a] -> ST s (MAVLSet a s)
-  new xs = do
-    res <- MAVLSet <$> newSTRef MAVLEmpty
-    forM_ xs $ flip S.mAdd res
-    return res
+  new = (newSTRef MAVLEmpty >>=) .
+    (. MAVLSet) . (`ap` return) . ((>>) .) . (. flip S.mAdd) . forM_
 
-foo :: [Int]
-foo = runST $ do
-  set   <- new [1, 4, 2, 8, 5, 7, 6 :: Int] :: ST s (MAVLSet Int s)
-  tes   <- MAVLSet <$> newSTRef MAVLEmpty
-  S.mAdd 3 tes
-  -- set `mUnion` tes
-  finish set
+
+--------------------------------------------------------------------------------
+-- AVL-Tree Specific Function
+--------------------------------------------------------------------------------
+
+-- | Utility Function.
+-- Returns the depth of the the AVL-tree.
+-- 
+depthBTN :: Ord a => STRef s (MAVLTree a s) -> ST s Int
+depthBTN tR = do
+  tree <- readSTRef tR
+  case tree of
+    MAVLNode _ dR _ _ _ -> readMURef dR
+    MAVLLeaf _          -> return 1
+    _                   -> return 0

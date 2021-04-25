@@ -15,8 +15,8 @@ import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(..))
 
-instance (Ord a, Show a) => Show (AVLSet a) where
-  show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
+-- instance (Ord a, Show a) => Show (AVLSet a) where
+--   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
 
 
 --------------------------------------------------------------------------------
@@ -144,14 +144,16 @@ balanceAVL tree@(AVLNode s d l e r@(AVLNode _ rd rl _ rr))
 balanceAVL tree
   = tree
 
--- | Tests if the element is in the the AVL-tree.
+-- | Utility Function.
+-- Tests if the element is in the the AVL-tree.
 -- 
 containsBT :: Ord a => AVLSet a -> a -> Bool
 containsBT set e = case searchAVLSet e set of
   AVLEmpty -> False
   _        -> True
 
--- | Returns the depth of the the AVL-tree.
+-- | Utility Function.
+-- Returns the depth of the the AVL-tree.
 -- 
 depthBTN :: Ord a => AVLSet a -> Int
 depthBTN tree = case tree of
@@ -159,7 +161,8 @@ depthBTN tree = case tree of
   AVLLeaf _         -> 1
   _                 -> 0
 
--- | Reduce a @AVLNode@ to @AVLLeaf@ if both children are @AVLEmpty@.
+-- | Utility Function.
+-- Reduce a @AVLNode@ to @AVLLeaf@ if both children are @AVLEmpty@.
 -- 
 normAVLSet :: AVLSet a -> AVLSet a
 normAVLSet (AVLNode _ _ AVLEmpty e AVLEmpty)
@@ -167,7 +170,8 @@ normAVLSet (AVLNode _ _ AVLEmpty e AVLEmpty)
 normAVLSet tree 
   = tree
 
--- | Removes the given element from the the AVL-tree with a balancing function.
+-- | Utility Function.
+-- Removes the given element from the the AVL-tree with a balancing function.
 -- Returns a tuple consisting of the removed element (or Nothing, if the
 -- element is not in the tree), and the tree without the element.
 --
@@ -206,7 +210,8 @@ removeBT f e set
               d' = 1 + max (depthBTN l) (depthBTN subT)
           in (Just e', f $ normAVLSet $ AVLNode (s - 1) d' l eSucc subT)
 
--- | Removing the minimum (most left) element from the the AVL-tree with a 
+-- | Utility Function.
+-- Removing the minimum (most left) element from the the AVL-tree with a 
 -- balancing function.
 -- 
 removeMinBT :: Ord a 
@@ -218,7 +223,8 @@ removeMinBT f set
   where
     (me, set') = removeMinAVLSet f set
 
--- | Removing the minimum (most left) element from the AVL-Tree with a 
+-- | Utility Function.
+-- Removing the minimum (most left) element from the AVL-Tree with a 
 -- balancing function.
 -- 
 removeMinAVLSet :: Ord a 
@@ -237,7 +243,8 @@ removeMinAVLSet _ (AVLLeaf e)
 removeMinAVLSet _ _ 
   = (Nothing, AVLEmpty)
 
--- | Returns the root of the AVL-Tree.
+-- | Utility Function.
+-- Returns the root element of the AVL-Tree.
 -- 
 rootBT :: (Ord a) => AVLSet a -> Maybe a
 rootBT set = case set of
@@ -245,7 +252,8 @@ rootBT set = case set of
   AVLLeaf e         -> Just e
   AVLNode _ _ _ e _ -> Just e
 
--- | Rotate the AVL-Tree to the left with the given node as the root.
+-- | Utility Function.
+-- Rotate the AVL-Tree to the left with the given node as the root.
 -- 
 rotateLeftAVLSet :: Ord a => AVLSet a -> AVLSet a
 rotateLeftAVLSet (AVLNode s _ l e (AVLNode _ _ rl re rr))
@@ -260,7 +268,8 @@ rotateLeftAVLSet (AVLNode s _ l e (AVLLeaf re))
 rotateLeftAVLSet tree
   = tree
 
--- | Rotate the tree to the right with the given node as the root.
+-- | Utility Function.
+-- Rotate the tree to the right with the given node as the root.
 -- Works for the Generic Binary Tree Node data type @AVLSet@.
 -- 
 rotateRightAVLSet :: Ord a => AVLSet a -> AVLSet a
@@ -276,7 +285,8 @@ rotateRightAVLSet (AVLNode s _ (AVLLeaf le) e r)
 rotateRightAVLSet tree
   = tree
 
--- | Searches for the sub-tree with the given element as the root.
+-- | Utility Function.
+-- Searches for the sub-tree with the given element as the root.
 -- 
 searchAVLSet :: Ord a => a -> AVLSet a -> AVLSet a
 searchAVLSet e
@@ -291,7 +301,8 @@ searchAVLSet e
       | e > e'    = search' r
       | otherwise = t
 
--- | Returns the size (number of elements) of the AVL-Tree.
+-- | Utility Function.
+-- Returns the size (number of elements) of the AVL-Tree.
 -- 
 sizeAVLSet :: AVLSet a -> Int
 sizeAVLSet tree = case tree of

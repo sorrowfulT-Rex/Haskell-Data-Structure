@@ -28,7 +28,7 @@ data AVLSet e
   = AVLEmpty
   | AVLLeaf e
   | AVLNode {-# UNPACK #-} !Int {-# UNPACK #-} !Int (AVLSet e) e (AVLSet e)
-    deriving (Eq)
+    deriving (Eq, Show)
 
 -- | 'FDQ' is a purely functional efficient deque structure with amortised
 -- O(1) frtertion/deletion from both ends.
