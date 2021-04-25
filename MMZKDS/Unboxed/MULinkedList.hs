@@ -77,14 +77,14 @@ instance MU a s => MList MULinkedList a ST s where
   mIndicesOf :: Eq a => MULinkedList a s -> a -> ST s [Int]
   mIndicesOf mll e = do
     let mIndicesOf' i node = do
-        if isHead node
-          then return []
-          else if uNodeElem node `unsafeSTEq` return e
-            then do
-              nxt <- nextUN node
-              rst <- mIndicesOf' (i + 1) nxt
-              return $ i : rst
-            else nextUN node >>= mIndicesOf' (i + 1)
+        if      isHead node
+        then    return []
+        else if uNodeElem node `unsafeSTEq` return e
+        then do
+          nxt <- nextUN node
+          rst <- mIndicesOf' (i + 1) nxt
+          return $ i : rst
+        else    nextUN node >>= mIndicesOf' (i + 1)
     hd <- getHead mll
     nextUN hd >>= mIndicesOf' 0
 
@@ -112,9 +112,7 @@ instance MU a s => MList MULinkedList a ST s where
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
-      else do
-        let MUNode _ eR _ = cur
-        writeMURef eR e
+      else let MUNode _ eR _ = cur in writeMURef eR e
 
   mSortOn :: Ord b => (a -> b) -> MULinkedList a s -> ST s ()
   mSortOn f mll@(MULinkedList _ hR iR cR) = do

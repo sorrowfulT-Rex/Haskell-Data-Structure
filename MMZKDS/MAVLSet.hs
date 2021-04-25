@@ -98,11 +98,11 @@ instance Ord a => MSet MAVLSet a ST s where
           MAVLLeaf eR           -> (== e) <$> readSTRef eR
           MAVLNode _ _ lR eR rR -> do
             e' <- readSTRef eR
-            if e == e'
-              then return True
-              else if e < e'
-                then contains' lR
-                else contains' rR
+            if      e == e'
+            then    return True
+            else if e < e'
+            then    contains' lR
+            else    contains' rR
 
   mFindAny :: MAVLSet a s -> ST s (Maybe a)
   mFindAny (MAVLSet tR) = do

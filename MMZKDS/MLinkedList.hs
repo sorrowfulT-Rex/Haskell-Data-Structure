@@ -76,14 +76,14 @@ instance MList MLinkedList a ST s where
   mIndicesOf :: Eq a => MLinkedList a s -> a -> ST s [Int]
   mIndicesOf mll e = do
     let mIndicesOf' i node = do
-        if isHead node
-          then return []
-          else if nodeElem node `unsafeSTEq` return e
-            then do
-              nxt <- nextN node
-              rst <- mIndicesOf' (i + 1) nxt
-              return $ i : rst
-            else nextN node >>= mIndicesOf' (i + 1)
+        if      isHead node
+        then    return []
+        else if nodeElem node `unsafeSTEq` return e
+        then do
+          nxt <- nextN node
+          rst <- mIndicesOf' (i + 1) nxt
+          return $ i : rst
+        else    nextN node >>= mIndicesOf' (i + 1)
     hd <- getHead mll
     nextN hd >>= mIndicesOf' 0
 
@@ -111,9 +111,7 @@ instance MList MLinkedList a ST s where
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
-      else do
-        let MNode _ eR _ = cur
-        writeSTRef eR e
+      else let MNode _ eR _ = cur in writeSTRef eR e
 
   mSortOn :: Ord b => (a -> b) -> MLinkedList a s -> ST s ()
   mSortOn f mll@(MLinkedList _ hR iR cR) = do
