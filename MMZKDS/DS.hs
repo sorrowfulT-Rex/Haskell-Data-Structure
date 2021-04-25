@@ -44,7 +44,7 @@ class DSCons a d where
   --
   new :: a -> d
 
-instance DSCons [a] (d a) => IsList (d a) where
+instance {-# OVERLAPPABLE #-} DSCons [a] (d a) => IsList (d a) where
   type Item (d a) = a
   fromList        = new
   toList          = finish
