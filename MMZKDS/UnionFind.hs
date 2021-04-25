@@ -77,8 +77,8 @@ class (Monad (m s), MDS (q e) m s, MDSCons [[e]] (q e) m s)
   -- | Default method.
   -- | Test if two elements are in the same class.
   --
-  mEsEquiv :: Eq e => e -> e -> q e s -> m s Bool
-  mEsEquiv a b muf = do
+  mIsEquiv :: Eq e => e -> e -> q e s -> m s Bool
+  mIsEquiv a b muf = do
     aRep <- muf `mFind` a
     bRep <- muf `mFind` b
     return $ fromMaybe False $ liftM2 (==) aRep bRep

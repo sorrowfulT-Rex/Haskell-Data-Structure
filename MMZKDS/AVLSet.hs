@@ -6,14 +6,14 @@
 module MMZKDS.AVLSet (AVLSet) where
 
 import           Data.Bool (bool)
-import           Data.Foldable (toList)
+import           Data.Foldable as F (toList)
 import           Data.List (foldl')
 import           Data.Maybe (isJust)
 
 import           MMZKDS.Base (AVLSet(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.PriorityQueue (PriorityQueue(..))
-import           MMZKDS.Set as S (Set(add, contains, findAny, remove))
+import           MMZKDS.Set as S (Set(..))
 
 instance (Ord a, Show a) => Show (AVLSet a) where
   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
@@ -58,11 +58,13 @@ instance DS (AVLSet a) where
   clear = const AVLEmpty
 
   size :: AVLSet a -> Int
-  size = length
+  size AVLEmpty            = 0
+  size (AVLLeaf _)         = 1
+  size (AVLNode s _ _ _ _) = s
 
 instance Ord a => DSCons [a] (AVLSet a) where
   finish :: AVLSet a -> [a]
-  finish = toList
+  finish = F.toList
 
   new :: [a] -> AVLSet a
   new = foldl' (flip S.add) AVLEmpty

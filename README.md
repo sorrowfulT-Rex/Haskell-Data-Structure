@@ -38,18 +38,23 @@ See the [Haddocks](MMZKDS/Queue.hs) for full documentation.
 # [MMZKDS/PriorityQueue.hs](MMZKDS/PriorityQueue.hs)
 This file provides type classes for both immutable and mutable priority queues.  
 There are two classes, namely `PriorityQueue` and `MPriorityQueue`, for immutable and mutable priority queues, respectively.  
-See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation. 
+See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation.  
 
 # [MMZKDS/Set.hs](MMZKDS/Set.hs)
-This file provides type classes for both immutable and mutable sets with unique elements, including methods of addition, deletion, union, intersection *etc.*   
+This file provides type classes for both immutable and mutable sets with unique elements, including methods of addition, deletion, union, intersection *etc.*  
 There are two classes, namely `Set` and `MSet`, for immutable and mutable sets, respectively.  
 It is expected that the elements are instances of `Eq`.  
-See the [Haddocks](MMZKDS/Set.hs) for full documentation. 
+See the [Haddocks](MMZKDS/Set.hs) for full documentation.  
+
+# [MMZKDS/UnionFind.hs](MMZKDS/UnionFind.hs)
+This file provides type classes for both immutable and mutable union-finds, offering find representative and union equivalence classes operations.    
+There are two classes, namely `UnionFind` and `MUnionFind`, for immutable and mutable structures, respectively.  
+See the [Haddocks](MMZKDS/UnionFind.hs) for full documentation.  
 
 # [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
 Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MMZKDS/MArrayList.hs) for frequent state updates.
-See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation. 
+See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.  
 
 # [MMZKDS/AVLSet.hs](MMZKDS/AVLSet.hs)  
 `AVLSet` is a purely functional set structure with O(n * log n) operations. It is based on an internal AVL Tree.  
