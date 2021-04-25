@@ -2,9 +2,9 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MMZKDS.MAVLSet (MAVLSet) where
+module MMZKDS.MAVLSet (MAVLSet, avlSetFreeze, avlSetThaw) where
 
-import           Control.Monad (ap, forM_, liftM2)
+import           Control.Monad (ap, forM_, liftM2, liftM5)
 import           Control.Monad.ST (ST, runST)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
@@ -30,13 +30,12 @@ avlSetFreeze (MAVLSet tR) = freeze' tR
       case tree of
         MAVLEmpty               -> return AVLEmpty
         MAVLLeaf eR             -> AVLLeaf <$> readSTRef eR
-        MAVLNode sR dR lR eR rR -> do
-          s <- readMURef sR
-          d <- readMURef dR
-          e <- readSTRef eR
-          l <- freeze' lR
-          r <- freeze' rR
-          return $ AVLNode s d l e r
+        MAVLNode sR dR lR eR rR -> liftM5 AVLNode 
+                                          (readMURef sR) 
+                                          (readMURef dR)
+                                          (freeze' lR) 
+                                          (readSTRef eR) 
+                                          (freeze' rR)
 
 -- | Make a mutable @MAVLSet@ from a @AVLSet@.
 --
@@ -46,14 +45,14 @@ avlSetThaw set = MAVLSet <$> (thaw' set >>= newSTRef)
     thaw' AVLEmpty            
       = return MAVLEmpty
     thaw' (AVLLeaf e)         
-      =  MAVLLeaf <$> newSTRef e
-    thaw' (AVLNode s d l e r) = do
-      sR <- newMURef s
-      dR <- newMURef d
-      lR <- thaw' l >>= newSTRef
-      eR <- newSTRef e
-      rR <- thaw' r >>= newSTRef
-      return $ MAVLNode sR dR lR eR rR
+      = MAVLLeaf <$> newSTRef e
+    thaw' (AVLNode s d l e r) 
+      = liftM5 MAVLNode (newMURef s)
+                        (newMURef d)
+                        (thaw' l >>= newSTRef)
+                        (newSTRef e)
+                        (thaw' r >>= newSTRef)
+
 
 --------------------------------------------------------------------------------
 -- MSet Instance
@@ -92,7 +91,15 @@ instance Ord a => MSet MAVLSet a ST s where
                 liftM2 max (depthBTN lR) (depthBTN rR) >>= writeMURef dR . succ
 
   -- mContains = _
-  -- mFindAny = _
+
+  mFindAny :: MAVLSet a s -> ST s (Maybe a)
+  mFindAny (MAVLSet tR) = do
+    tree <- readSTRef tR
+    case tree of
+      MAVLEmpty           -> return Nothing
+      MAVLLeaf eR         -> Just <$> readSTRef eR
+      MAVLNode _ _ _ eR _ -> Just <$> readSTRef eR
+      
   -- mRemove = _
 
 
@@ -109,22 +116,15 @@ instance MDS (MAVLSet a) ST s where
     tree <- readSTRef tR
     let copy' t = case t of
           MAVLEmpty               -> newSTRef MAVLEmpty
-          MAVLLeaf eR             -> do
-            e  <- readSTRef eR
-            eR <- newSTRef e
-            newSTRef $ MAVLLeaf eR
-          MAVLNode sR dR lR eR rR -> do
-            s  <- readMURef sR
-            sR <- newMURef s
-            d  <- readMURef dR
-            dR <- newMURef d
-            e  <- readSTRef eR
-            eR <- newSTRef e
-            l  <- readSTRef lR
-            r  <- readSTRef rR
-            lR <- copy' l
-            rR <- copy' r
-            newSTRef $ MAVLNode sR dR lR eR rR
+          MAVLLeaf eR             -> readSTRef eR >>= newSTRef >>= 
+                                     newSTRef . MAVLLeaf
+          MAVLNode sR dR lR eR rR -> liftM5 MAVLNode
+                                            (readMURef sR >>= newMURef)
+                                            (readMURef dR >>= newMURef)
+                                            (readSTRef lR >>= copy')
+                                            (readSTRef eR >>= newSTRef)
+                                            (readSTRef rR >>= copy') 
+                                     >>= newSTRef
     MAVLSet <$> copy' tree
 
   size :: MAVLSet a s -> ST s Int
@@ -153,12 +153,12 @@ instance Ord a => MDSCons [a] (MAVLSet a) ST s where
               then return [e]
               else let MAVLNode _ _ _ eR rR = head stack
                    in  fmap (e :) $
-                         readSTRef eR >>= (<$> finish' (tail stack) rR) . (:)
+                       readSTRef eR >>= (<$> finish' (tail stack) rR) . (:)
           MAVLNode _ _ lR _ _ -> finish' (tree : stack) lR
 
   new :: [a] -> ST s (MAVLSet a s)
-  new = (newSTRef MAVLEmpty >>=) .
-    (. MAVLSet) . (`ap` return) . ((>>) .) . (. flip S.mAdd) . forM_
+  new = (newSTRef MAVLEmpty >>=) . (. MAVLSet) . (`ap` return) . 
+    ((>>) .) . (. flip S.mAdd) . forM_
 
 
 --------------------------------------------------------------------------------
