@@ -8,7 +8,7 @@ import           Data.Array.ST
     (MArray, STUArray, newArray, readArray, writeArray)
 
 -- | Type alias for the constraint @MArray (STUArray) s e (ST s)@, which forces
--- e to be a primitive.
+-- @e@ to be a primitive.
 -- 
 type MU e s = MArray (STUArray s) e (ST s)
 
