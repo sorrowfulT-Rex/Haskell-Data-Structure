@@ -34,7 +34,7 @@ import           MMZKDS.Utilities
 -- Freeze & Thaw
 --------------------------------------------------------------------------------
 
--- | Makes a immutable @ArrayList@ from a mutable @MArrayList@ by copying. 
+-- | Makes an immutable @ArrayList@ from a mutable @MArrayList@ by copying. 
 --
 arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreeze (MArrayList lR arrR) = do

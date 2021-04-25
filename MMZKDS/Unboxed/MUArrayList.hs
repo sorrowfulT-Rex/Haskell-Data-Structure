@@ -39,7 +39,7 @@ import           MMZKDS.Utilities
 -- Freeze & Thaw
 --------------------------------------------------------------------------------
 
--- | Makes a immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
+-- | Makes an immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
 --
 uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
                  => MUArrayList a s
