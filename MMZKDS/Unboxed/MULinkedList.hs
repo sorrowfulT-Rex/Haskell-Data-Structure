@@ -233,10 +233,23 @@ instance MU a s => MDSCons [a] (MULinkedList a) ST s where
         else liftM2 (:) (uNodeElem node) (nextUN node >>= mToList')
     getHead mll >>= nextUN >>= mToList'
 
+  {-# INLINE new #-}
   new :: [a] -> ST s (MULinkedList a s)
   new xs = do
     mll <- emptyMULinkedList
-    forM_ xs (`mAppend` mll)
+    let MULinkedList lR hR _ _ = mll
+    let len = length xs
+    cur <- readSTRef hR
+    let go e = do
+            prv <- prevUN cur
+            nR  <- newSTRef cur
+            pR  <- newSTRef prv
+            eR  <- newMURef e
+            let newNode = MUNode pR eR nR
+            writeSTRef (prevUNRef cur) newNode
+            writeSTRef (nextUNRef prv) newNode
+    forM_ xs go
+    writeMURef lR len
     return mll
 
 

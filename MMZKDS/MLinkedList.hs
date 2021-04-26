@@ -232,10 +232,23 @@ instance MDSCons [a] (MLinkedList a) ST s where
         else liftM2 (:) (nodeElem node) (nextN node >>= mToList')
     getHead mll >>= nextN >>= mToList'
 
+  {-# INLINE new #-}
   new :: [a] -> ST s (MLinkedList a s)
   new xs = do
     mll <- emptyMLinkedList
-    forM_ xs (`mAppend` mll)
+    let MLinkedList lR hR _ _ = mll
+    let len = length xs
+    cur <- readSTRef hR
+    let go e = do
+            prv <- prevN cur
+            nR  <- newSTRef cur
+            pR  <- newSTRef prv
+            eR  <- newSTRef e
+            let newNode = MNode pR eR nR
+            writeSTRef (prevNRef cur) newNode
+            writeSTRef (nextNRef prv) newNode
+    forM_ xs go
+    writeMURef lR len
     return mll
 
 
