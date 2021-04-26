@@ -21,9 +21,9 @@ data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 -- "smallest" element.
 -- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
 -- 
-data MUHeapPQ e s = MUHeapPQ {
-  mHeapS :: MURef s Int,
-  mHeapA :: STRef s (STUArray s Int e)
+data MUHeapPQ e s = MUHeapPQ 
+  { mHeapS :: MURef s Int
+  , mHeapA :: STRef s (STUArray s Int e)
   }
 
 -- | @MULinkedList@ is a doubly-linked circular list implementing the 'MList'
@@ -37,7 +37,7 @@ data MUHeapPQ e s = MUHeapPQ {
 data MULinkedList e s
   = MULinkedList
     (MURef s Int)  -- ^ Length of the Linked-List
-    (STRef s (MUNode e s)) -- ^ Point to the head node
+    (STRef s (MUNode e s)) -- ^ Pointer to the head node
     (MURef s Int)  -- ^ Index of the most recently accessed node
     (STRef s (MUNode e s)) -- ^ Pointer to the most recently accessed node
 

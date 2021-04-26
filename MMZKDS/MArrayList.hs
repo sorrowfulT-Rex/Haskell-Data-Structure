@@ -104,16 +104,16 @@ instance MList MArrayList a ST s where
   mInsert index e mal@(MArrayList lR arrR) = do
     ls <- size mal
     ps <- mPhysicalSize mal
-    if index < 0 || index > ls
-      then outOfBoundError index
-      else if ls == ps
-        then do
-          mResize (expandedSize ls) mal
-          mInsert index e mal
-        else do
-          arrST <- readSTRef arrR
-          writeMURef lR $! ls + 1
-          unsafeAddST index e (ls - 1) arrST
+    if      index < 0 || index > ls
+    then    outOfBoundError index
+    else if ls == ps
+    then do
+      mResize (expandedSize ls) mal
+      mInsert index e mal
+    else do
+      arrST <- readSTRef arrR
+      writeMURef lR $! ls + 1
+      unsafeAddST index e (ls - 1) arrST
 
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MArrayList lR arrR) = do

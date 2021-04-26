@@ -67,9 +67,9 @@ data MAVLTree e s
 -- "smallest" element.
 -- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
 -- 
-data MHeapPQ e s = MHeapPQ {
-  mHeapS :: MURef s Int,
-  mHeapA :: STRef s (STArray s Int e)
+data MHeapPQ e s = MHeapPQ
+  { mHeapS :: MURef s Int
+  , mHeapA :: STRef s (STArray s Int e)
   }
 
 -- | @MLinkedList@ is a doubly-linked circular list implementing the 'MList'
@@ -83,7 +83,7 @@ data MHeapPQ e s = MHeapPQ {
 data MLinkedList e s
   = MLinkedList
     (MURef s Int)  -- ^ Length of the Linked-List
-    (STRef s (MNode e s)) -- ^ Point to the head node
+    (STRef s (MNode e s)) -- ^ Pointer to the head node
     (MURef s Int)  -- ^ Index of the most recently accessed node
     (STRef s (MNode e s)) -- ^ Pointer to the most recently accessed node
 

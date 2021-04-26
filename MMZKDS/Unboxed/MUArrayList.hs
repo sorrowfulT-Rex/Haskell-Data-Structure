@@ -132,16 +132,16 @@ instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
   mInsert index e mal@(MUArrayList lR arrR) = do
     ls <- size mal
     ps <- mPhysicalSize mal
-    if index < 0 || index > ls
-      then return $ outOfBoundError index
-      else if ls == ps
-        then do
-          mResize (expandedSize ls) mal
-          mInsert index e mal
-        else do
-          arrST <- readSTRef arrR
-          writeMURef lR (ls + 1)
-          unsafeAddST index e (ls - 1) arrST
+    if      index < 0 || index > ls
+    then    return $ outOfBoundError index
+    else if ls == ps
+    then do
+      mResize (expandedSize ls) mal
+      mInsert index e mal
+    else do
+      arrST <- readSTRef arrR
+      writeMURef lR (ls + 1)
+      unsafeAddST index e (ls - 1) arrST
 
   mSet :: MUArrayList a s -> Int -> a -> ST s ()
   mSet mal@(MUArrayList _ arrR) index e = do
