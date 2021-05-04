@@ -176,4 +176,4 @@ instance {-# OVERLAPPABLE #-}
     => MQueue q a m s where
   mDequeue = mDequeueFront
   mEnqueue = mEnqueueEnd
-  mPeek = mPeekFront
+  mPeek    = mPeekFront

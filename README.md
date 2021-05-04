@@ -63,6 +63,7 @@ See the [Haddocks](MMZKDS/AVLSet.hs) for full documentation.
 
 # [MMZKDS/FDQ.hs](MMZKDS/FDQ.hs)  
 `FDQ` is a purely functional deque structure with amortised O(1) operations. It is based on two internal lists storing the front and rear of the deque.  
+Although it also implements the `List` type class, it is the most efficient when used as a deque.  
 See the [Haddocks](MMZKDS/FDQ.hs) for full documentation.  
 
 # [MMZKDS/MArrayList.hs](MMZKDS/MArrayList.hs)

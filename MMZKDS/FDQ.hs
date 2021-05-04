@@ -2,11 +2,15 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module MMZKDS.FDQ (FDQ) where
+module MMZKDS.FDQ (FDQ, balanceDeque) where
+
+import          Data.Maybe (listToMaybe)
 
 import          MMZKDS.Base (FDQ(..))
 import          MMZKDS.DS (DS(..), DSCons(..))
+import          MMZKDS.List (List(..))
 import          MMZKDS.Queue (Deque(..))
+import          MMZKDS.Utilities (outOfBoundError)
 
 instance Show a => Show (FDQ a) where
   show (FDQ _ frt _ end)
@@ -14,33 +18,98 @@ instance Show a => Show (FDQ a) where
 
 
 --------------------------------------------------------------------------------
+-- List Instance
+--------------------------------------------------------------------------------
+
+instance List FDQ a where
+  delete :: Int -> FDQ a -> (Maybe a, FDQ a)
+  delete index q@(FDQ fl frt el end)
+    | index < 0    = (Nothing, q)
+    | index >= len = (Nothing, q)
+    | index < fl   = let (f, e : f') = splitAt index frt
+                     in  (Just e, balanceDeque $ FDQ (fl - 1) (f ++ f') el end)
+    | otherwise    = let (r, e : r') = splitAt (len - index - 1) end
+                     in  (Just e, balanceDeque $ FDQ fl frt (el - 1) (r ++ r'))
+    where
+      len = fl + el
+
+  get :: FDQ a -> Int -> a
+  get q@(FDQ fl frt el end) index
+    | index >= len || index < 0 = outOfBoundError index
+    | index < fl                = frt !! index
+    | otherwise                 = end !! (len - index - 1)
+    where
+      len = fl + el
+
+  indicesOf :: Eq a => FDQ a -> a -> [Int]
+  indicesOf q@(FDQ fl frt _ end) e
+    = fmap fst (filter ((== e) . snd) (zip [0..] frt)) ++ 
+      fmap fst (filter ((== e) . snd) (zip [fl..] $ reverse end))
+
+  insert :: Int -> a -> FDQ a -> FDQ a
+  insert index e q@(FDQ fl frt el end)
+    | index > len = outOfBoundError index
+    | index < 0   = outOfBoundError index
+    | index <= fl = let (f, f') = splitAt index frt
+                    in balanceDeque $ FDQ (fl + 1) (f ++ e : f') el end
+    | otherwise   = let (r, r') = splitAt (len - index) end
+                    in balanceDeque $ FDQ fl frt (el + 1) (r ++ e : r')
+    where
+      len = fl + el
+
+  set :: FDQ a -> Int -> a -> FDQ a
+  set q@(FDQ fl frt el end) index e
+    | index >= len = outOfBoundError index
+    | index < 0    = outOfBoundError index
+    | index < fl   = let (f, _ : f') = splitAt index frt
+                     in  balanceDeque $ FDQ fl (f ++ e : f') el end
+    | otherwise    = let (r, _ : r') = splitAt (len - index - 1) end
+                     in  balanceDeque $ FDQ fl frt el (r ++ e : r')
+    where
+      len = fl + el
+
+  subList :: Int -> Int -> FDQ a -> FDQ a
+  subList inf sup q
+    = new $ take (sup - inf) $ drop inf $ toList q
+
+  -- Overwritten default methods
+  lastIndexOf :: Eq a => FDQ a -> a -> Maybe Int
+  lastIndexOf q@(FDQ fl frt _ end) e
+    = listToMaybe $ 
+      fmap fst (filter ((== e) . snd) (zip [sup, sup - 1..] end)) ++
+      fmap fst (filter ((== e) . snd) (zip [fl - 1, fl - 2..] $ reverse frt))
+      where
+        sup = size q - 1
+      
+
+--------------------------------------------------------------------------------
 -- Deque Instance
 --------------------------------------------------------------------------------
 
 instance Deque FDQ a where
   dequeueFront :: FDQ a -> (Maybe a, FDQ a)
-  dequeueFront (FDQ fl (e : frt) el end)
-    = (Just e, balanceDeque $ FDQ (fl - 1) frt el end)
-  dequeueFront (FDQ _ [] el (e : end))
-    = (Just e, FDQ 0 [] (el - 1) end)
-  dequeueFront q@(FDQ _ [] _ [])
-    = (Nothing, q)
+  dequeueFront = popFront
 
   dequeueEnd :: FDQ a -> (Maybe a, FDQ a)
-  dequeueEnd (FDQ fl frt el (e : end))
-    = (Just e, balanceDeque $ FDQ fl frt (el - 1) end)
-  dequeueEnd (FDQ fl (e : frt) _ [])
-    = (Just e, FDQ (fl - 1) frt 0 [])
-  dequeueEnd q@(FDQ _ [] _ [])
-    = (Nothing, q)
+  dequeueEnd = pop
 
   enqueueFront :: a -> FDQ a -> FDQ a
-  enqueueFront e (FDQ fl frt el end)
-    = balanceDeque $ FDQ (fl + 1) (e : frt) el end
+  enqueueFront = push
 
   enqueueEnd :: a -> FDQ a -> FDQ a
-  enqueueEnd e (FDQ fl frt el end)
-    = balanceDeque $ FDQ fl frt (el + 1) (e : end)
+  enqueueEnd = append
+
+  -- Overwritten default methods
+  peekFront :: FDQ e -> Maybe e
+  peekFront q
+    | isNull q  = Nothing
+    | otherwise = Just $ get q 0
+
+ -- Overwritten default methods
+  peekEnd :: FDQ e -> Maybe e
+  peekEnd q
+    | isNull q  = Nothing
+    | otherwise = Just $ get q (size q - 1)
 
 
 --------------------------------------------------------------------------------
