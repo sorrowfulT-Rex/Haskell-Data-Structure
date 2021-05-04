@@ -95,7 +95,7 @@ instance List ArrayList a where
   toList (ArrayList l arr)
     = take l $ F.toList arr
 
-  -- Overwritten default methods
+  -- Overwritten default method
   lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int
   lastIndexOf al e
     = lastIndexOf' (l - 1)

@@ -100,7 +100,7 @@ instance IArray UArray a => List UArrayList a where
         | i == sup  = []
         | otherwise = (arr ! i) : toList' (i + 1)
 
-  -- Overwritten default methods
+  -- Overwritten default method
   lastIndexOf :: Eq a => UArrayList a -> a -> Maybe Int
   lastIndexOf al e
     = lastIndexOf' (l - 1)
