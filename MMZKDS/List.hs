@@ -8,7 +8,7 @@ module MMZKDS.List (List(..), MList(..)) where
 import           Control.Monad (ap, forM, join, liftM2)
 import           Data.Foldable (toList)
 import           Data.List as L (foldl', maximumBy, sort, sortOn)
-import           Data.Maybe (fromJust, isJust, maybe)
+import           Data.Maybe (fromJust, isJust, listToMaybe, maybe)
 
 import           MMZKDS.DS as DS (DS(..), DSCons(..))
 import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
@@ -97,12 +97,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- Usually used as an infix function.
   --
   indexOf :: Eq e => l e -> e -> Maybe Int
-  indexOf l e
-    | notFound  = Nothing
-    | otherwise = Just $ head indices
-    where
-      notFound = null indices
-      indices  = indicesOf l e
+  indexOf = (listToMaybe .) . indicesOf
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the
@@ -111,12 +106,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- Usually used as an infix function.
   --
   lastIndexOf :: Eq e => l e -> e -> Maybe Int
-  lastIndexOf l e
-    | notFound  = Nothing
-    | otherwise = Just $ last indices
-    where
-      notFound = null indices
-      indices  = indicesOf l e
+  lastIndexOf = ((listToMaybe . reverse) .) . indicesOf
 
   -- | Default Method
   -- Returns a new list structure with from @[]@.
@@ -299,11 +289,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Usually used as an infix function.
   --
   mIndexOf :: Eq e => l e s -> e -> m s (Maybe Int)
-  mIndexOf ml e = do
-    indices <- mIndicesOf ml e
-    return $ if null indices
-      then Nothing
-      else Just $ head indices
+  mIndexOf = (fmap listToMaybe .) . mIndicesOf
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the
@@ -312,11 +298,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Usually used as an infix function.
   --
   mLastIndexOf :: Eq e => l e s -> e -> m s (Maybe Int)
-  mLastIndexOf ml e = do
-    indices <- mIndicesOf ml e
-    return $ if null indices
-      then Nothing
-      else Just $ last indices
+  mLastIndexOf = (fmap (listToMaybe . reverse) .) . mIndicesOf
 
   -- | Default method.
   -- Returns a new list structure with from @[]@.
