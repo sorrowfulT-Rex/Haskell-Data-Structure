@@ -17,8 +17,8 @@ import           MMZKDS.Base (MLinkedList(..), MNode(..))
 import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
-import           MMZKDS.Unboxed.MURef
-  (MURef, modifyMURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.STURef
+  (STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 
@@ -30,7 +30,7 @@ import           MMZKDS.Utilities (outOfBoundError)
 instance MList MLinkedList a ST s where
   mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MLinkedList lR _ iR cR) = do
-    l <- readMURef lR
+    l <- readSTURef lR
     if index < 0 || index >= l
       then return Nothing
       else do
@@ -39,7 +39,7 @@ instance MList MLinkedList a ST s where
                 cur <- readSTRef cR
                 prv <- prevN cur
                 nxt <- nextN cur
-                writeMURef iR (-1)
+                writeSTURef iR (-1)
                 getHead mll >>= writeSTRef cR
                 return (prv, cur, nxt)
               | i < index  = do
@@ -53,16 +53,16 @@ instance MList MLinkedList a ST s where
                 nxt <- readSTRef cR
                 cur <- prevN nxt
                 prv <- prevN cur
-                i   <- readMURef iR
-                when (i == index + 1) $ modifyMURef iR pred
+                i   <- readSTURef iR
+                when (i == index + 1) $ modifySTURef iR pred
                 return (prv, cur, nxt)
         let del prv cur nxt = do
             writeSTRef (prevNRef nxt) prv
             writeSTRef (nextNRef prv) nxt
             Just <$> nodeElem cur
-        i <- readMURef iR
+        i <- readSTURef iR
         (pre, cur, nxt) <- preDelete i l
-        writeMURef lR $! l - 1
+        writeSTURef lR $! l - 1
         del pre cur nxt
 
   mGet :: MLinkedList a s -> Int -> ST s a
@@ -89,7 +89,7 @@ instance MList MLinkedList a ST s where
 
   mInsert :: Int -> a -> MLinkedList a s -> ST s ()
   mInsert index e mll@(MLinkedList lR _ iR cR) = do
-    l <- readMURef lR
+    l <- readSTURef lR
     if index < 0 || index > l
       then outOfBoundError index
       else do
@@ -103,7 +103,7 @@ instance MList MLinkedList a ST s where
         writeSTRef (prevNRef cur) newNode
         writeSTRef (nextNRef prv) newNode
         writeSTRef cR newNode
-        writeMURef lR $! l + 1
+        writeSTURef lR $! l + 1
 
   mSet :: MLinkedList a s -> Int -> a -> ST s ()
   mSet mll@(MLinkedList _ _ _ cR) index e = do
@@ -115,7 +115,7 @@ instance MList MLinkedList a ST s where
 
   mSortOn :: Ord b => (a -> b) -> MLinkedList a s -> ST s ()
   mSortOn f mll@(MLinkedList _ hR iR cR) = do
-    i    <- readMURef iR
+    i    <- readSTURef iR
     list <- mToList mll
     let list' = sortOn (f . snd) $ zip [0..] list
     let ui'   = elemIndex i (fst <$> list')
@@ -123,7 +123,7 @@ instance MList MLinkedList a ST s where
     hd   <- getHead mll'
     writeSTRef hR $! hd
     writeSTRef cR $! hd
-    writeMURef iR $ -1
+    writeSTURef iR $ -1
     case ui' of
       Nothing -> return ()
       Just i' -> accessNode i' mll
@@ -145,7 +145,7 @@ instance MList MLinkedList a ST s where
     let newNode = MNode pR eR nR
     writeSTRef (prevNRef cur) newNode
     writeSTRef (nextNRef prv) newNode
-    modifyMURef lR succ
+    modifySTURef lR succ
 
   -- Overwritten default method
   mIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
@@ -181,9 +181,9 @@ instance MList MLinkedList a ST s where
     let newNode = MNode pR eR nR
     writeSTRef (nextNRef cur) newNode
     writeSTRef (prevNRef nxt) newNode
-    modifyMURef lR succ
-    i   <- readMURef iR
-    when (i >= 0) $ modifyMURef iR succ
+    modifySTURef lR succ
+    i   <- readSTURef iR
+    when (i >= 0) $ modifySTURef iR succ
 
 
 --------------------------------------------------------------------------------
@@ -211,8 +211,8 @@ instance MDeque MLinkedList a ST s where
 instance MDS (MLinkedList a) ST s where
   clear :: MLinkedList a s -> ST s ()
   clear (MLinkedList lR hR iR cR) = do
-    writeMURef lR 0
-    writeMURef iR $ -1
+    writeSTURef lR 0
+    writeSTURef iR $ -1
     hd <- newHead
     writeSTRef hR hd
     writeSTRef cR hd
@@ -222,7 +222,7 @@ instance MDS (MLinkedList a) ST s where
 
   size :: MLinkedList a s -> ST s Int
   size (MLinkedList lR _ _ _)
-    = readMURef lR
+    = readSTURef lR
 
 instance MDSCons [a] (MLinkedList a) ST s where
   finish :: MLinkedList a s -> ST s [a]
@@ -248,7 +248,7 @@ instance MDSCons [a] (MLinkedList a) ST s where
             writeSTRef (prevNRef cur) newNode
             writeSTRef (nextNRef prv) newNode
     forM_ xs go
-    writeMURef lR len
+    writeSTURef lR len
     return mll
 
 
@@ -261,7 +261,7 @@ instance MDSCons [a] (MLinkedList a) ST s where
 -- If the index is out of bound, set it to head.
 accessNode :: Int -> MLinkedList a s -> ST s ()
 accessNode index (MLinkedList lR hR iR cR) = do
-  l   <- readMURef lR
+  l   <- readSTURef lR
   let inBound = index >= 0 && index < l
   let front' i nR
         | i == 0    = readSTRef nR
@@ -275,17 +275,17 @@ accessNode index (MLinkedList lR hR iR cR) = do
         | index <= i               = back' (i - index) cR
         | index <= (i + l) `div` 2 = front' (index - i) cR
         | otherwise                = back' (l - index) hR
-  i   <- readMURef iR
+  i   <- readSTURef iR
   nd' <- access' i l
-  writeMURef iR $ if inBound then index else -1
+  writeSTURef iR $ if inBound then index else -1
   writeSTRef cR nd'
 
 -- | Utility Function.
 -- Creates an empty linked list.
 emptyMLinkedList :: ST s (MLinkedList a s)
 emptyMLinkedList = do
-  lR <- newMURef 0
-  iR <- newMURef $ -1
+  lR <- newSTURef 0
+  iR <- newSTURef $ -1
   hd <- newHead
   hR <- newSTRef hd
   cR <- newSTRef hd

@@ -23,7 +23,7 @@ import           MMZKDS.Base (ArrayList(..), MArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
-import           MMZKDS.Unboxed.MURef (MURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.STURef (STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -38,7 +38,7 @@ import           MMZKDS.Utilities
 --
 arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 arrayListFreeze (MArrayList lR arrR) = do
-  l     <- readMURef lR
+  l     <- readSTURef lR
   arrST <- readSTRef arrR
   arr   <- freeze arrST
   return $ ArrayList l arr
@@ -48,7 +48,7 @@ arrayListFreeze (MArrayList lR arrR) = do
 arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 arrayListThaw (ArrayList l arr) = do
   arrST <- thaw arr
-  lR    <- newMURef l
+  lR    <- newSTURef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
@@ -59,7 +59,7 @@ arrayListThaw (ArrayList l arr) = do
 --
 unsafeArrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
 unsafeArrayListFreeze (MArrayList lR arrR) = do
-  l     <- readMURef lR
+  l     <- readSTURef lR
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
   return $ ArrayList l arr
@@ -72,7 +72,7 @@ unsafeArrayListFreeze (MArrayList lR arrR) = do
 unsafeArrayListThaw :: ArrayList a -> ST s (MArrayList a s)
 unsafeArrayListThaw (ArrayList l arr) = do
   arrST <- unsafeThaw arr
-  lR    <- newMURef l
+  lR    <- newSTURef l
   arrR  <- newSTRef arrST
   return $ MArrayList lR arrR
 
@@ -112,7 +112,7 @@ instance MList MArrayList a ST s where
       mInsert index e mal
     else do
       arrST <- readSTRef arrR
-      writeMURef lR $! ls + 1
+      writeSTURef lR $! ls + 1
       unsafeAddST index e (ls - 1) arrST
 
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
@@ -124,7 +124,7 @@ instance MList MArrayList a ST s where
       else do
         arrST <- readSTRef arrR
         v     <- readArray arrST index
-        writeMURef lR $! ls - 1
+        writeSTURef lR $! ls - 1
         unsafeRemoveST index (ls - 2) arrST
         return $ Just v
 
@@ -157,7 +157,7 @@ instance MList MArrayList a ST s where
         resST <- newArray_ (0, ps - 1)
         forM_ [0..(len' - 1)]
           $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
-        lR <- newMURef len'
+        lR <- newSTURef len'
         resR <- newSTRef resST
         return $ MArrayList lR resR
 
@@ -197,9 +197,9 @@ instance MArrayBased MArrayList a ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- mNewList []
-    rl                  <- readMURef rlR
+    rl                  <- readSTURef rlR
     resST               <- readSTRef resR
-    writeMURef lR rl
+    writeSTURef lR rl
     writeSTRef arrR resST
 
   mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
@@ -216,7 +216,7 @@ instance MArrayBased MArrayList a ST s where
     | s < 0 = arrayLengthOverflowError
   mResize s (MArrayList lR arrR) = do
     arrST    <- readSTRef arrR
-    l        <- readMURef lR
+    l        <- readSTURef lR
     (_, sup) <- getBounds arrST
     let s' = max s (sup + 1)
     resST    <- newArray_ (0, s' - 1)
@@ -232,7 +232,7 @@ instance MArrayBased MArrayList a ST s where
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
     unsafeCopyArray arrST resST (0, ls - 1)
-    rlR   <- newMURef ls
+    rlR   <- newSTURef ls
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
@@ -262,21 +262,21 @@ instance MDeque MArrayList a ST s where
 instance MDS (MArrayList a) ST s where
   clear :: MArrayList a s -> ST s ()
   clear (MArrayList lR _)
-    = writeMURef lR 0
+    = writeSTURef lR 0
 
   copy :: MArrayList a s -> ST s (MArrayList a s)
   copy (MArrayList lR arrR) = do
-    l     <- readMURef lR
+    l     <- readSTURef lR
     arrST <- readSTRef arrR
     resST <- newArray_ (0, initialSize l - 1)
     unsafeCopyArray arrST resST (0, l - 1)
-    rlR   <- newMURef l
+    rlR   <- newSTURef l
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
 
   size :: MArrayList a s -> ST s Int
   size (MArrayList lR _)
-    = readMURef lR
+    = readSTURef lR
 
 instance MDSCons [a] (MArrayList a) ST s where
   finish :: MArrayList a s -> ST s [a]

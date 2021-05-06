@@ -12,8 +12,8 @@ import           MMZKDS.Base (AVLSet(..), MAVLSet(..), MAVLTree(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
 import           MMZKDS.Set as S (MSet(..))
-import           MMZKDS.Unboxed.MURef
-  (modifyMURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.STURef
+  (modifySTURef, newSTURef, readSTURef, writeSTURef)
 
 
 --------------------------------------------------------------------------------
@@ -31,8 +31,8 @@ avlSetFreeze (MAVLSet tR) = freeze' tR
         MAVLEmpty               -> return AVLEmpty
         MAVLLeaf eR             -> AVLLeaf <$> readSTRef eR
         MAVLNode sR dR lR eR rR -> liftM5 AVLNode 
-                                          (readMURef sR) 
-                                          (readMURef dR)
+                                          (readSTURef sR) 
+                                          (readSTURef dR)
                                           (freeze' lR) 
                                           (readSTRef eR) 
                                           (freeze' rR)
@@ -47,8 +47,8 @@ avlSetThaw set = MAVLSet <$> (thaw' set >>= newSTRef)
     thaw' (AVLLeaf e)         
       = MAVLLeaf <$> newSTRef e
     thaw' (AVLNode s d l e r) 
-      = liftM5 MAVLNode (newMURef s)
-                        (newMURef d)
+      = liftM5 MAVLNode (newSTURef s)
+                        (newSTURef d)
                         (thaw' l >>= newSTRef)
                         (newSTRef e)
                         (thaw' r >>= newSTRef)
@@ -71,8 +71,8 @@ instance Ord a => MSet MAVLSet a ST s where
             if e == e'
               then writeSTRef eR' e
               else do
-                s2 <- newMURef 2
-                d2 <- newMURef 2
+                s2 <- newSTURef 2
+                d2 <- newSTURef 2
                 eR <- newSTRef e
                 ep <- newSTRef MAVLEmpty
                 sb <- newSTRef (MAVLLeaf eR)
@@ -84,9 +84,9 @@ instance Ord a => MSet MAVLSet a ST s where
             if e == e'
               then writeSTRef eR' e
               else if e < e' then add' lR else add' rR >>
-                   modifyMURef sR succ >>
+                   modifySTURef sR succ >>
                    liftM2 max (depthBTN lR) (depthBTN rR) >>= 
-                   writeMURef dR . succ
+                   writeSTURef dR . succ
 
   mContains :: Eq a => MAVLSet a s -> a -> ST s Bool
   mContains (MAVLSet tR) e = contains' tR
@@ -131,8 +131,8 @@ instance MDS (MAVLSet a) ST s where
           MAVLLeaf eR             -> readSTRef eR >>= newSTRef >>= 
                                      newSTRef . MAVLLeaf
           MAVLNode sR dR lR eR rR -> liftM5 MAVLNode
-                                            (readMURef sR >>= newMURef)
-                                            (readMURef dR >>= newMURef)
+                                            (readSTURef sR >>= newSTURef)
+                                            (readSTURef dR >>= newSTURef)
                                             (readSTRef lR >>= copy')
                                             (readSTRef eR >>= newSTRef)
                                             (readSTRef rR >>= copy') 
@@ -145,7 +145,7 @@ instance MDS (MAVLSet a) ST s where
     case tree of
       MAVLEmpty           -> return 0
       MAVLLeaf _          -> return 1
-      MAVLNode sR _ _ _ _ -> readMURef sR
+      MAVLNode sR _ _ _ _ -> readSTURef sR
 
 
 instance Ord a => MDSCons [a] (MAVLSet a) ST s where
@@ -184,6 +184,6 @@ depthBTN :: Ord a => STRef s (MAVLTree a s) -> ST s Int
 depthBTN tR = do
   tree <- readSTRef tR
   case tree of
-    MAVLNode _ dR _ _ _ -> readMURef dR
+    MAVLNode _ dR _ _ _ -> readSTURef dR
     MAVLLeaf _          -> return 1
     _                   -> return 0

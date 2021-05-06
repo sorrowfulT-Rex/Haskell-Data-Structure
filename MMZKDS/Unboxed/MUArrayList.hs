@@ -22,8 +22,8 @@ import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
-import           MMZKDS.Unboxed.MURef
-  (MU, MURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.STURef
+  (STU, STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
 import           MMZKDS.List (List(newList, toList), MList(..))
@@ -45,7 +45,7 @@ uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
                  => MUArrayList a s
                  -> ST s (UArrayList a)
 uArrayListFreeze (MUArrayList lR arrR) = do
-  l     <- readMURef lR
+  l     <- readSTURef lR
   arrST <- readSTRef arrR
   arr   <- freeze arrST
   return $ UArrayList l arr
@@ -57,7 +57,7 @@ uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
                -> ST s (MUArrayList a s)
 uArrayListThaw (UArrayList l arr) = do
   arrST <- thaw arr :: ST s (STUArray s Int a)
-  lR    <- newMURef l
+  lR    <- newSTURef l
   arrR  <- newSTRef arrST
   return $ MUArrayList lR arrR
 
@@ -67,11 +67,11 @@ uArrayListThaw (UArrayList l arr) = do
 -- The original mutable list should not be used ever since.
 --
 unsafeUArrayListFreeze :: 
-  forall a s. (IArray UArray a, MU a s)
+  forall a s. (IArray UArray a, STU a s)
   => MUArrayList a s
   -> ST s (UArrayList a)
 unsafeUArrayListFreeze (MUArrayList lR arrR) = do
-  l     <- readMURef lR
+  l     <- readSTURef lR
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
   return $ UArrayList l arr
@@ -82,12 +82,12 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 -- The original immutable list should not be used ever since.
 --
 unsafeUArrayListThaw :: 
-  forall a s. (IArray UArray a, MU a s)
+  forall a s. (IArray UArray a, STU a s)
   => UArrayList a
   -> ST s (MUArrayList a s)
 unsafeUArrayListThaw (UArrayList l arr) = do
   arrST <- unsafeThaw arr
-  lR    <- newMURef l
+  lR    <- newSTURef l
   arrR  <- newSTRef arrST
   return $ MUArrayList lR arrR
 
@@ -96,7 +96,7 @@ unsafeUArrayListThaw (UArrayList l arr) = do
 -- MList Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
+instance (IArray UArray a, STU a s) => MList MUArrayList a ST s where
   mGet :: MUArrayList a s -> Int -> ST s a
   mGet mal@(MUArrayList lR arrR) index = do
     l <- size mal
@@ -124,7 +124,7 @@ instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
       else do
         arrST <- readSTRef arrR
         v     <- readArray arrST index
-        writeMURef lR (ls - 1)
+        writeSTURef lR (ls - 1)
         unsafeRemoveST index (ls - 2) arrST
         return $ Just v
 
@@ -140,7 +140,7 @@ instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
       mInsert index e mal
     else do
       arrST <- readSTRef arrR
-      writeMURef lR (ls + 1)
+      writeSTURef lR (ls + 1)
       unsafeAddST index e (ls - 1) arrST
 
   mSet :: MUArrayList a s -> Int -> a -> ST s ()
@@ -172,7 +172,7 @@ instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
         resST <- newArray_ (0, ps - 1)
         forM_ [0..(len' - 1)]
           $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
-        lR <- newMURef len'
+        lR <- newSTURef len'
         resR <- newSTRef resST
         return $ MUArrayList lR resR
 
@@ -208,13 +208,13 @@ instance (IArray UArray a, MU a s) => MList MUArrayList a ST s where
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
+instance (IArray UArray a, STU a s) => MArrayBased MUArrayList a ST s where
   mDeepClear :: MUArrayList a s -> ST s ()
   mDeepClear (MUArrayList lR arrR) = do
     MUArrayList rlR resR <- mNewList []
-    rl                   <- readMURef rlR
+    rl                   <- readSTURef rlR
     resST                <- readSTRef resR
-    writeMURef lR rl
+    writeSTURef lR rl
     writeSTRef arrR resST
 
   mNewWithSize  :: Foldable f => Int -> f a -> ST s (MUArrayList a s)
@@ -231,7 +231,7 @@ instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
     | s < 0 = return arrayLengthOverflowError
   mResize s (MUArrayList lR arrR) = do
     arrST    <- readSTRef arrR
-    l        <- readMURef lR
+    l        <- readSTURef lR
     (_, sup) <- getBounds arrST
     let s' = max s (sup + 1)
     resST    <- newArray_ (0, s' - 1)
@@ -247,7 +247,7 @@ instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
     unsafeCopyArray arrST resST (0, ls - 1)
-    rlR   <- newMURef ls
+    rlR   <- newSTURef ls
     resR  <- newSTRef resST
     return $ MUArrayList rlR resR
 
@@ -256,7 +256,7 @@ instance (IArray UArray a, MU a s) => MArrayBased MUArrayList a ST s where
 -- MDeque Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MU a s) => MDeque MUArrayList a ST s where
+instance (IArray UArray a, STU a s) => MDeque MUArrayList a ST s where
   mDequeueFront :: MUArrayList a s -> ST s (Maybe a)
   mDequeueFront = mPopFront
 
@@ -274,24 +274,24 @@ instance (IArray UArray a, MU a s) => MDeque MUArrayList a ST s where
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, MU a s) => MDS (MUArrayList a) ST s where
+instance (IArray UArray a, STU a s) => MDS (MUArrayList a) ST s where
   clear :: MUArrayList a s -> ST s ()
   clear (MUArrayList lR _)
-    = writeMURef lR 0
+    = writeSTURef lR 0
 
   copy :: MUArrayList a s -> ST s (MUArrayList a s)
   copy (MUArrayList lR arrR) = do
-    l     <- readMURef lR
+    l     <- readSTURef lR
     arrST <- readSTRef arrR
     resST <- newArray_ (0, initialSize l - 1)
     unsafeCopyArray arrST resST (0, l - 1)
-    rlR   <- newMURef l
+    rlR   <- newSTURef l
     resR  <- newSTRef resST
     return $ MUArrayList rlR resR
 
   size :: MUArrayList a s -> ST s Int
   size (MUArrayList lR _)
-    = readMURef lR
+    = readSTURef lR
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MDSCons [a] (MUArrayList a) ST s where

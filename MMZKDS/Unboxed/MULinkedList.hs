@@ -18,8 +18,8 @@ import           MMZKDS.List as L (MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.Base (MULinkedList(..), MUNode(..))
-import           MMZKDS.Unboxed.MURef
-  (MU, MURef, modifyMURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.STURef
+  (STU, STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
 import           MMZKDS.Utilities (outOfBoundError)
 
@@ -28,10 +28,10 @@ import           MMZKDS.Utilities (outOfBoundError)
 -- List Instance
 --------------------------------------------------------------------------------
 
-instance MU a s => MList MULinkedList a ST s where
+instance STU a s => MList MULinkedList a ST s where
   mDelete :: Int -> MULinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MULinkedList lR _ iR cR) = do
-    l <- readMURef lR
+    l <- readSTURef lR
     if index < 0 || index >= l
       then return Nothing
       else do
@@ -40,7 +40,7 @@ instance MU a s => MList MULinkedList a ST s where
                 cur <- readSTRef cR
                 prv <- prevUN cur
                 nxt <- nextUN cur
-                writeMURef iR (-1)
+                writeSTURef iR (-1)
                 getHead mll >>= writeSTRef cR
                 return (prv, cur, nxt)
               | i < index  = do
@@ -54,16 +54,16 @@ instance MU a s => MList MULinkedList a ST s where
                 nxt <- readSTRef cR
                 cur <- prevUN nxt
                 prv <- prevUN cur
-                i   <- readMURef iR
-                when (i == index + 1) $ modifyMURef iR pred
+                i   <- readSTURef iR
+                when (i == index + 1) $ modifySTURef iR pred
                 return (prv, cur, nxt)
         let del prv cur nxt = do
             writeSTRef (prevUNRef nxt) prv
             writeSTRef (nextUNRef prv) nxt
             Just <$> uNodeElem cur
-        i <- readMURef iR
+        i <- readSTURef iR
         (pre, cur, nxt) <- preDelete i l
-        writeMURef lR $ l - 1
+        writeSTURef lR $ l - 1
         del pre cur nxt
 
   mGet :: MULinkedList a s -> Int -> ST s a
@@ -90,7 +90,7 @@ instance MU a s => MList MULinkedList a ST s where
 
   mInsert :: Int -> a -> MULinkedList a s -> ST s ()
   mInsert index e mll@(MULinkedList lR _ iR cR) = do
-    l <- readMURef lR
+    l <- readSTURef lR
     if index < 0 || index > l
       then outOfBoundError index
       else do
@@ -99,12 +99,12 @@ instance MU a s => MList MULinkedList a ST s where
         prv <- prevUN cur
         nR  <- newSTRef cur
         pR  <- newSTRef prv
-        eR  <- newMURef e
+        eR  <- newSTURef e
         let newNode = MUNode pR eR nR
         writeSTRef (prevUNRef cur) newNode
         writeSTRef (nextUNRef prv) newNode
         writeSTRef cR newNode
-        writeMURef lR $ l + 1
+        writeSTURef lR $ l + 1
 
   mSet :: MULinkedList a s -> Int -> a -> ST s ()
   mSet mll@(MULinkedList _ _ _ cR) index e = do
@@ -112,11 +112,11 @@ instance MU a s => MList MULinkedList a ST s where
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
-      else let MUNode _ eR _ = cur in writeMURef eR e
+      else let MUNode _ eR _ = cur in writeSTURef eR e
 
   mSortOn :: Ord b => (a -> b) -> MULinkedList a s -> ST s ()
   mSortOn f mll@(MULinkedList _ hR iR cR) = do
-    i    <- readMURef iR
+    i    <- readSTURef iR
     list <- mToList mll
     let list' = sortOn (f . snd) $ zip [0..] list
     let ui'   = elemIndex i (fst <$> list')
@@ -124,7 +124,7 @@ instance MU a s => MList MULinkedList a ST s where
     hd   <- getHead mll'
     writeSTRef hR $! hd
     writeSTRef cR $! hd
-    writeMURef iR $ -1
+    writeSTURef iR $ -1
     case ui' of
       Nothing -> return ()
       Just i' -> accessUNode i' mll
@@ -142,11 +142,11 @@ instance MU a s => MList MULinkedList a ST s where
     prv <- prevUN cur
     nR  <- newSTRef cur
     pR  <- newSTRef prv
-    eR  <- newMURef e
+    eR  <- newSTURef e
     let newNode = MUNode pR eR nR
     writeSTRef (prevUNRef cur) newNode
     writeSTRef (nextUNRef prv) newNode
-    modifyMURef lR succ
+    modifySTURef lR succ
 
   -- Overwritten default method
   mIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
@@ -178,20 +178,20 @@ instance MU a s => MList MULinkedList a ST s where
     nxt <- nextUN cur
     pR  <- newSTRef cur
     nR  <- newSTRef nxt
-    eR  <- newMURef e
+    eR  <- newSTURef e
     let newNode = MUNode pR eR nR
     writeSTRef (nextUNRef cur) newNode
     writeSTRef (prevUNRef nxt) newNode
-    modifyMURef lR succ
-    i   <- readMURef iR
-    when (i >= 0) $ modifyMURef iR succ
+    modifySTURef lR succ
+    i   <- readSTURef iR
+    when (i >= 0) $ modifySTURef iR succ
 
 
 --------------------------------------------------------------------------------
 -- MDeque Instance
 --------------------------------------------------------------------------------
 
-instance MU a s => MDeque MULinkedList a ST s where
+instance STU a s => MDeque MULinkedList a ST s where
   mDequeueFront :: MULinkedList a s -> ST s (Maybe a)
   mDequeueFront = mPopFront
 
@@ -209,11 +209,11 @@ instance MU a s => MDeque MULinkedList a ST s where
 -- MDS & MDSCons Instances
 --------------------------------------------------------------------------------
 
-instance MU a s => MDS (MULinkedList a) ST s where
+instance STU a s => MDS (MULinkedList a) ST s where
   clear :: MULinkedList a s -> ST s ()
   clear (MULinkedList lR hR iR cR) = do
-    writeMURef lR 0
-    writeMURef iR $ -1
+    writeSTURef lR 0
+    writeSTURef iR $ -1
     hd <- newHead
     writeSTRef hR hd
     writeSTRef cR hd
@@ -223,9 +223,9 @@ instance MU a s => MDS (MULinkedList a) ST s where
 
   size :: MULinkedList a s -> ST s Int
   size (MULinkedList lR _ _ _)
-    = readMURef lR
+    = readSTURef lR
 
-instance MU a s => MDSCons [a] (MULinkedList a) ST s where
+instance STU a s => MDSCons [a] (MULinkedList a) ST s where
   finish :: MULinkedList a s -> ST s [a]
   finish mll = do
     let mToList' node = if isHead node
@@ -244,12 +244,12 @@ instance MU a s => MDSCons [a] (MULinkedList a) ST s where
             prv <- prevUN cur
             nR  <- newSTRef cur
             pR  <- newSTRef prv
-            eR  <- newMURef e
+            eR  <- newSTURef e
             let newNode = MUNode pR eR nR
             writeSTRef (prevUNRef cur) newNode
             writeSTRef (nextUNRef prv) newNode
     forM_ xs go
-    writeMURef lR len
+    writeSTURef lR len
     return mll
 
 
@@ -262,7 +262,7 @@ instance MU a s => MDSCons [a] (MULinkedList a) ST s where
 -- If the index is out of bound, set it to head.
 accessUNode :: Int -> MULinkedList a s -> ST s ()
 accessUNode index (MULinkedList lR hR iR cR) = do
-  l   <- readMURef lR
+  l   <- readSTURef lR
   let inBound = index >= 0 && index < l
   let front' i nR
         | i == 0    = readSTRef nR
@@ -276,17 +276,17 @@ accessUNode index (MULinkedList lR hR iR cR) = do
         | index <= i               = back' (i - index) cR
         | index <= (i + l) `div` 2 = front' (index - i) cR
         | otherwise                = back' (l - index) hR
-  i   <- readMURef iR
+  i   <- readSTURef iR
   nd' <- access' i l
-  writeMURef iR $ if inBound then index else -1
+  writeSTURef iR $ if inBound then index else -1
   writeSTRef cR nd'
 
 -- | Utility Function.
 -- Creates an empty linked list.
 emptyMULinkedList :: ST s (MULinkedList a s)
 emptyMULinkedList = do
-  lR <- newMURef 0
-  iR <- newMURef $ -1
+  lR <- newSTURef 0
+  iR <- newSTURef $ -1
   hd <- newHead
   hR <- newSTRef hd
   cR <- newSTRef hd
@@ -346,6 +346,6 @@ prevUNRef (MUNode pR _ _)
 -- | Unsafe: Does not check if the node is head.
 -- Get the element from an @MUNode@.
 -- Pre: The node is not head.
-uNodeElem :: MU a s => MUNode a s -> ST s a
+uNodeElem :: STU a s => MUNode a s -> ST s a
 uNodeElem (MUNode _ eR _)
-  = readMURef eR
+  = readSTURef eR

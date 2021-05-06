@@ -21,7 +21,7 @@ import           MMZKDS.ArrayBased (MArrayBased(..))
 import           MMZKDS.Base (MHeapPQ(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
-import           MMZKDS.Unboxed.MURef (MURef, newMURef, readMURef, writeMURef)
+import           MMZKDS.Unboxed.STURef (STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe
   (unsafeCopyArray, unsafeLeftChild, unsafeParent, unsafeRightChild)
 import           MMZKDS.Utilities
@@ -41,7 +41,7 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
       then mResize (expandedSize ls) mh >> mAdd e mh
       else do
         arrST <- readSTRef arrR
-        writeMURef lR $! ls + 1
+        writeSTURef lR $! ls + 1
         writeArray arrST ls e
         let bubbleUp i = when (i > 0) $ do
             let pI = unsafeParent i
@@ -66,7 +66,7 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
         writeArray arrST 0 lastE
         writeArray arrST lastI popE
         fixHead arrST lastI 0 (glc 0) (grc 0)
-        writeMURef lR lastI
+        writeSTURef lR lastI
         return $ Just popE
 
   -- Overwritten default method
@@ -84,14 +84,14 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
   mDeepClear :: MHeapPQ a s -> ST s ()
   mDeepClear mh =
     (newArray_ (0, initialSize 0 - 1) :: ST s (STArray s Int a)) >>=
-      writeSTRef (mHeapA mh) >> writeMURef (mHeapS mh) 0
+      writeSTRef (mHeapA mh) >> writeSTURef (mHeapS mh) 0
 
   mNewWithSize :: Foldable f => Int -> f a -> ST s (MHeapPQ a s)
   mNewWithSize s fd = do
     let l = length fd
     arrST <- (newListArray :: (Int, Int) -> [a] -> ST s (STArray s Int a))
       (0, max s (initialSize l) - 1) $ toList fd
-    lR    <- newMURef l
+    lR    <- newSTURef l
     aR    <- newSTRef arrST
     let toMinHeap mi
           | isNothing mi = return Nothing
@@ -114,7 +114,7 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
     | s < 0 = arrayLengthOverflowError
   mResize s (MHeapPQ lR arrR) = do
     arrST    <- readSTRef arrR
-    l        <- readMURef lR
+    l        <- readSTURef lR
     (_, sup) <- getBounds arrST
     resST    <- newArray_ (0, max s (sup + 1) - 1)
     forM_ [0..(l - 1)] $ \i -> do
@@ -124,8 +124,8 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
 
   trueCopy :: MHeapPQ a s -> ST s (MHeapPQ a s)
   trueCopy mh = do
-    l     <- readMURef (mHeapS mh)
-    lR    <- newMURef l
+    l     <- readSTURef (mHeapS mh)
+    lR    <- newSTURef l
     arrST <- readSTRef (mHeapA mh)
     resST <- getBounds arrST >>= newArray_
     unsafeCopyArray arrST resST (0, l - 1)
@@ -139,12 +139,12 @@ instance Ord a => MArrayBased MHeapPQ a ST s where
 
 instance Ord a => MDS (MHeapPQ a) ST s where
   clear :: MHeapPQ a s -> ST s ()
-  clear = flip writeMURef 0 . mHeapS
+  clear = flip writeSTURef 0 . mHeapS
 
   copy :: MHeapPQ a s -> ST s (MHeapPQ a s)
   copy mh = do
-    l     <- readMURef (mHeapS mh)
-    lR    <- newMURef l
+    l     <- readSTURef (mHeapS mh)
+    lR    <- newSTURef l
     arrST <- readSTRef (mHeapA mh)
     resST <- newArray_ (0, initialSize l - 1)
     unsafeCopyArray arrST resST (0, l - 1)
@@ -152,13 +152,13 @@ instance Ord a => MDS (MHeapPQ a) ST s where
     return $ MHeapPQ lR aR
 
   size :: MHeapPQ a s -> ST s Int
-  size = readMURef . mHeapS
+  size = readSTURef . mHeapS
 
 instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
   finish :: MHeapPQ a s -> ST s [a]
   finish mh = do
     let freeze' = freeze :: STArray s Int a -> ST s (Array Int a)
-    readMURef (mHeapS mh) >>=
+    readSTURef (mHeapS mh) >>=
       flip fmap (readSTRef (mHeapA mh) >>= freeze') . (. toList) . take
 
   new :: [a] -> ST s (MHeapPQ a s)

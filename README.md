@@ -83,6 +83,6 @@ See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.
 # [MMZKDS/UnBoxed](MMZKDS/Unboxed/)
 Contains the unboxed version of (some of) the data structures.  
 
-# [MMZKDS/UnBoxed/MURef.hs](MMZKDS/Unboxed/MURef.hs)
+# [MMZKDS/UnBoxed/STURef.hs](MMZKDS/Unboxed/STURef.hs)
 The strict unboxed equivalence for `STRef`.  
-See the [Haddocks](MMZKDS/Unboxed/MURef.hs) for full documentation.  
+See the [Haddocks](MMZKDS/Unboxed/STURef.hs) for full documentation.  

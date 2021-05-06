@@ -5,14 +5,14 @@ module MMZKDS.Unboxed.Base
 import           Data.STRef (STRef)
 import           Data.Array.Base (STUArray, UArray)
 
-import           MMZKDS.Unboxed.MURef (MURef)
+import           MMZKDS.Unboxed.STURef (STURef)
 
 -- | @MUArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STUArray@.
 -- It has O(1) random access, amortised O(1) appending/popping, O(n) 
 -- inserting/deleting, O(n) searching, and O(n * log n) sorting.
 --
-data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
+data MUArrayList e s = MUArrayList (STURef s Int) (STRef s (STUArray s Int e))
 
 -- | 'MUHeapPQ' is a min-heap implementing the 'MPriorityQueue' class with
 -- unboxed elements.
@@ -22,7 +22,7 @@ data MUArrayList e s = MUArrayList (MURef s Int) (STRef s (STUArray s Int e))
 -- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
 -- 
 data MUHeapPQ e s = MUHeapPQ 
-  { mHeapS :: MURef s Int
+  { mHeapS :: STURef s Int
   , mHeapA :: STRef s (STUArray s Int e)
   }
 
@@ -36,16 +36,16 @@ data MUHeapPQ e s = MUHeapPQ
 --
 data MULinkedList e s
   = MULinkedList
-    (MURef s Int)  -- ^ Length of the Linked-List
+    (STURef s Int)  -- ^ Length of the Linked-List
     (STRef s (MUNode e s)) -- ^ Pointer to the head node
-    (MURef s Int)  -- ^ Index of the most recently accessed node
+    (STURef s Int)  -- ^ Index of the most recently accessed node
     (STRef s (MUNode e s)) -- ^ Pointer to the most recently accessed node
 
 -- | @MUNode@ represents a single node in @MULinkedList@.
 --
 data MUNode e s
   = MHead (STRef s (MUNode e s)) (STRef s (MUNode e s))
-  | MUNode (STRef s (MUNode e s)) (MURef s e) (STRef s (MUNode e s))
+  | MUNode (STRef s (MUNode e s)) (STURef s e) (STRef s (MUNode e s))
 
 -- | @UArrayList@ is a data structure implementing the 'List' class with an
 -- internal array storing unboxed values.

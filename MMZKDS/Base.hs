@@ -8,7 +8,7 @@ import           Data.Array (Array)
 import           Data.Array.ST (STArray)
 import           Data.STRef (STRef)
 
-import           MMZKDS.Unboxed.MURef (MURef)
+import           MMZKDS.Unboxed.STURef (STURef)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
@@ -40,7 +40,7 @@ data FDQ e = FDQ {-# UNPACK #-} !Int [e] {-# UNPACK #-} !Int [e]
 -- It has O(1) random access, amortised O(1) appending/popping, O(n) 
 -- inserting/deleting, O(n) searching, and O(n * log n) sorting.
 --
-data MArrayList e s = MArrayList (MURef s Int) (STRef s (STArray s Int e))
+data MArrayList e s = MArrayList (STURef s Int) (STRef s (STArray s Int e))
 
 -- | A mmutable set structure implemented with an internal (mutable) AVL-Tree
 -- using @ST@.
@@ -54,8 +54,8 @@ newtype MAVLSet e s = MAVLSet (STRef s (MAVLTree e s))
 data MAVLTree e s
   = MAVLEmpty
   | MAVLLeaf (STRef s e)
-  | MAVLNode (MURef s Int) 
-             (MURef s Int) 
+  | MAVLNode (STURef s Int) 
+             (STURef s Int) 
              (STRef s (MAVLTree e s)) 
              (STRef s e) 
              (STRef s (MAVLTree e s))
@@ -68,7 +68,7 @@ data MAVLTree e s
 -- It has O(log n) adding, O(log n) popping, and O(n) construction from list.
 -- 
 data MHeapPQ e s = MHeapPQ
-  { mHeapS :: MURef s Int
+  { mHeapS :: STURef s Int
   , mHeapA :: STRef s (STArray s Int e)
   }
 
@@ -82,9 +82,9 @@ data MHeapPQ e s = MHeapPQ
 --
 data MLinkedList e s
   = MLinkedList
-    (MURef s Int)  -- ^ Length of the Linked-List
+    (STURef s Int)  -- ^ Length of the Linked-List
     (STRef s (MNode e s)) -- ^ Pointer to the head node
-    (MURef s Int)  -- ^ Index of the most recently accessed node
+    (STURef s Int)  -- ^ Index of the most recently accessed node
     (STRef s (MNode e s)) -- ^ Pointer to the most recently accessed node
 
 -- | @MNode@ represents a single node in @MLinkedList@.
