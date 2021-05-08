@@ -1,6 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.Set (Set(..), MSet(..)) where
 
@@ -175,3 +177,15 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
          -> c1 e s
          -> m s ()
   mUnion = flip ((>>=) . (MDS.finish :: c1 e s -> m s [e])) . mapM_ . flip mAdd
+
+
+--------------------------------------------------------------------------------
+-- Set -> Monoid
+--------------------------------------------------------------------------------
+
+instance {-# OVERLAPPABLE #-} (Set c e) => Semigroup (c e) where
+  (<>) = mappend
+
+instance {-# OVERLAPPABLE #-} (Set c e) => Monoid (c e) where
+  mempty  = newSet []
+  mappend = union
