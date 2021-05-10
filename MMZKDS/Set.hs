@@ -1,6 +1,6 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -30,33 +30,33 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- "stream" the set with @toList@, apply the functions, then "collect" it back 
 -- with "@newSet@".
 --
-class (DS (c e), DSCons [e] (c e)) => Set c e where
+class (DS c, DSCons [e] c e) => Set c e | c -> e where
   -- | Adds an element into the set.
   -- If the element is not already in the set, returns a new set with this
   -- element, otherwise replaces the old element in the set with the new one.
   --
-  add :: e -> c e -> c e
+  add :: e -> c -> c
 
   -- | Tests if the element is in the set.
   --
-  contains :: c e -> e -> Bool
+  contains :: c -> e -> Bool
 
   -- | Returns an element from the set if it is non-empty.
   -- Does not guarantee which element is returned.
   -- 
-  findAny :: c e -> Maybe e
+  findAny :: c -> Maybe e
 
   -- | Removes the given element from the set.
   -- Returns a tuple consisting of the removed element (or Nothing, if the
   -- element is not in the set), and the set without the element.
   --
-  remove :: e -> c e -> (Maybe e, c e)
+  remove :: e -> c -> (Maybe e, c)
 
   -- | Default method.
   -- Computes the difference of two sets.
   --
-  difference :: forall c1. DSCons [e] (c1 e) => c e -> c1 e -> c e
-  difference = (. (DS.finish :: c1 e -> [e])) . foldl' ((snd .) . flip remove)
+  difference :: forall c1. DSCons [e] c1 e => c -> c1 -> c
+  difference = (. (DS.finish :: c1 -> [e])) . foldl' ((snd .) . flip remove)
 
   -- | Default method.
   -- Removes an element from the set.
@@ -64,33 +64,33 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
   -- element is not in the set), and the set without the element.
   -- Does not guarantee which element is removed.
   -- 
-  dropAny :: c e -> (Maybe e, c e)
+  dropAny :: c -> (Maybe e, c)
   dropAny s 
     = maybe (Nothing, s) (`remove` s) (findAny s)
 
   -- | Default method.
   -- Computes the intersection of two sets.
   --
-  intersection :: forall c1. DSCons [e] (c1 e) => c e -> c1 e -> c e
+  intersection :: forall c1. DSCons [e] c1 e => c -> c1 -> c
   intersection = liftM2 (.) difference difference
 
   -- | Default method.
   -- Returns a new set from @[]@.
   -- 
-  newSet :: [e] -> c e
+  newSet :: [e] -> c
   newSet = DS.new
 
   -- | Default method.
   -- Return the list representation of the set.
   -- 
-  toList :: c e -> [e]
+  toList :: c -> [e]
   toList = DS.finish
 
   -- | Default method.
   -- Computes the union of two sets.
   --
-  union :: forall c1. DSCons [e] (c1 e) => c e -> c1 e -> c e
-  union = (. (DS.finish :: c1 e -> [e])) . foldl' (flip add)
+  union :: forall c1. DSCons [e] c1 e => c -> c1 -> c
+  union = (. (DS.finish :: c1 -> [e])) . foldl' (flip add)
 
 
 --------------------------------------------------------------------------------
@@ -107,39 +107,37 @@ class (DS (c e), DSCons [e] (c e)) => Set c e where
 -- Default methods include @mDifference@, @mDropAny@, @mIntersection@,
 -- @mNewSet@, @mToList @and @mUnion@.
 --
-class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
+class (Monad (m s), MDS c m s, MDSCons [e] c e m s) 
+  => MSet c e m s | c -> e where
   -- | Adds an element into the set.
   -- If the element is not already in the set, adds it to the set, otherwise
   -- it replaces the old element in the set with the new one.
   --
-  mAdd :: e -> c e s -> m s ()
+  mAdd :: e -> c s -> m s ()
 
   -- | Tests if the element is in the set.
   --
-  mContains :: c e s -> e -> m s Bool
+  mContains :: c s -> e -> m s Bool
 
   -- | Returns an element from the set if it is non-empty.
   -- Does not guarantee which element is returned.
   -- 
-  mFindAny :: c e s -> m s (Maybe e)
+  mFindAny :: c s -> m s (Maybe e)
 
   -- | Removes an element into the set.
   -- Returns the removed element (or Nothing, if element is not in the set), and 
   -- deletes the element from the set.
   --
-  mRemove :: e -> c e s -> m s (Maybe e)
+  mRemove :: e -> c s -> m s (Maybe e)
 
   -- | Default method.
   -- Computes the difference of two sets, and update it to the first set.
   --
-  mDifference :: forall c1. MDSCons [e] (c1 e) m s
-              => c e s
-              -> c1 e s
-              -> m s ()
+  mDifference :: forall c1. MDSCons [e] c1 e m s => c s -> c1 s -> m s ()
   mDifference
-    = flip ((>>=) . (MDS.finish :: c1 e s -> m s [e])) . mapM_ . flip mRemove
+    = flip ((>>=) . (MDS.finish :: c1 s -> m s [e])) . mapM_ . flip mRemove
 
-  mDropAny :: c e s -> m s (Maybe e)
+  mDropAny :: c s -> m s (Maybe e)
   mDropAny s = do
     me <- mFindAny s
     when (isJust me) $ void $ mRemove (fromJust me) s
@@ -148,10 +146,7 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   -- | Default method.
   -- Computes the intersection of two sets, and update it to the first set.
   --
-  mIntersection :: forall c1. MDSCons [e] (c1 e) m s
-                => c e s
-                -> c1 e s
-                -> m s ()
+  mIntersection :: forall c1. MDSCons [e] c1 e m s => c s -> c1 s -> m s ()
   mIntersection d ds = do
     d' <- MDS.copy d
     mDifference d' ds
@@ -160,32 +155,29 @@ class (Monad (m s), MDS (c e) m s, MDSCons [e] (c e) m s) => MSet c e m s where
   -- | Default method.
   -- Returns a new set from @[]@.
   -- 
-  mNewSet :: [e] -> m s (c e s)
+  mNewSet :: [e] -> m s (c s)
   mNewSet = MDS.new
 
   -- | Default method.
   -- Return the list representation of the set.
   -- 
-  mToList :: c e s -> m s [e]
+  mToList :: c s -> m s [e]
   mToList = MDS.finish
 
   -- | Default method.
   -- Computes the union of two sets, and update it to the first set.
   --
-  mUnion :: forall c1. MDSCons [e] (c1 e) m s
-         => c e s
-         -> c1 e s
-         -> m s ()
-  mUnion = flip ((>>=) . (MDS.finish :: c1 e s -> m s [e])) . mapM_ . flip mAdd
+  mUnion :: forall c1. MDSCons [e] c1 e m s => c s -> c1 s -> m s ()
+  mUnion = flip ((>>=) . (MDS.finish :: c1 s -> m s [e])) . mapM_ . flip mAdd
 
 
 --------------------------------------------------------------------------------
 -- Set -> Monoid
 --------------------------------------------------------------------------------
 
-instance {-# OVERLAPPABLE #-} (Set c e) => Semigroup (c e) where
+instance {-# OVERLAPPABLE #-} (Set c e) => Semigroup c where
   (<>) = mappend
 
-instance {-# OVERLAPPABLE #-} (Set c e) => Monoid (c e) where
+instance {-# OVERLAPPABLE #-} (Set c e) => Monoid c where
   mempty  = newSet []
   mappend = union

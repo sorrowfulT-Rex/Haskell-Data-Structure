@@ -26,7 +26,7 @@ instance (Show a, IArray UArray a) => Show (UArrayList a) where
 -- List Instance
 --------------------------------------------------------------------------------
 
-instance IArray UArray a => List UArrayList a where
+instance IArray UArray a => List (UArrayList a) a where
   delete :: Int -> UArrayList a -> (Maybe a, UArrayList a)
   delete index al@(UArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
@@ -116,7 +116,7 @@ instance IArray UArray a => List UArrayList a where
 -- ArrayBased Functions
 --------------------------------------------------------------------------------
 
-instance IArray UArray a => ArrayBased UArrayList a where
+instance IArray UArray a => ArrayBased (UArrayList a) a where
   deepClear :: UArrayList a -> UArrayList a
   deepClear = const (newList [])
 
@@ -140,7 +140,7 @@ instance IArray UArray a => ArrayBased UArrayList a where
 -- Deque Instance
 --------------------------------------------------------------------------------
 
-instance IArray UArray a => Deque UArrayList a where
+instance IArray UArray a => Deque (UArrayList a) a where
   dequeueFront :: UArrayList a -> (Maybe a, UArrayList a)
   dequeueFront = popFront
 
@@ -167,7 +167,7 @@ instance IArray UArray a => DS (UArrayList a) where
   size (UArrayList l _)
     = l
 
-instance IArray UArray a => DSCons [a] (UArrayList a) where
+instance IArray UArray a => DSCons [a] (UArrayList a) a where
   finish :: UArrayList a -> [a]
   finish (UArrayList l arr)
     = toList' 0

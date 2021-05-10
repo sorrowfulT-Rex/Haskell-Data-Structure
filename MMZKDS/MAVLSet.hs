@@ -58,7 +58,7 @@ avlSetThaw set = MAVLSet <$> (thaw' set >>= newSTRef)
 -- MSet Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => MSet MAVLSet a ST s where
+instance Ord a => MSet (MAVLSet a) a ST s where
   mAdd :: a -> MAVLSet a s -> ST s ()
   mAdd e (MAVLSet tR) = add' tR
     where
@@ -148,7 +148,7 @@ instance MDS (MAVLSet a) ST s where
       MAVLNode sR _ _ _ _ -> readSTURef sR
 
 
-instance Ord a => MDSCons [a] (MAVLSet a) ST s where
+instance Ord a => MDSCons [a] (MAVLSet a) a ST s where
   finish :: MAVLSet a s -> ST s [a]
   finish (MAVLSet tR) = finish' [] tR
     where

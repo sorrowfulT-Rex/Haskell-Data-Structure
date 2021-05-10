@@ -26,7 +26,7 @@ instance Show a => Show (ArrayList a) where
 -- List Instance
 --------------------------------------------------------------------------------
 
-instance List ArrayList a where
+instance List (ArrayList a) a where
   delete :: Int -> ArrayList a -> (Maybe a, ArrayList a)
   delete index al@(ArrayList l arr)
     | index >= l || index < 0 = (Nothing, al)
@@ -111,7 +111,7 @@ instance List ArrayList a where
 -- ArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance ArrayBased ArrayList a where
+instance ArrayBased (ArrayList a) a where
   deepClear :: ArrayList a -> ArrayList a
   deepClear = const (newList [])
 
@@ -135,7 +135,7 @@ instance ArrayBased ArrayList a where
 -- Deque Instance
 --------------------------------------------------------------------------------
 
-instance Deque ArrayList a where
+instance Deque (ArrayList a) a where
   dequeueFront :: ArrayList a -> (Maybe a, ArrayList a)
   dequeueFront = popFront
 
@@ -162,7 +162,7 @@ instance DS (ArrayList a) where
   size (ArrayList l _)
     = l
 
-instance DSCons [a] (ArrayList a) where
+instance DSCons [a] (ArrayList a) a where
   finish :: ArrayList a -> [a]
   finish = L.toList
 

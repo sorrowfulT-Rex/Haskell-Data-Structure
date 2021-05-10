@@ -32,7 +32,7 @@ import           MMZKDS.Utilities
 -- MPriorityQueue Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => MPriorityQueue MHeapPQ a ST s where
+instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
   mAdd :: a -> MHeapPQ a s -> ST s ()
   mAdd e mh@(MHeapPQ lR arrR) = do
     ls <- size mh
@@ -80,7 +80,7 @@ instance Ord a => MPriorityQueue MHeapPQ a ST s where
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => MArrayBased MHeapPQ a ST s where
+instance Ord a => MArrayBased (MHeapPQ a) a ST s where
   mDeepClear :: MHeapPQ a s -> ST s ()
   mDeepClear mh =
     (newArray_ (0, initialSize 0 - 1) :: ST s (STArray s Int a)) >>=
@@ -154,7 +154,7 @@ instance Ord a => MDS (MHeapPQ a) ST s where
   size :: MHeapPQ a s -> ST s Int
   size = readSTURef . mHeapS
 
-instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
+instance Ord a => MDSCons [a] (MHeapPQ a) a ST s where
   finish :: MHeapPQ a s -> ST s [a]
   finish mh = do
     let freeze' = freeze :: STArray s Int a -> ST s (Array Int a)

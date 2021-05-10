@@ -21,7 +21,7 @@ instance Show a => Show (FDQ a) where
 -- List Instance
 --------------------------------------------------------------------------------
 
-instance List FDQ a where
+instance List (FDQ a) a where
   delete :: Int -> FDQ a -> (Maybe a, FDQ a)
   delete index q@(FDQ fl frt el end)
     | index < 0    = (Nothing, q)
@@ -86,7 +86,7 @@ instance List FDQ a where
 -- Deque Instance
 --------------------------------------------------------------------------------
 
-instance Deque FDQ a where
+instance Deque (FDQ a) a where
   dequeueFront :: FDQ a -> (Maybe a, FDQ a)
   dequeueFront = popFront
 
@@ -124,7 +124,7 @@ instance DS (FDQ a) where
   size (FDQ fl _ el _)
     = fl + el
 
-instance DSCons [a] (FDQ a) where
+instance DSCons [a] (FDQ a) a where
   finish :: FDQ a -> [a]
   finish (FDQ _ frt _ end)
     = frt ++ reverse end

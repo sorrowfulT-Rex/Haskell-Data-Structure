@@ -23,7 +23,7 @@ import           MMZKDS.Set as S (Set(..))
 -- Set Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => Set AVLSet a where
+instance Ord a => Set (AVLSet a) a where
   add :: a -> AVLSet a -> AVLSet a
   add = addBT balanceAVL
 
@@ -41,7 +41,7 @@ instance Ord a => Set AVLSet a where
 -- PriorityQueue Instance
 --------------------------------------------------------------------------------
 
-instance Ord a => PriorityQueue AVLSet a where
+instance Ord a => PriorityQueue (AVLSet a) a where
   add :: a -> AVLSet a -> AVLSet a
   add = S.add
 
@@ -62,7 +62,7 @@ instance DS (AVLSet a) where
   size (AVLLeaf _)         = 1
   size (AVLNode s _ _ _ _) = s
 
-instance Ord a => DSCons [a] (AVLSet a) where
+instance Ord a => DSCons [a] (AVLSet a) a where
   finish :: AVLSet a -> [a]
   finish = F.toList
 

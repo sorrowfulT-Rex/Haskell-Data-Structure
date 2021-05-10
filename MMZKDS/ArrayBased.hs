@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..)) where 
 
@@ -19,27 +19,27 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- Minimal implementation requires @deepClear@, @newWithSize@, @physicalSize@
 -- and @resize@.
 --
-class (DS (a e), DSCons [e] (a e)) => ArrayBased a e where
+class (DS a, DSCons [e] a e) => ArrayBased a e | a -> e where
   -- | Returns a new structure that is truly empty; in other words, all elements
   -- are physically removed from the structure.
   --
-  deepClear :: a e -> a e
+  deepClear :: a -> a
 
   -- | Takes an @Int@ as length and an instance of 'Foldable', creates a new 
   -- structure containing the elements in the 'Foldable' and the representing
   -- array has at least the length specified by the argument.
   --
-  newWithSize  :: Foldable f => Int -> f e -> a e
+  newWithSize  :: Foldable f => Int -> f e -> a
 
   -- | Returns the physical size of the structure, in other words, the length
   -- of the representing array.
   --
-  physicalSize :: a e -> Int
+  physicalSize :: a -> Int
 
   -- | Takes an Int as length and a structure, returns a structure containing
   -- the same elements but with at least the length specified by the argument.
   --
-  resize :: Int -> a e -> a e
+  resize :: Int -> a -> a
 
 
 --------------------------------------------------------------------------------
@@ -54,30 +54,30 @@ class (DS (a e), DSCons [e] (a e)) => ArrayBased a e where
 -- Minimal implementation requires @mDeepClear@, @mNewWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class (Monad (m s), MDS (a e) m s, MDSCons [e] (a e) m s) 
-  => MArrayBased a e m s where
+class (Monad (m s), MDS a m s, MDSCons [e] a e m s) 
+  => MArrayBased a e m s | a -> e where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.
   --
-  mDeepClear :: a e s -> m s ()
+  mDeepClear :: a s -> m s ()
 
   -- | Takes an @Int@ as length and an instance of 'Foldable', creates a new 
   -- structure containing the elements in the 'Foldable' and the representing
   -- array has at least the length specified by the argument.
   -- 
-  mNewWithSize :: Foldable f => Int -> f e -> m s (a e s)
+  mNewWithSize :: Foldable f => Int -> f e -> m s (a s)
 
   -- | Returns the physical size of the structure, in other words, the length
   -- of the representing array.
   -- 
-  mPhysicalSize :: a e s -> m s Int
+  mPhysicalSize :: a s -> m s Int
 
   -- | Takes an @Int@ as length and a structure, modifies the structure such that
   -- it has at least the length specified by the argument.
   --
-  mResize :: Int -> a e s -> m s ()
+  mResize :: Int -> a s -> m s ()
 
   -- | Create a new mutable data structure from the given mutable data 
   -- structure, retaining the physical size.
   --
-  trueCopy :: a e s -> m s (a e s)
+  trueCopy :: a s -> m s (a s)

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.PriorityQueue (PriorityQueue(..), MPriorityQueue(..)) where
@@ -29,17 +29,17 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- When the queue is non-empty:
 --  @ q ==== let (Just e, q') = pop q in add e q' @
 --
-class (DS (q e), DSCons [e] (q e)) => PriorityQueue q e where
+class (DS q, DSCons [e] q e) => PriorityQueue q e | q -> e where
   -- | Adds an element into the queue.
-  add :: e -> q e -> q e
+  add :: e -> q -> q
 
   -- | Removes the element at the front of the queue, returning a tuple of the
   -- element and the rest of the queue.
-  pop :: q e -> (Maybe e, q e)
+  pop :: q -> (Maybe e, q)
 
   -- | Default method.
   -- Retrieves the element at the front but not removing it.
-  peek :: q e -> Maybe e
+  peek :: q -> Maybe e
   peek = fst . pop
 
 
@@ -60,17 +60,17 @@ class (DS (q e), DSCons [e] (q e)) => PriorityQueue q e where
 -- When the queue is non-empty:
 -- @ mPop mq ==== mPop mq >>= flip mAdd mq >> mPop mq @
 --
-class (Monad (m s), MDS (q e) m s, MDSCons [e] (q e) m s) 
-  => MPriorityQueue q e m s where
+class (Monad (m s), MDS q m s, MDSCons [e] q e m s) 
+  => MPriorityQueue q e m s | q -> e where
   -- | Adds an element into the queue.
-  mAdd :: e -> q e s -> m s ()
+  mAdd :: e -> q s -> m s ()
 
   -- | Removes the element at the front of the queue, returning the element.
-  mPop :: q e s -> m s (Maybe e)
+  mPop :: q s -> m s (Maybe e)
 
   -- | Default method.
   -- Retrieves the element at the front but not removing it.
-  mPeek :: q e s -> m s (Maybe e)
+  mPeek :: q s -> m s (Maybe e)
   mPeek q = do
     me <- mPop q
     when (isJust me) $ mAdd (fromJust me) q

@@ -81,7 +81,7 @@ unsafeArrayListThaw (ArrayList l arr) = do
 -- MList Instance
 --------------------------------------------------------------------------------
 
-instance MList MArrayList a ST s where
+instance MList (MArrayList a) a ST s where
   mGet :: MArrayList a s -> Int -> ST s a
   mGet mal@(MArrayList lR arrR) index = do
     l <- size mal
@@ -193,7 +193,7 @@ instance MList MArrayList a ST s where
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance MArrayBased MArrayList a ST s where
+instance MArrayBased (MArrayList a) a ST s where
   mDeepClear :: MArrayList a s -> ST s ()
   mDeepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- mNewList []
@@ -241,7 +241,7 @@ instance MArrayBased MArrayList a ST s where
 -- MDeque Instance
 --------------------------------------------------------------------------------
 
-instance MDeque MArrayList a ST s where
+instance MDeque (MArrayList a) a ST s where
   mDequeueFront :: MArrayList a s -> ST s (Maybe a)
   mDequeueFront = mPopFront
 
@@ -278,7 +278,7 @@ instance MDS (MArrayList a) ST s where
   size (MArrayList lR _)
     = readSTURef lR
 
-instance MDSCons [a] (MArrayList a) ST s where
+instance MDSCons [a] (MArrayList a) a ST s where
   finish :: MArrayList a s -> ST s [a]
   finish mal = do
     al <- arrayListFreeze mal

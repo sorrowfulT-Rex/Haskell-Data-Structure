@@ -96,7 +96,7 @@ unsafeUArrayListThaw (UArrayList l arr) = do
 -- MList Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, STU a s) => MList MUArrayList a ST s where
+instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
   mGet :: MUArrayList a s -> Int -> ST s a
   mGet mal@(MUArrayList lR arrR) index = do
     l <- size mal
@@ -208,7 +208,7 @@ instance (IArray UArray a, STU a s) => MList MUArrayList a ST s where
 -- MArrayBased Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, STU a s) => MArrayBased MUArrayList a ST s where
+instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
   mDeepClear :: MUArrayList a s -> ST s ()
   mDeepClear (MUArrayList lR arrR) = do
     MUArrayList rlR resR <- mNewList []
@@ -256,7 +256,7 @@ instance (IArray UArray a, STU a s) => MArrayBased MUArrayList a ST s where
 -- MDeque Instance
 --------------------------------------------------------------------------------
 
-instance (IArray UArray a, STU a s) => MDeque MUArrayList a ST s where
+instance (IArray UArray a, STU a s) => MDeque (MUArrayList a) a ST s where
   mDequeueFront :: MUArrayList a s -> ST s (Maybe a)
   mDequeueFront = mPopFront
 
@@ -294,7 +294,7 @@ instance (IArray UArray a, STU a s) => MDS (MUArrayList a) ST s where
     = readSTURef lR
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s))
-  => MDSCons [a] (MUArrayList a) ST s where
+  => MDSCons [a] (MUArrayList a) a ST s where
   finish :: MUArrayList a s -> ST s [a]
   finish mal = do
     al <- uArrayListFreeze mal

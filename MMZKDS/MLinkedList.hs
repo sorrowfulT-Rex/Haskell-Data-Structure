@@ -27,7 +27,7 @@ import           MMZKDS.Utilities (outOfBoundError)
 -- MList Instance
 --------------------------------------------------------------------------------
 
-instance MList MLinkedList a ST s where
+instance MList (MLinkedList a) a ST s where
   mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
   mDelete index mll@(MLinkedList lR _ iR cR) = do
     l <- readSTURef lR
@@ -190,7 +190,7 @@ instance MList MLinkedList a ST s where
 -- MDeque Instance
 --------------------------------------------------------------------------------
 
-instance MDeque MLinkedList a ST s where
+instance MDeque (MLinkedList a) a ST s where
   mDequeueFront :: MLinkedList a s -> ST s (Maybe a)
   mDequeueFront = mPopFront
 
@@ -224,7 +224,7 @@ instance MDS (MLinkedList a) ST s where
   size (MLinkedList lR _ _ _)
     = readSTURef lR
 
-instance MDSCons [a] (MLinkedList a) ST s where
+instance MDSCons [a] (MLinkedList a) a ST s where
   finish :: MLinkedList a s -> ST s [a]
   finish mll = do
     let mToList' node = if isHead node

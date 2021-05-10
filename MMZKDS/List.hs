@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.List (List(..), MList(..)) where
@@ -37,14 +37,14 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
 -- argument.
 --
-class (DS (l e), DSCons [e] (l e)) => List l e where
+class (DS l, DSCons [e] l e) => List l e | l -> e where
   -- | Adds an element into the list structure.
   -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  insert :: Int -> e -> l e -> l e
+  insert :: Int -> e -> l -> l
 
   -- | Removes an element from the list structure.
   -- Takes an @Int@ as index and a list, returns a tuple containing the removed 
@@ -52,42 +52,42 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- If the index is out of bound, returns a typle of @Nothing@ and the original
   -- list.
   --
-  delete :: Int -> l e -> (Maybe e, l e)
+  delete :: Int -> l -> (Maybe e, l)
 
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
   -- It is usally used as an infix operator.
   --
-  get :: l e -> Int -> e
+  get :: l -> Int -> e
 
   -- | Takes a list structure and an element, returns a list containing all 
   -- indices that has the element from least to greatest.
   -- Usually used as an infix function.
   --
-  indicesOf :: Eq e => l e -> e -> [Int]
+  indicesOf :: Eq e => l -> e -> [Int]
 
   -- | Takes a list structure, an @Int@ as index and an element, returns a list
   -- that overwrites the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
   --
-  set :: l e -> Int -> e -> l e
+  set :: l -> Int -> e -> l
 
   -- | Returns a sub-list of the list structure from the first argument 
   -- (inclusive) to the second argument (exclusive).
   --
-  subList :: Int -> Int -> l e -> l e
+  subList :: Int -> Int -> l -> l
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
   --
-  append :: e -> l e -> l e
+  append :: e -> l -> l
   append = flip (join (flip . insert . DS.size))
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
   -- element is in the list.
   --
-  contains :: Eq e => l e -> e -> Bool
+  contains :: Eq e => l -> e -> Bool
   contains = (isJust .) . indexOf
 
   -- | Default method.
@@ -96,7 +96,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- the list.
   -- Usually used as an infix function.
   --
-  indexOf :: Eq e => l e -> e -> Maybe Int
+  indexOf :: Eq e => l -> e -> Maybe Int
   indexOf = (listToMaybe .) . indicesOf
 
   -- | Default method.
@@ -105,13 +105,13 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- the list.
   -- Usually used as an infix function.
   --
-  lastIndexOf :: Eq e => l e -> e -> Maybe Int
+  lastIndexOf :: Eq e => l -> e -> Maybe Int
   lastIndexOf = ((listToMaybe . reverse) .) . indicesOf
 
   -- | Default Method
   -- Returns a new list structure with from @[]@.
   --
-  newList :: [e] -> l e
+  newList :: [e] -> l
   newList = DS.new
 
   -- | Default method.
@@ -120,7 +120,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- given element at the index.
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   --
-  pop :: l e -> (Maybe e, l e)
+  pop :: l -> (Maybe e, l)
   pop = join (delete . (+ (-1)) . DS.size)
 
   -- | Default method.
@@ -129,18 +129,18 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- given element at the index.
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   --
-  popFront :: l e -> (Maybe e, l e)
+  popFront :: l -> (Maybe e, l)
   popFront = delete 0
 
   -- | Default method.
   -- Insert an element to the front of the list structure.
   --
-  push :: e -> l e -> l e
+  push :: e -> l -> l
   push = insert 0
 
   -- | Default method.
   -- Return the list representation of the list structure.
-  toList :: l e -> [e]
+  toList :: l -> [e]
   toList = DS.finish
 
   -- | Default method.
@@ -149,7 +149,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- If the element does not appear in the list, returns a tuple of @Nothing@
   -- and the original list.
   --
-  remove :: Eq e => e -> l e -> (Maybe e, l e)
+  remove :: Eq e => e -> l -> (Maybe e, l)
   remove e l
     = maybe (Nothing, l) (`delete` l) (indexOf l e)
 
@@ -159,7 +159,7 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- If the element does not appear in the list, returns a tuple of @Nothing@
   -- and the original list.
   --
-  removeAll :: Eq e => e -> l e -> ([e], l e)
+  removeAll :: Eq e => e -> l -> ([e], l)
   removeAll e l
     = let (a, b, _) = foldl' worker ([], l, 0) indices in (a, b)
     where
@@ -173,20 +173,20 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- If the element does not appear in the list, returns a tuple of @Nothing@
   -- and the original list.
   --
-  removeLast :: Eq e => e -> l e -> (Maybe e, l e)
+  removeLast :: Eq e => e -> l -> (Maybe e, l)
   removeLast e l
     = maybe (Nothing, l) (`delete` l) (lastIndexOf l e)
 
   -- | Default method.
   -- Sort the list structure in the default ordering of its elements.
   --
-  sort :: Ord e => l e -> l e
+  sort :: Ord e => l -> l
   sort = newList . L.sort . MMZKDS.List.toList
 
   -- | Default method.
   -- Sort the list structure by a ordering function.
   --
-  sortOn :: Ord o => (e -> o) -> l e -> l e
+  sortOn :: Ord o => (e -> o) -> l -> l
   sortOn = (. MMZKDS.List.toList) . (newList .) . L.sortOn
 
   -- | Default method.
@@ -195,13 +195,13 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
   -- function.
   -- Returns an error if the index of out of bound.
   --
-  update :: l e -> Int -> (e -> e) -> l e
+  update :: l -> Int -> (e -> e) -> l
   update = ap (ap . ((.) .) . set) ((flip id .) . get)
 
   -- | Default method.
   -- Strict version of @update@.
   --
-  update' :: l e -> Int -> (e -> e) -> l e
+  update' :: l -> Int -> (e -> e) -> l
   update' = ap (ap . (((.) . ($!)) .) . set) ((flip id .) . get)
 
 
@@ -225,14 +225,15 @@ class (DS (l e), DSCons [e] (l e)) => List l e where
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
 -- first argument.
 --
-class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
+class (Monad (m s), MDS l m s, MDSCons [e] l e m s) 
+  => MList l e m s | l -> e where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by
   -- inserting the given element before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  mInsert :: Int -> e -> l e s -> m s ()
+  mInsert :: Int -> e -> l s -> m s ()
 
   -- | Removes an element into the list structure.
   -- Takes an @Int@ as index and a list, returns the removed element and deletes
@@ -240,46 +241,46 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- If the index is out of bound, returns @Nothing@ and the orignal list is 
   -- unmodified.
   --
-  mDelete :: Int -> l e s -> m s (Maybe e)
+  mDelete :: Int -> l s -> m s (Maybe e)
 
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
   -- It is usally used as an infix operator.
   --
-  mGet :: l e s -> Int -> m s e
+  mGet :: l s -> Int -> m s e
 
   -- | Takes a list structure and an element, returns a list containing all 
   -- indices that has the element from least to greatest.
   -- Usually used as an infix function.
   --
-  mIndicesOf :: Eq e => l e s -> e -> m s [Int]
+  mIndicesOf :: Eq e => l s -> e -> m s [Int]
 
   -- | Takes a list structure, an @Int@ as index and an element, modifies the 
   -- list by overwriting the element at the index by the given element.
   -- If the index is out of bound, the function returns an error.
   --
-  mSet :: l e s -> Int -> e -> m s ()
+  mSet :: l s -> Int -> e -> m s ()
 
   -- | Sort the list structure by a ordering function.
   --
-  mSortOn :: Ord o => (e -> o) -> l e s -> m s ()
+  mSortOn :: Ord o => (e -> o) -> l s -> m s ()
 
   -- | Returns a sub-list of the list structure from the first argument 
   -- (inclusive) to the second argument (exclusive).
   --
-  mSubList :: Int -> Int -> l e s -> m s (l e s)
+  mSubList :: Int -> Int -> l s -> m s (l s)
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
   --
-  mAppend :: e -> l e s -> m s ()
+  mAppend :: e -> l s -> m s ()
   mAppend = liftM2 (>>=) MDS.size . flip . flip mInsert
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
   -- element is in the list.
   --
-  mContains :: Eq e => l e s -> e -> m s Bool
+  mContains :: Eq e => l s -> e -> m s Bool
   mContains = (fmap isJust .) . mIndexOf
 
   -- | Default method.
@@ -288,7 +289,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- the list.
   -- Usually used as an infix function.
   --
-  mIndexOf :: Eq e => l e s -> e -> m s (Maybe Int)
+  mIndexOf :: Eq e => l s -> e -> m s (Maybe Int)
   mIndexOf = (fmap listToMaybe .) . mIndicesOf
 
   -- | Default method.
@@ -297,13 +298,13 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- the list.
   -- Usually used as an infix function.
   --
-  mLastIndexOf :: Eq e => l e s -> e -> m s (Maybe Int)
+  mLastIndexOf :: Eq e => l s -> e -> m s (Maybe Int)
   mLastIndexOf = (fmap (listToMaybe . reverse) .) . mIndicesOf
 
   -- | Default method.
   -- Returns a new list structure with from @[]@.
   --
-  mNewList :: [e] -> m s (l e s)
+  mNewList :: [e] -> m s (l s)
   mNewList = MDS.new
 
   -- | Default method.
@@ -311,7 +312,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   --
-  mPop :: l e s -> m s (Maybe e)
+  mPop :: l s -> m s (Maybe e)
   mPop ml = do
     l <- MDS.size ml
     mDelete (l - 1) ml
@@ -321,13 +322,13 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Returns the removed element and deletes the element from the list.
   -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
   --
-  mPopFront :: l e s -> m s (Maybe e)
+  mPopFront :: l s -> m s (Maybe e)
   mPopFront = mDelete 0
 
   -- | Default method.
   -- Insert an element to the front of the list structure.
   --
-  mPush :: e -> l e s -> m s ()
+  mPush :: e -> l s -> m s ()
   mPush = mInsert 0
 
   -- | Default method.
@@ -335,7 +336,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- returns that element while removing the element.
   -- If the element does not appear in the list, returns @Nothing@.
   --
-  mRemove :: Eq e => e -> l e s -> m s (Maybe e)
+  mRemove :: Eq e => e -> l s -> m s (Maybe e)
   mRemove e ml = do
     index <- ml `mIndexOf` e
     maybe (return Nothing) (`mDelete` ml) index
@@ -345,7 +346,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- that element while removing the element.
   -- If the element does not appear in the list, returns @Nothing@.
   --
-  mRemoveAll :: Eq e => e -> l e s -> m s [e]
+  mRemoveAll :: Eq e => e -> l s -> m s [e]
   mRemoveAll e ml = do
     indices <- ml `mIndicesOf` e
     forM (zip indices [0..]) $ 
@@ -356,7 +357,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- returns that element while removing the element.
   -- If the element does not appear in the list, returns @Nothing@.
   --
-  mRemoveLast :: Eq e => e -> l e s -> m s (Maybe e)
+  mRemoveLast :: Eq e => e -> l s -> m s (Maybe e)
   mRemoveLast e ml = do
     index <- ml `mLastIndexOf` e
     maybe (return Nothing) (`mDelete` ml) index
@@ -365,12 +366,12 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- Sort the list structure in the default ordering of its elements.
   --
   {-# INLINE mSort #-}
-  mSort :: Ord e => l e s -> m s ()
+  mSort :: Ord e => l s -> m s ()
   mSort = mSortOn id
 
   -- | Returns the default list (@[]@) representation of the list structure.
   --
-  mToList :: l e s -> m s [e]
+  mToList :: l s -> m s [e]
   mToList = MDS.finish
 
   -- | Default method.
@@ -379,7 +380,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- given function.
   -- Returns an error if the index of out of bound.
   --
-  mUpdate :: l e s -> Int -> (e -> e) -> m s ()
+  mUpdate :: l s -> Int -> (e -> e) -> m s ()
   mUpdate ml index f = do
     v <- mGet ml index
     mSet ml index $ f v
@@ -387,7 +388,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
   -- | Default method.
   -- Strict version of @mUpdate@.
   --
-  mUpdate' :: l e s -> Int -> (e -> e) -> m s ()
+  mUpdate' :: l s -> Int -> (e -> e) -> m s ()
   mUpdate' ml index f = do
     v <- mGet ml index
     mSet ml index $! f v
@@ -397,7 +398,7 @@ class (Monad (m s), MDS (l e) m s, MDSCons [e] (l e) m s) => MList l e m s where
 -- List -> Eq
 --------------------------------------------------------------------------------
 
-instance {-# OVERLAPPABLE #-} (Eq a, List l a) => Eq (l a) where
+instance {-# OVERLAPPABLE #-} (Eq a, List (l a) a) => Eq (l a) where
   l == l'
     = ls == ls' && all (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)]
     where

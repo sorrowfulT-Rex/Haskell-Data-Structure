@@ -23,7 +23,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- Minimal implementation requires @find@ and @union@.
 -- Default method is @isEquiv@ and @(!)@.
 -- 
-class (DS (q e), DSCons [[e]] (q e)) => UnionFind q e where
+class (DS (q e), DSCons [[e]] (q e) e) => UnionFind q e where
   -- | Find the representative of a give element. If the element is not in the
   -- union-find, return @Nothing@.
   -- 
@@ -95,7 +95,7 @@ class (Monad (m s), MDS (q e) m s, MDSCons [[e]] (q e) m s)
 -- Construct from [] as Singleton
 --------------------------------------------------------------------------------
 
-instance UnionFind q e => DSCons [e] (q e) where
+instance UnionFind q e => DSCons [e] (q e) e where
   finish = concat . (MMZKDS.DS.finish :: q e -> [[e]])
 
   new = MMZKDS.DS.new . map (: [])
