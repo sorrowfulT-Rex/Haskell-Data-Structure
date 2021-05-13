@@ -9,6 +9,7 @@ module MMZKDS.ArrayList (ArrayList) where
 import           Control.Monad (join)
 import           Data.Array (Array, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
+import           Data.Maybe (isJust)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.Base (ArrayList(..))
@@ -186,6 +187,9 @@ instance Foldable ArrayList where
       go i v
         | i == l    = v
         | otherwise = f (arr ! i) (go (i + 1) v)
+
+  elem :: Eq a => a -> ArrayList a -> Bool
+  elem = (isJust .) . flip indexOf
 
   null :: ArrayList a -> Bool
   null = isNull

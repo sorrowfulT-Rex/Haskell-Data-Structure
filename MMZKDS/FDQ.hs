@@ -4,7 +4,7 @@
 
 module MMZKDS.FDQ (FDQ, balanceDeque) where
 
-import          Data.Maybe (listToMaybe)
+import          Data.Maybe (isJust, listToMaybe)
 
 import          MMZKDS.Base (FDQ(..))
 import          MMZKDS.DS (DS(..), DSCons(..))
@@ -152,3 +152,21 @@ balanceDeque q@(FDQ fl frt el end)
     len          = abs (el - fl) `div` 2
     (frtF, frtR) = splitAt (fl - len) frt
     (endF, endR) = splitAt (el - len) end
+
+
+--------------------------------------------------------------------------------
+-- Foldable Instance
+--------------------------------------------------------------------------------
+
+instance Foldable FDQ where
+  foldr :: (a -> b -> b) -> b -> FDQ a -> b
+  foldr f v = foldr f v . toList
+
+  elem :: Eq a => a -> FDQ a -> Bool
+  elem = (isJust .) . flip indexOf
+
+  null :: FDQ a -> Bool
+  null = isNull
+
+  length :: FDQ a -> Int
+  length = size
