@@ -172,3 +172,26 @@ instance DSCons [a] (ArrayList a) a where
     where
       l  = length list
       l' = initialSize l
+
+
+--------------------------------------------------------------------------------
+-- Foldable Instance
+--------------------------------------------------------------------------------
+
+instance Foldable ArrayList where
+  foldr :: (a -> b -> b) -> b -> ArrayList a -> b
+  foldr f v (ArrayList l arr) 
+    = go 0 v
+    where
+      go i v
+        | i == l    = v
+        | otherwise = f (arr ! i) (go (i + 1) v)
+
+  null :: ArrayList a -> Bool
+  null = isNull
+
+  length :: ArrayList a -> Int
+  length = size
+
+  toList :: ArrayList a -> [a]
+  toList = L.toList
