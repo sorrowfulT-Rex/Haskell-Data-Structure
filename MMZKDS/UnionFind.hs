@@ -8,8 +8,8 @@ module MMZKDS.UnionFind where
 import           Control.Monad (liftM2)
 import           Data.Maybe (fromJust, fromMaybe)
 
-import           MMZKDS.DS as DS (DS(..), DSCons(..))
-import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
+import           MMZKDS.Class.MDS as MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------

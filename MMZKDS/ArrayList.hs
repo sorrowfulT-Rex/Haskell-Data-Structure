@@ -13,7 +13,7 @@ import           Data.Maybe (isJust)
 
 import           MMZKDS.ArrayBased (ArrayBased(..))
 import           MMZKDS.Base (ArrayList(..))
-import           MMZKDS.DS (DS(..), DSCons(..))
+import           MMZKDS.Class.DS (DS(..), DSCons(..))
 import           MMZKDS.Queue (Deque(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities

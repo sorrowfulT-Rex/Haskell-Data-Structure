@@ -80,7 +80,7 @@ unsafeAddST index e lastIndexOf arrST = do
 -- @Int@-indexed @STArray@ as the destination, and a tuple of @Int@s as the
 -- lower and upper bound (both inclusive) of the range of indices.
 -- Copies the elements in the starting array within the range to the
--- destination whose index starts from 0.
+-- destination whose index starts at 0.
 -- Pre: The index bounds are valid and the destination array is large enough
 -- to hold the number of elements.
 --
@@ -114,12 +114,12 @@ unsafeQuickSort f inf sup arrST
       | inf + 1 >= sup = return ()
       | otherwise      = do
         let getPivot = do
-            (r, gen) <- return $ randomR (inf, sup - 1) gen
-            vi       <- readArray arrST inf
-            vp       <- readArray arrST $ (inf + sup) `div` 2
-            writeArray arrST inf vp
-            writeArray arrST ((inf + sup) `div` 2) vi
-            return (vp, gen)
+              (r, gen) <- return $ randomR (inf, sup - 1) gen
+              vi       <- readArray arrST inf
+              vp       <- readArray arrST $ (inf + sup) `div` 2
+              writeArray arrST inf vp
+              writeArray arrST ((inf + sup) `div` 2) vi
+              return (vp, gen)
         let shuffleAround i j pv
               | i + 1 == j = return i
               | otherwise  = do
@@ -139,21 +139,25 @@ unsafeQuickSort f inf sup arrST
         worker (pi + 1) sup gen
 
 -- | Unsafe: Does not conduct bound check for array.
--- Takes an @Int@ as the starting index, an element, an @Int@ as the last index
--- to be written to, and an @Int@-indexed @STArray@, pushes all elements since
--- the starting index (exclusive) to the last index (inclusive) to the previous 
--- slot, effectively removing the original element at the starting index.
+-- Takes an @Int@ as the starting index, an @Int@ as the ending index, 
+-- an @Int@ as the logical last index, and an @Int@-indexed "MArray", pushes all
+-- elements since the ending index (inclusive) to the last index (inclusive)
+-- backwords, effectively removing the original elements from the starting to
+-- the ending index.
 -- Pre: The index bounds are valid and the last index is less than the physical
 -- length of the array minus 1.
 --
 unsafeRemoveST :: (MArray r a m) 
                => Int 
+               -> Int
                -> Int 
                -> r Int a -> m ()
-unsafeRemoveST index lastIndexOf arrST
-  = forM_ [index..lastIndexOf] $ \i -> do
-    v <- readArray arrST (i + 1)
+unsafeRemoveST start end lastIndexOf arrST
+  = forM_ [end..lastIndexOf] $ \i -> do
+    v <- readArray arrST (i + gap)
     writeArray arrST i v
+  where
+    gap = end - start + 1
 
 
 --------------------------------------------------------------------------------

@@ -19,7 +19,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.ArrayBased (MArrayBased(..))
 import           MMZKDS.Base (MHeapPQ(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
 import           MMZKDS.Unboxed.STURef 
   (STURef, newSTURef, readSTURef, writeSTURef)

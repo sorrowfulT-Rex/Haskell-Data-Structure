@@ -5,8 +5,8 @@ module MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..)) where
 
 import           Control.Monad (forM_)
 
-import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.DS (DS(..), DSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------

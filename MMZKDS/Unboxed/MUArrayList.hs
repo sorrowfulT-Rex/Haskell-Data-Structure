@@ -27,7 +27,7 @@ import           MMZKDS.Unboxed.STURef
 import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
 import           MMZKDS.List (List(newList, toList), MList(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
@@ -127,7 +127,7 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
         arrST <- readSTRef arrR
         v     <- readArray arrST index
         writeSTURef lR (ls - 1)
-        unsafeRemoveST index (ls - 2) arrST
+        unsafeRemoveST index index (ls - 2) arrST
         return $ Just v
 
   mInsert :: Int -> a -> MUArrayList a s -> ST s ()

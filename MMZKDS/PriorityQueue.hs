@@ -8,8 +8,8 @@ module MMZKDS.PriorityQueue (PriorityQueue(..), MPriorityQueue(..)) where
 import           Control.Monad (when)
 import           Data.Maybe (fromJust, isJust)
 
-import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.DS (DS(..), DSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------

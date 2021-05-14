@@ -10,8 +10,8 @@ import           Data.Foldable (toList)
 import           Data.List as L (foldl', maximumBy, sort, sortOn)
 import           Data.Maybe (fromJust, isJust, listToMaybe, maybe)
 
-import           MMZKDS.DS as DS (DS(..), DSCons(..))
-import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
+import           MMZKDS.Class.MDS as MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------

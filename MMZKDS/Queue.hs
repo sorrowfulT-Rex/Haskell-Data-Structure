@@ -7,8 +7,8 @@ module MMZKDS.Queue (Queue(..), MQueue(..), Deque(..), MDeque(..)) where
 
 import           Control.Monad (forM_)
 
-import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.DS (DS(..), DSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ import           Data.STRef
 
 import           MMZKDS.Base (MLinkedList(..), MNode(..))
 import           MMZKDS.List as L (MList(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.STURef
   (STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)

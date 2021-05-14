@@ -7,7 +7,7 @@ module MMZKDS.FDQ (FDQ, balanceDeque) where
 import          Data.Maybe (isJust, listToMaybe)
 
 import          MMZKDS.Base (FDQ(..))
-import          MMZKDS.DS (DS(..), DSCons(..))
+import          MMZKDS.Class.DS (DS(..), DSCons(..))
 import          MMZKDS.List (List(..))
 import          MMZKDS.Queue (Deque(..))
 import          MMZKDS.Utilities (idFDQ, outOfBoundError)

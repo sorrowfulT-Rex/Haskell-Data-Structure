@@ -11,7 +11,7 @@ import           Data.List (foldl')
 import           Data.Maybe (isJust)
 
 import           MMZKDS.Base (AVLSet(..))
-import           MMZKDS.DS (DS(..), DSCons(..))
+import           MMZKDS.Class.DS (DS(..), DSCons(..))
 import           MMZKDS.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(..))
 import           MMZKDS.Utilities (idAVLSet)

@@ -10,8 +10,8 @@ import           Control.Monad (liftM2, void, when)
 import           Data.List (foldl')
 import           Data.Maybe (isJust, fromJust)
 
-import           MMZKDS.DS as DS (DS(..), DSCons(..))
-import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
+import           MMZKDS.Class.MDS as MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------

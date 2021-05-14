@@ -21,7 +21,7 @@ import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList ()
 import           MMZKDS.Base (ArrayList(..), MArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.STURef 
   (STURef, newSTURef, readSTURef, writeSTURef)
@@ -128,7 +128,7 @@ instance MList (MArrayList a) a ST s where
         arrST <- readSTRef arrR
         v     <- readArray arrST index
         writeSTURef lR $! ls - 1
-        unsafeRemoveST index (ls - 2) arrST
+        unsafeRemoveST index index (ls - 2) arrST
         return $ Just v
 
   mSet :: MArrayList a s -> Int -> a -> ST s ()
