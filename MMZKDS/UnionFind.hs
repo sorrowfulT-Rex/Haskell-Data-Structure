@@ -95,12 +95,12 @@ class (Monad (m s), MDS (q e) m s, MDSCons [[e]] (q e) m s)
 -- Construct from [] as Singleton
 --------------------------------------------------------------------------------
 
--- instance UnionFind q e => DSCons [e] (q e) e where
---   finish q = concat $ (MMZKDS.DS.finish :: q e -> [[e]]) q
+instance UnionFind q e => DSCons [e] (q e) where
+  finish = concat . (MMZKDS.DS.finish :: q e -> [[e]])
 
---   new = MMZKDS.DS.new
+  new = MMZKDS.DS.new . map (: [])
 
--- instance MUnionFind q e m s => MDSCons [e] (q e) e m s where
---   finish = MMZKDS.MDS.finish
+instance MUnionFind q e m s => MDSCons [e] (q e) m s where
+  finish = fmap concat . (MMZKDS.MDS.finish :: q e s -> m s [[e]])
 
---   new = MMZKDS.MDS.new
+  new = MMZKDS.MDS.new . map (: [])
