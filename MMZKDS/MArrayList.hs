@@ -5,8 +5,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.MArrayList 
-  (MArrayList, arrayListFreeze, arrayListThaw, unsafeArrayListFreeze,
-   unsafeArrayListThaw
+  ( MArrayList, arrayListFreeze, arrayListThaw, unsafeArrayListFreeze
+   , unsafeArrayListThaw
   ) where
 
 import           Control.Monad (forM_, liftM2, when)
@@ -23,11 +23,14 @@ import           MMZKDS.Base (ArrayList(..), MArrayList(..))
 import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
-import           MMZKDS.Unboxed.STURef (STURef, newSTURef, readSTURef, writeSTURef)
+import           MMZKDS.Unboxed.STURef 
+  (STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
-  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
+  ( arrayLengthOverflowError, expandedSize, idMArrayList, initialSize
+  , outOfBoundError
+  )
 
 
 --------------------------------------------------------------------------------
@@ -273,6 +276,9 @@ instance MDS (MArrayList a) ST s where
     rlR   <- newSTURef l
     resR  <- newSTRef resST
     return $ MArrayList rlR resR
+
+  identifier :: MArrayList a s -> ST s String
+  identifier = const $ return idMArrayList
 
   size :: MArrayList a s -> ST s Int
   size (MArrayList lR _)

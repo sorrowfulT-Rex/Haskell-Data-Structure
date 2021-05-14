@@ -9,8 +9,8 @@ import           Control.Monad (forM_, when)
 import           Control.Monad.ST (ST)
 import           Data.Array (Array)
 import           Data.Array.ST
-  (STArray, getBounds, freeze, newArray_, newListArray, thaw, readArray,
-  writeArray
+  ( STArray, getBounds, freeze, newArray_, newListArray, thaw, readArray
+  , writeArray
   )
 import           Data.Bool (bool)
 import           Data.Foldable (toList)
@@ -21,11 +21,14 @@ import           MMZKDS.ArrayBased (MArrayBased(..))
 import           MMZKDS.Base (MHeapPQ(..))
 import           MMZKDS.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
-import           MMZKDS.Unboxed.STURef (STURef, newSTURef, readSTURef, writeSTURef)
+import           MMZKDS.Unboxed.STURef 
+  (STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe
   (unsafeCopyArray, unsafeLeftChild, unsafeParent, unsafeRightChild)
 import           MMZKDS.Utilities
-  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
+  ( arrayLengthOverflowError, expandedSize, idMHeapPQ, initialSize
+  , outOfBoundError
+  )
 
 
 --------------------------------------------------------------------------------
@@ -150,6 +153,9 @@ instance Ord a => MDS (MHeapPQ a) ST s where
     unsafeCopyArray arrST resST (0, l - 1)
     aR    <- newSTRef resST
     return $ MHeapPQ lR aR
+
+  identifier :: MHeapPQ a s -> ST s String
+  identifier = const $ return idMHeapPQ
 
   size :: MHeapPQ a s -> ST s Int
   size = readSTURef . mHeapS

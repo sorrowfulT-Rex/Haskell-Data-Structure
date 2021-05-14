@@ -21,7 +21,7 @@ import           MMZKDS.Unboxed.Base (MULinkedList(..), MUNode(..))
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
-import           MMZKDS.Utilities (outOfBoundError)
+import           MMZKDS.Utilities (idMULinkedList, outOfBoundError)
 
 
 --------------------------------------------------------------------------------
@@ -220,6 +220,9 @@ instance STU a s => MDS (MULinkedList a) ST s where
 
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
   copy = new <=< mToList
+
+  identifier :: MULinkedList a s -> ST s String
+  identifier = const $ return idMULinkedList 
 
   size :: MULinkedList a s -> ST s Int
   size (MULinkedList lR _ _ _)

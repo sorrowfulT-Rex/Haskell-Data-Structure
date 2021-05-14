@@ -14,9 +14,7 @@ import           MMZKDS.Base (AVLSet(..))
 import           MMZKDS.DS (DS(..), DSCons(..))
 import           MMZKDS.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(..))
-
--- instance (Ord a, Show a) => Show (AVLSet a) where
---   show = ("Set: " ++) . show . (finish :: AVLSet a -> [a])
+import           MMZKDS.Utilities (idAVLSet)
 
 
 --------------------------------------------------------------------------------
@@ -56,6 +54,9 @@ instance Ord a => PriorityQueue (AVLSet a) a where
 instance DS (AVLSet a) where
   clear :: AVLSet a -> AVLSet a
   clear = const AVLEmpty
+
+  identifier :: AVLSet a -> String
+  identifier = const idAVLSet
 
   size :: AVLSet a -> Int
   size AVLEmpty            = 0

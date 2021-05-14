@@ -13,8 +13,8 @@ module MMZKDS.Unboxed.MUArrayList
 import           Control.Monad (forM_, liftM2, when)
 import           Control.Monad.ST (ST)
 import           Data.Array.ST
-  (STUArray, MArray, freeze, getBounds, newArray_, readArray, thaw,
-   writeArray
+  ( STUArray, MArray, freeze, getBounds, newArray_, readArray, thaw
+  , writeArray
   )
 import           Data.Array.Unboxed (IArray, UArray)
 import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
@@ -32,7 +32,9 @@ import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
-  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
+  ( arrayLengthOverflowError, expandedSize, idMUArrayList, initialSize
+  , outOfBoundError
+  )
 
 
 --------------------------------------------------------------------------------
@@ -288,6 +290,9 @@ instance (IArray UArray a, STU a s) => MDS (MUArrayList a) ST s where
     rlR   <- newSTURef l
     resR  <- newSTRef resST
     return $ MUArrayList rlR resR
+
+  identifier :: MUArrayList a s -> ST s String
+  identifier = const $ return idMUArrayList
 
   size :: MUArrayList a s -> ST s Int
   size (MUArrayList lR _)

@@ -10,7 +10,7 @@ import          MMZKDS.Base (FDQ(..))
 import          MMZKDS.DS (DS(..), DSCons(..))
 import          MMZKDS.List (List(..))
 import          MMZKDS.Queue (Deque(..))
-import          MMZKDS.Utilities (outOfBoundError)
+import          MMZKDS.Utilities (idFDQ, outOfBoundError)
 
 instance Show a => Show (FDQ a) where
   show (FDQ _ frt _ end)
@@ -119,6 +119,9 @@ instance Deque (FDQ a) a where
 instance DS (FDQ a) where
   clear :: FDQ a -> FDQ a
   clear = const (FDQ 0 [] 0 [])
+
+  identifier :: FDQ a -> String
+  identifier = const idFDQ
 
   size :: FDQ a -> Int
   size (FDQ fl _ el _)

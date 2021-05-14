@@ -10,7 +10,7 @@ import           Control.Monad ((<=<))
 -- It provides ways to copy the data structure and to clear all elements.
 -- It can also check for emptiness and return the size of the structure.
 -- Minimum implementation reqires @clear@, @copy@ and @size@.
--- Default method is @isNull@.
+-- Default methods are @identifier@ and @isNull@.
 --
 class Monad (m s) => MDS d m s where
   -- | Makes the data structure empty, i.e. remove all elements.
@@ -30,6 +30,13 @@ class Monad (m s) => MDS d m s where
   -- | Returns the size (length) of the list structure.
   --
   size :: d s -> m s Int
+
+  -- | Default method.
+  -- Returns a @String@ representation of the type of the data structure.
+  -- It is expected to be overridden by a unique identifier.
+  --
+  identifier :: d s -> m s String
+  identifier = const $ return "MDS"
 
   -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.

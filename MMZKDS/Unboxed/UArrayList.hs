@@ -16,7 +16,9 @@ import           MMZKDS.Queue (Deque(..))
 import           MMZKDS.List as L (List(..))
 import           MMZKDS.Unboxed.Base (UArrayList(..))
 import           MMZKDS.Utilities
-  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
+  ( arrayLengthOverflowError, expandedSize, idUArrayList, initialSize
+  , outOfBoundError
+  )
 
 instance (Show a, IArray UArray a) => Show (UArrayList a) where
   show = ("ArrayList: " ++) . show . L.toList
@@ -162,6 +164,9 @@ instance IArray UArray a => DS (UArrayList a) where
   clear :: UArrayList a -> UArrayList a
   clear (UArrayList _ arr)
     = UArrayList 0 arr
+
+  identifier :: UArrayList a -> String
+  identifier = const idUArrayList
 
   size :: UArrayList a -> Int
   size (UArrayList l _)

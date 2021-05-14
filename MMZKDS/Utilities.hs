@@ -10,6 +10,24 @@ import           Data.Coerce (Coercible, coerce)
 import           Data.Foldable (toList)
 import           Data.Maybe (isJust)
 
+
+--------------------------------------------------------------------------------
+-- Identifiers
+--------------------------------------------------------------------------------
+
+idArrayList, idAVLSet, idFDQ, idMArrayList, idMHeapPQ, idMLinkedList :: String
+idArrayList   = "ArrayList"
+idAVLSet      = "AVLSet"
+idFDQ         = "FDQ"
+idMArrayList  = "MArrayList"
+idMHeapPQ     = "MHeapPQ"
+idMLinkedList = "MLinkedList"
+
+idMUArrayList, idMUHeapPQ, idMULinkedList, idUArrayList :: String
+idMUArrayList  = "MUArrayList"
+idMUHeapPQ     = "MUHeapPQ"
+idMULinkedList = "MULinkedList"
+idUArrayList   = "UArrayList"
  
 --------------------------------------------------------------------------------
 -- Array & STArray

@@ -8,8 +8,8 @@ module MMZKDS.UnionFind where
 import           Control.Monad (liftM2)
 import           Data.Maybe (fromJust, fromMaybe)
 
-import           MMZKDS.DS (DS(..), DSCons(..))
-import           MMZKDS.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.DS as DS (DS(..), DSCons(..))
+import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 
 
 --------------------------------------------------------------------------------
@@ -96,11 +96,11 @@ class (Monad (m s), MDS (q e) m s, MDSCons [[e]] (q e) m s)
 --------------------------------------------------------------------------------
 
 instance UnionFind q e => DSCons [e] (q e) where
-  finish = concat . (MMZKDS.DS.finish :: q e -> [[e]])
+  finish = concat . (DS.finish :: q e -> [[e]])
 
-  new = MMZKDS.DS.new . map (: [])
+  new = DS.new . map (: [])
 
 instance MUnionFind q e m s => MDSCons [e] (q e) m s where
-  finish = fmap concat . (MMZKDS.MDS.finish :: q e s -> m s [[e]])
+  finish = fmap concat . (MDS.finish :: q e s -> m s [[e]])
 
-  new = MMZKDS.MDS.new . map (: [])
+  new = MDS.new . map (: [])

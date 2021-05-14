@@ -9,8 +9,8 @@ module MMZKDS.Unboxed.MUHeapPQ (MUHeapPQ) where
 import           Control.Monad (forM_, when)
 import           Control.Monad.ST (ST)
 import           Data.Array.ST
-  (STUArray, getBounds, freeze, newArray_, newListArray, thaw, readArray,
-  writeArray
+  ( STUArray, getBounds, freeze, newArray_, newListArray, thaw, readArray
+  , writeArray
   )
 import           Data.Array.Unboxed (IArray, UArray, (!))
 import           Data.Bool (bool)
@@ -27,7 +27,9 @@ import           MMZKDS.Unboxed.STURef
 import           MMZKDS.Unsafe
   (unsafeCopyArray, unsafeLeftChild, unsafeParent, unsafeRightChild)
 import           MMZKDS.Utilities
-  (arrayLengthOverflowError, expandedSize, initialSize, outOfBoundError)
+  ( arrayLengthOverflowError, expandedSize, idMUHeapPQ, initialSize
+  , outOfBoundError
+  )
 
 
 --------------------------------------------------------------------------------
@@ -160,6 +162,9 @@ instance (Ord a, STU a s) => MDS (MUHeapPQ a) ST s where
     unsafeCopyArray arrST resST (0, l - 1)
     aR    <- newSTRef resST
     return $ MUHeapPQ lR aR
+
+  identifier :: MUHeapPQ a s -> ST s String
+  identifier = const $ return idMUHeapPQ
 
   size :: MUHeapPQ a s -> ST s Int
   size = readSTURef . mHeapS

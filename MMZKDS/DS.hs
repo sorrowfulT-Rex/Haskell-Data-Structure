@@ -10,9 +10,9 @@ import           GHC.Exts (IsList(..))
 
 -- | The 'DS' class is a type class for mutable data structures living in the 
 -- ST monad.
--- It provides a method to clear all elements and to check the size.
+-- It provides methods to clear all elements and to check the size.
 -- Minimum implementation reqires @clear@, @size@.
--- Default method is @isNull@.
+-- Default methods are @identifier@ and @isNull@.
 --
 class DS d where
   -- | Makes the data structure empty, i.e. remove all elements.
@@ -24,6 +24,13 @@ class DS d where
   -- | Returns the size (length) of the list structure.
   --
   size :: d -> Int
+
+  -- | Default method.
+  -- Returns a @String@ representation of the type of the data structure.
+  -- It is expected to be overridden by a unique identifier.
+  --
+  identifier :: d -> String
+  identifier = const "DS"
 
   -- | Default method.
   -- Returns @True@ if and only if the list structure is empty.

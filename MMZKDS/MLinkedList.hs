@@ -20,7 +20,7 @@ import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.STURef
   (STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
-import           MMZKDS.Utilities (outOfBoundError)
+import           MMZKDS.Utilities (idMLinkedList, outOfBoundError)
 
 
 --------------------------------------------------------------------------------
@@ -219,6 +219,9 @@ instance MDS (MLinkedList a) ST s where
 
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
   copy = new <=< mToList
+
+  identifier :: MLinkedList a s -> ST s String
+  identifier = const $ return idMLinkedList 
 
   size :: MLinkedList a s -> ST s Int
   size (MLinkedList lR _ _ _)
