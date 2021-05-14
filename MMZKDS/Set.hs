@@ -59,6 +59,14 @@ class (DS c, DSCons [e] c) => Set c e | c -> e where
   difference = (. (DS.finish :: c1 -> [e])) . foldl' ((snd .) . flip remove)
 
   -- | Default method.
+  -- Computes the difference of two sets, where the second set is of the same
+  -- type as the first one.
+  -- For some instances of "Set" this may have a more efficient implementation.
+  --
+  difference' ::  c -> c -> c
+  difference' = difference
+
+  -- | Default method.
   -- Removes an element from the set.
   -- Returns a tuple consisting of the removed element (or Nothing, if the
   -- element is not in the set), and the set without the element.
@@ -73,6 +81,14 @@ class (DS c, DSCons [e] c) => Set c e | c -> e where
   --
   intersection :: forall c1. DSCons [e] c1 => c -> c1 -> c
   intersection = liftM2 (.) difference difference
+
+  -- | Default method.
+  -- Computes the intersection of two sets, where the second set is of the same
+  -- type as the first one.
+  -- For some instances of "Set" this may have a more efficient implementation.
+  --
+  intersection' :: c -> c -> c
+  intersection' = intersection
 
   -- | Default method.
   -- Returns a new set from @[]@.
@@ -91,6 +107,14 @@ class (DS c, DSCons [e] c) => Set c e | c -> e where
   --
   union :: forall c1. DSCons [e] c1 => c -> c1 -> c
   union = (. (DS.finish :: c1 -> [e])) . foldl' (flip add)
+
+  -- | Default method.
+  -- Computes the union of two sets, where the second set is of the same
+  -- type as the first one.
+  -- For some instances of "Set" this may have a more efficient implementation.
+  --
+  union' :: c -> c -> c
+  union' = union
 
 
 --------------------------------------------------------------------------------
@@ -137,6 +161,14 @@ class (Monad (m s), MDS c m s, MDSCons [e] c m s)
   mDifference
     = flip ((>>=) . (MDS.finish :: c1 s -> m s [e])) . mapM_ . flip mRemove
 
+  -- | Default method.
+  -- Computes the difference of two sets, and update it to the first set.
+  -- The second set is of the same type as the first one.
+  -- For some instances of "Set" this may have a more efficient implementation.
+  --
+  mDifference' :: c s -> c s -> m s ()
+  mDifference' = mDifference
+
   mDropAny :: c s -> m s (Maybe e)
   mDropAny s = do
     me <- mFindAny s
@@ -151,6 +183,14 @@ class (Monad (m s), MDS c m s, MDSCons [e] c m s)
     d' <- MDS.copy d
     mDifference d' ds
     mDifference d d'
+
+  -- | Default method.
+  -- Computes the intersection of two sets, and update it to the first set.
+  -- The second set is of the same type as the first one.
+  -- For some instances of "Set" this may have a more efficient implementation.
+  --
+  mIntersection' :: c s -> c s -> m s ()
+  mIntersection' = mIntersection
 
   -- | Default method.
   -- Returns a new set from @[]@.
@@ -169,6 +209,14 @@ class (Monad (m s), MDS c m s, MDSCons [e] c m s)
   --
   mUnion :: forall c1. MDSCons [e] c1 m s => c s -> c1 s -> m s ()
   mUnion = flip ((>>=) . (MDS.finish :: c1 s -> m s [e])) . mapM_ . flip mAdd
+
+  -- | Default method.
+  -- Computes the union of two sets, and update it to the first set.
+  -- The second set is of the same type as the first one.
+  -- For some instances of "Set" this may have a more efficient implementation.
+  --
+  mUnion' :: c s -> c s -> m s ()
+  mUnion' = mUnion
 
 
 --------------------------------------------------------------------------------
