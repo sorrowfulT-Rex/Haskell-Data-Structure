@@ -124,7 +124,7 @@ instance DS (FDQ a) where
   size (FDQ fl _ el _)
     = fl + el
 
-instance DSCons [a] (FDQ a) a where
+instance DSCons [a] (FDQ a) where
   finish :: FDQ a -> [a]
   finish (FDQ _ frt _ end)
     = frt ++ reverse end

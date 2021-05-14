@@ -29,7 +29,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- When the queue is non-empty:
 --  @ q ==== let (Just e, q') = pop q in add e q' @
 --
-class (DS q, DSCons [e] q e) => PriorityQueue q e | q -> e where
+class (DS q, DSCons [e] q) => PriorityQueue q e | q -> e where
   -- | Adds an element into the queue.
   add :: e -> q -> q
 
@@ -60,7 +60,7 @@ class (DS q, DSCons [e] q e) => PriorityQueue q e | q -> e where
 -- When the queue is non-empty:
 -- @ mPop mq ==== mPop mq >>= flip mAdd mq >> mPop mq @
 --
-class (Monad (m s), MDS q m s, MDSCons [e] q e m s) 
+class (Monad (m s), MDS q m s, MDSCons [e] q m s) 
   => MPriorityQueue q e m s | q -> e where
   -- | Adds an element into the queue.
   mAdd :: e -> q s -> m s ()

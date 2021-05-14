@@ -225,7 +225,7 @@ instance STU a s => MDS (MULinkedList a) ST s where
   size (MULinkedList lR _ _ _)
     = readSTURef lR
 
-instance STU a s => MDSCons [a] (MULinkedList a) a ST s where
+instance STU a s => MDSCons [a] (MULinkedList a) ST s where
   finish :: MULinkedList a s -> ST s [a]
   finish mll = do
     let mToList' node = if isHead node

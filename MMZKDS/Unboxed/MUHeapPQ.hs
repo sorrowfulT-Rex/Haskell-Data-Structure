@@ -165,7 +165,7 @@ instance (Ord a, STU a s) => MDS (MUHeapPQ a) ST s where
   size = readSTURef . mHeapS
 
 instance (Ord a, IArray UArray a, STU a s) 
-  => MDSCons [a] (MUHeapPQ a) a ST s where
+  => MDSCons [a] (MUHeapPQ a) ST s where
     finish :: MUHeapPQ a s -> ST s [a]
     finish mh@(MUHeapPQ _ arrR) = do
       l <- size mh

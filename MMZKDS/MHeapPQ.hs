@@ -154,7 +154,7 @@ instance Ord a => MDS (MHeapPQ a) ST s where
   size :: MHeapPQ a s -> ST s Int
   size = readSTURef . mHeapS
 
-instance Ord a => MDSCons [a] (MHeapPQ a) a ST s where
+instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
   finish :: MHeapPQ a s -> ST s [a]
   finish mh = do
     let freeze' = freeze :: STArray s Int a -> ST s (Array Int a)

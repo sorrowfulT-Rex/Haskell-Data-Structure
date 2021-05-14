@@ -163,7 +163,7 @@ instance DS (ArrayList a) where
   size (ArrayList l _)
     = l
 
-instance DSCons [a] (ArrayList a) a where
+instance DSCons [a] (ArrayList a) where
   finish :: ArrayList a -> [a]
   finish = L.toList
 

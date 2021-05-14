@@ -62,7 +62,7 @@ instance DS (AVLSet a) where
   size (AVLLeaf _)         = 1
   size (AVLNode s _ _ _ _) = s
 
-instance Ord a => DSCons [a] (AVLSet a) a where
+instance Ord a => DSCons [a] (AVLSet a) where
   finish :: AVLSet a -> [a]
   finish = F.toList
 
@@ -71,7 +71,7 @@ instance Ord a => DSCons [a] (AVLSet a) a where
 
 
 --------------------------------------------------------------------------------
--- AVL-Tree Specific Function
+-- Foldable Instance
 --------------------------------------------------------------------------------
 
 instance Foldable AVLSet where
@@ -92,6 +92,11 @@ instance Foldable AVLSet where
         = e : e' : toList' stack r
       toList' stack bt@(AVLNode _ _ l _ _)
         = toList' (bt : stack) l
+
+
+--------------------------------------------------------------------------------
+-- AVL-Tree Specific Function
+--------------------------------------------------------------------------------
 
 -- | Adds an element to the AVL-tree with a balancing function.
 -- If the element exists already, the function replaces it and returns @False@.

@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module MMZKDS.MDS (MDS(..), MDSCons(..)) where
@@ -44,7 +44,7 @@ class Monad (m s) => MDS d m s where
 -- 'Foo a s', then @instance [a] (Foo a) s@ is used to define how to make a new 
 -- instance of 'Foo' from a list.
 --
-class Monad (m s) => MDSCons a d e m s | a -> e, d -> e where
+class Monad (m s) => MDSCons a d m s where
   -- | Turns the mutable data structure to the given immutable data structure
   -- 
   finish :: d s -> m s a

@@ -19,7 +19,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- Minimal implementation requires @deepClear@, @newWithSize@, @physicalSize@
 -- and @resize@.
 --
-class (DS a, DSCons [e] a e) => ArrayBased a e | a -> e where
+class (DS a, DSCons [e] a) => ArrayBased a e | a -> e where
   -- | Returns a new structure that is truly empty; in other words, all elements
   -- are physically removed from the structure.
   --
@@ -54,7 +54,7 @@ class (DS a, DSCons [e] a e) => ArrayBased a e | a -> e where
 -- Minimal implementation requires @mDeepClear@, @mNewWithSize@, 
 -- @mPhysicalSize@, @mResize@ and @trueCopy@.
 --
-class (Monad (m s), MDS a m s, MDSCons [e] a e m s) 
+class (Monad (m s), MDS a m s, MDSCons [e] a m s) 
   => MArrayBased a e m s | a -> e where
   -- | Truly empties the structure; in other words, all elements are physically 
   -- removed from the structure.

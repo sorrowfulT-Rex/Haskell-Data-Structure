@@ -30,7 +30,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- "stream" the set with @toList@, apply the functions, then "collect" it back 
 -- with "@newSet@".
 --
-class (DS c, DSCons [e] c e) => Set c e | c -> e where
+class (DS c, DSCons [e] c) => Set c e | c -> e where
   -- | Adds an element into the set.
   -- If the element is not already in the set, returns a new set with this
   -- element, otherwise replaces the old element in the set with the new one.
@@ -55,7 +55,7 @@ class (DS c, DSCons [e] c e) => Set c e | c -> e where
   -- | Default method.
   -- Computes the difference of two sets.
   --
-  difference :: forall c1. DSCons [e] c1 e => c -> c1 -> c
+  difference :: forall c1. DSCons [e] c1 => c -> c1 -> c
   difference = (. (DS.finish :: c1 -> [e])) . foldl' ((snd .) . flip remove)
 
   -- | Default method.
@@ -71,7 +71,7 @@ class (DS c, DSCons [e] c e) => Set c e | c -> e where
   -- | Default method.
   -- Computes the intersection of two sets.
   --
-  intersection :: forall c1. DSCons [e] c1 e => c -> c1 -> c
+  intersection :: forall c1. DSCons [e] c1 => c -> c1 -> c
   intersection = liftM2 (.) difference difference
 
   -- | Default method.
@@ -89,7 +89,7 @@ class (DS c, DSCons [e] c e) => Set c e | c -> e where
   -- | Default method.
   -- Computes the union of two sets.
   --
-  union :: forall c1. DSCons [e] c1 e => c -> c1 -> c
+  union :: forall c1. DSCons [e] c1 => c -> c1 -> c
   union = (. (DS.finish :: c1 -> [e])) . foldl' (flip add)
 
 
@@ -107,7 +107,7 @@ class (DS c, DSCons [e] c e) => Set c e | c -> e where
 -- Default methods include @mDifference@, @mDropAny@, @mIntersection@,
 -- @mNewSet@, @mToList @and @mUnion@.
 --
-class (Monad (m s), MDS c m s, MDSCons [e] c e m s) 
+class (Monad (m s), MDS c m s, MDSCons [e] c m s) 
   => MSet c e m s | c -> e where
   -- | Adds an element into the set.
   -- If the element is not already in the set, adds it to the set, otherwise
@@ -133,7 +133,7 @@ class (Monad (m s), MDS c m s, MDSCons [e] c e m s)
   -- | Default method.
   -- Computes the difference of two sets, and update it to the first set.
   --
-  mDifference :: forall c1. MDSCons [e] c1 e m s => c s -> c1 s -> m s ()
+  mDifference :: forall c1. MDSCons [e] c1 m s => c s -> c1 s -> m s ()
   mDifference
     = flip ((>>=) . (MDS.finish :: c1 s -> m s [e])) . mapM_ . flip mRemove
 
@@ -146,7 +146,7 @@ class (Monad (m s), MDS c m s, MDSCons [e] c e m s)
   -- | Default method.
   -- Computes the intersection of two sets, and update it to the first set.
   --
-  mIntersection :: forall c1. MDSCons [e] c1 e m s => c s -> c1 s -> m s ()
+  mIntersection :: forall c1. MDSCons [e] c1 m s => c s -> c1 s -> m s ()
   mIntersection d ds = do
     d' <- MDS.copy d
     mDifference d' ds
@@ -167,7 +167,7 @@ class (Monad (m s), MDS c m s, MDSCons [e] c e m s)
   -- | Default method.
   -- Computes the union of two sets, and update it to the first set.
   --
-  mUnion :: forall c1. MDSCons [e] c1 e m s => c s -> c1 s -> m s ()
+  mUnion :: forall c1. MDSCons [e] c1 m s => c s -> c1 s -> m s ()
   mUnion = flip ((>>=) . (MDS.finish :: c1 s -> m s [e])) . mapM_ . flip mAdd
 
 

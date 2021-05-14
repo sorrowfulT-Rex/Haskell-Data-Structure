@@ -224,7 +224,7 @@ instance MDS (MLinkedList a) ST s where
   size (MLinkedList lR _ _ _)
     = readSTURef lR
 
-instance MDSCons [a] (MLinkedList a) a ST s where
+instance MDSCons [a] (MLinkedList a) ST s where
   finish :: MLinkedList a s -> ST s [a]
   finish mll = do
     let mToList' node = if isHead node

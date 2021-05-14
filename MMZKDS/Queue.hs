@@ -23,7 +23,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- Minimal implementation requires @dequeue@ and @enqueue@.
 -- Default method is @peek@.
 -- 
-class (DS q, DSCons [e] q e) => Queue q e | q -> e where
+class (DS q, DSCons [e] q) => Queue q e | q -> e where
   -- | Removes the element from the front of the queue, returning a tuple of the
   -- element and the rest of the queue.
   -- 
@@ -51,7 +51,7 @@ class (DS q, DSCons [e] q e) => Queue q e | q -> e where
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- Minimal implementation requires @mDequeue@, @mEnqueue@ and @mPeek@.
 -- 
-class (Monad (m s), MDS q m s, MDSCons [e] q e m s)
+class (Monad (m s), MDS q m s, MDSCons [e] q m s)
   => MQueue q e m s | q -> e where
   -- | Removes the element at the front of the queue, returning the element.
   -- 
@@ -78,7 +78,7 @@ class (Monad (m s), MDS q m s, MDSCons [e] q e m s)
 -- and @enqueueEnd@.
 -- Default method is @peekFront@ and @peekEnd@.
 -- 
-class (DS q, DSCons [e] q e) => Deque q e | q -> e where
+class (DS q, DSCons [e] q) => Deque q e | q -> e where
   -- | Removes the element from the front of the queue, returning a tuple of the
   -- element and the rest of the queue.
   -- 
@@ -120,7 +120,7 @@ class (DS q, DSCons [e] q e) => Deque q e | q -> e where
 -- A 'MDeque' is a 'MQueue' by default.
 -- Minimal implementation requires @mDequeueFront@, @mDequeueEnd@, 
 -- @mEnqueueFront@ and @mEnqueueEnd@.
-class (Monad (m s), MDS q m s, MDSCons [e] q e m s)
+class (Monad (m s), MDS q m s, MDSCons [e] q m s)
   => MDeque q e m s | q -> e where
   -- | Removes the element at the front of the queue, returning the element.
   -- 
@@ -161,7 +161,7 @@ class (Monad (m s), MDS q m s, MDSCons [e] q e m s)
 -- Deque -> Queue
 --------------------------------------------------------------------------------
 
-instance {-# OVERLAPPABLE #-} (DS (q a), DSCons [a] (q a) a, (Deque (q a) a)) 
+instance {-# OVERLAPPABLE #-} (DS (q a), DSCons [a] (q a), (Deque (q a) a)) 
   => Queue (q a) a where
   dequeue = dequeueFront
   enqueue = enqueueEnd
@@ -172,7 +172,7 @@ instance {-# OVERLAPPABLE #-} (DS (q a), DSCons [a] (q a) a, (Deque (q a) a))
 --------------------------------------------------------------------------------
 
 instance {-# OVERLAPPABLE #-} 
-  (Monad (m s), MDS (q a) m s, MDSCons [a] (q a) a m s, (MDeque (q a) a m s)) 
+  (Monad (m s), MDS (q a) m s, MDSCons [a] (q a) m s, (MDeque (q a) a m s)) 
     => MQueue (q a) a m s where
   mDequeue = mDequeueFront
   mEnqueue = mEnqueueEnd

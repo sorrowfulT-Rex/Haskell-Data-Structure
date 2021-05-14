@@ -167,7 +167,7 @@ instance IArray UArray a => DS (UArrayList a) where
   size (UArrayList l _)
     = l
 
-instance IArray UArray a => DSCons [a] (UArrayList a) a where
+instance IArray UArray a => DSCons [a] (UArrayList a) where
   finish :: UArrayList a -> [a]
   finish (UArrayList l arr)
     = toList' 0

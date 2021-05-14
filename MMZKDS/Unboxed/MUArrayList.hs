@@ -294,7 +294,7 @@ instance (IArray UArray a, STU a s) => MDS (MUArrayList a) ST s where
     = readSTURef lR
 
 instance (IArray UArray a, MArray (STUArray s) a (ST s))
-  => MDSCons [a] (MUArrayList a) a ST s where
+  => MDSCons [a] (MUArrayList a) ST s where
   finish :: MUArrayList a s -> ST s [a]
   finish mal = do
     al <- uArrayListFreeze mal

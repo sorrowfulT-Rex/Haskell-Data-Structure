@@ -278,7 +278,7 @@ instance MDS (MArrayList a) ST s where
   size (MArrayList lR _)
     = readSTURef lR
 
-instance MDSCons [a] (MArrayList a) a ST s where
+instance MDSCons [a] (MArrayList a) ST s where
   finish :: MArrayList a s -> ST s [a]
   finish mal = do
     al <- arrayListFreeze mal

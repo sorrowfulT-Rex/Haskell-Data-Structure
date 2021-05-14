@@ -37,7 +37,7 @@ import           MMZKDS.MDS as MDS (MDS(..), MDSCons(..))
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
 -- argument.
 --
-class (DS l, DSCons [e] l e) => List l e | l -> e where
+class (DS l, DSCons [e] l) => List l e | l -> e where
   -- | Adds an element into the list structure.
   -- Takes an @Int@ as index, an element and a list, returns a list that inserts
   -- the given element before the index.
@@ -225,7 +225,7 @@ class (DS l, DSCons [e] l e) => List l e | l -> e where
 -- method does not change the size (e.g. @mGet@ or @mSet@), the list is the 
 -- first argument.
 --
-class (Monad (m s), MDS l m s, MDSCons [e] l e m s) 
+class (Monad (m s), MDS l m s, MDSCons [e] l m s) 
   => MList l e m s | l -> e where
   -- | Adds an element into the list structure.
   -- Takes an Int as index, an element and a list, modifies the list by

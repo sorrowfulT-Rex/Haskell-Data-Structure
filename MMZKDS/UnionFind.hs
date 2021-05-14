@@ -23,7 +23,7 @@ import           MMZKDS.MDS (MDS(..), MDSCons(..))
 -- Minimal implementation requires @find@ and @union@.
 -- Default method is @isEquiv@ and @(!)@.
 -- 
-class (DS (q e), DSCons [[e]] (q e) e) => UnionFind q e where
+class (DS (q e), DSCons [[e]] (q e)) => UnionFind q e where
   -- | Find the representative of a give element. If the element is not in the
   -- union-find, return @Nothing@.
   -- 
@@ -45,7 +45,7 @@ class (DS (q e), DSCons [[e]] (q e) e) => UnionFind q e where
   -- | Default method.
   -- Find the representative of a give element. If the element is not in the
   -- union-find, it gives an error.
-  infix 1 !
+  infix 2 !
   (!) :: q e -> e -> e
   (!) = (fromJust .) . find
 
@@ -86,7 +86,7 @@ class (Monad (m s), MDS (q e) m s, MDSCons [[e]] (q e) m s)
   -- | Default method.
   -- Find the representative of a give element. If the element is not in the
   -- union-find, it gives an error.
-  infix 1 ~!
+  infix 2 ~!
   (~!) :: q e s -> e -> m s e
   (~!) = (fmap fromJust .) . mFind
 
@@ -95,12 +95,12 @@ class (Monad (m s), MDS (q e) m s, MDSCons [[e]] (q e) m s)
 -- Construct from [] as Singleton
 --------------------------------------------------------------------------------
 
-instance UnionFind q e => DSCons [e] (q e) e where
-  finish = concat . (MMZKDS.DS.finish :: q e -> [[e]])
+-- instance UnionFind q e => DSCons [e] (q e) e where
+--   finish q = concat $ (MMZKDS.DS.finish :: q e -> [[e]]) q
 
-  new = MMZKDS.DS.new . map (: [])
+--   new = MMZKDS.DS.new
 
-instance MUnionFind q e m s => MDSCons [e] (q e) m s where
-  finish = fmap concat . (MMZKDS.MDS.finish :: q e s -> m s [[e]])
+-- instance MUnionFind q e m s => MDSCons [e] (q e) e m s where
+--   finish = MMZKDS.MDS.finish
 
-  new = MMZKDS.MDS.new . map (: [])
+--   new = MMZKDS.MDS.new

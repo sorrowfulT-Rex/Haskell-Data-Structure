@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -35,7 +35,7 @@ class DS d where
 -- from or to a potentially different immutable data structure.
 -- It provides a @finish@ method and a @new@ method.
 --
-class DSCons a d e | a -> e, d -> e where
+class DSCons a d where
   -- | Turn the mutable data structure to the given immutable data structure
   finish :: d -> a
 
@@ -44,7 +44,7 @@ class DSCons a d e | a -> e, d -> e where
   --
   new :: a -> d
 
-instance {-# OVERLAPPABLE #-} DSCons [e] (d e) e => IsList (d e) where
+instance {-# OVERLAPPABLE #-} DSCons [e] (d e) => IsList (d e) where
   type Item (d e) = e
   fromList        = new
   toList          = finish
