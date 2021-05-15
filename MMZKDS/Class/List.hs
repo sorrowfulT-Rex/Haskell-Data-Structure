@@ -129,9 +129,9 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- the function returns an error.
   --
   insertAll :: forall l1. (DS l1, DSCons [e] l1) => l -> Int -> l1 -> l
-  insertAll l index es
-    = L.foldl' (\l (offset, e) -> insert l (index + offset) e) l $ 
-      zip [0..] $ (finish :: l1 -> [e]) es
+  insertAll l index 
+    = L.foldl' (\l (offset, e) -> insert l (index + offset) e) l .
+      zip [0..] . (finish :: l1 -> [e]) 
 
   -- | Default method.
   -- Same as @insertAll@, but specifies the list of new elements to be the same
@@ -258,3 +258,16 @@ instance {-# OVERLAPPABLE #-} (Eq a, List (l a) a) => Eq (l a) where
     where
       ls  = size l
       ls' = size l'
+
+instance {-# OVERLAPPABLE #-} (Ord a, List (l a) a) => Ord (l a) where
+  l <= l' 
+    = go 0
+    where
+      ls  = size l
+      ls' = size l'
+      go x 
+        | x == ls                = True
+        | x == ls'               = False
+        | l `get` x < l' `get` x = True
+        | l `get` x > l' `get` x = False
+        | otherwise              = go (x + 1)

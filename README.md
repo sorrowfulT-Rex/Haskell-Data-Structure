@@ -40,6 +40,7 @@ See the [Haddocks](MMZKDS/Class/MArrayBased.hs) for full documentation.
 This file provides a type class, `List`, for immutable and mutable list structures, including methods of random access, addition, deletion, finding indices *etc.*   
 The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
 Instances of `List` is automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
+Similarly `List` instances also derive `Ord`.  
 See the [Haddocks](MMZKDS/Class/List.hs) for full documentation.  
 
 # [MMZKDS/Class/MList.hs](MMZKDS/Class/MList.hs)
