@@ -8,14 +8,14 @@ module MMZKDS.MLinkedList (MLinkedList) where
 
 import           Control.Monad (forM, forM_, liftM2, when, (<=<))
 import           Control.Monad.ST (ST)
-import           Data.List (elemIndex, sortOn)
+import           Data.List as L (elemIndex, sortOn)
 import           Data.Maybe (fromJust, isJust)
 import           Data.STRef
   (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.Base (MLinkedList(..), MNode(..))
-import           MMZKDS.List as L (MList(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MList (MList(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.STURef
   (STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
@@ -28,8 +28,8 @@ import           MMZKDS.Utilities (idMLinkedList, outOfBoundError)
 --------------------------------------------------------------------------------
 
 instance MList (MLinkedList a) a ST s where
-  mDelete :: Int -> MLinkedList a s -> ST s (Maybe a)
-  mDelete index mll@(MLinkedList lR _ iR cR) = do
+  delete :: Int -> MLinkedList a s -> ST s (Maybe a)
+  delete index mll@(MLinkedList lR _ iR cR) = do
     l <- readSTURef lR
     if index < 0 || index >= l
       then return Nothing
@@ -65,16 +65,16 @@ instance MList (MLinkedList a) a ST s where
         writeSTURef lR $! l - 1
         del pre cur nxt
 
-  mGet :: MLinkedList a s -> Int -> ST s a
-  mGet mll@(MLinkedList _ _ _ cR) index = do
+  get :: MLinkedList a s -> Int -> ST s a
+  get mll@(MLinkedList _ _ _ cR) index = do
     accessNode index mll
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
       else nodeElem cur
 
-  mIndicesOf :: Eq a => MLinkedList a s -> a -> ST s [Int]
-  mIndicesOf mll e = do
+  indicesOf :: Eq a => MLinkedList a s -> a -> ST s [Int]
+  indicesOf mll e = do
     let mIndicesOf' i node = do
         if      isHead node
         then    return []
@@ -87,8 +87,8 @@ instance MList (MLinkedList a) a ST s where
     hd <- getHead mll
     nextN hd >>= mIndicesOf' 0
 
-  mInsert :: Int -> a -> MLinkedList a s -> ST s ()
-  mInsert index e mll@(MLinkedList lR _ iR cR) = do
+  insert :: Int -> a -> MLinkedList a s -> ST s ()
+  insert index e mll@(MLinkedList lR _ iR cR) = do
     l <- readSTURef lR
     if index < 0 || index > l
       then outOfBoundError index
@@ -105,21 +105,21 @@ instance MList (MLinkedList a) a ST s where
         writeSTRef cR newNode
         writeSTURef lR $! l + 1
 
-  mSet :: MLinkedList a s -> Int -> a -> ST s ()
-  mSet mll@(MLinkedList _ _ _ cR) index e = do
+  set :: MLinkedList a s -> Int -> a -> ST s ()
+  set mll@(MLinkedList _ _ _ cR) index e = do
     accessNode index mll
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
       else let MNode _ eR _ = cur in writeSTRef eR e
 
-  mSortOn :: Ord b => (a -> b) -> MLinkedList a s -> ST s ()
-  mSortOn f mll@(MLinkedList _ hR iR cR) = do
+  sortOn :: Ord b => (a -> b) -> MLinkedList a s -> ST s ()
+  sortOn f mll@(MLinkedList _ hR iR cR) = do
     i    <- readSTURef iR
-    list <- mToList mll
-    let list' = sortOn (f . snd) $ zip [0..] list
+    list <- toList mll
+    let list' = L.sortOn (f . snd) $ zip [0..] list
     let ui'   = elemIndex i (fst <$> list')
-    mll' <- mNewList $ snd <$> list'
+    mll' <- newList $ snd <$> list'
     hd   <- getHead mll'
     writeSTRef hR $! hd
     writeSTRef cR $! hd
@@ -128,15 +128,15 @@ instance MList (MLinkedList a) a ST s where
       Nothing -> return ()
       Just i' -> accessNode i' mll
 
-  mSubList :: Int -> Int -> MLinkedList a s -> ST s (MLinkedList a s)
-  mSubList inf sup mll@(MLinkedList _ _ _ cR) = do
+  subList :: Int -> Int -> MLinkedList a s -> ST s (MLinkedList a s)
+  subList inf sup mll@(MLinkedList _ _ _ cR) = do
     ls <- size mll
     forM [(max inf 0)..(min sup ls - 1)]
-      ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= mNewList
+      ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= newList
 
   -- Overwritten default method
-  mAppend :: a -> MLinkedList a s -> ST s ()
-  mAppend e (MLinkedList lR hR _ _) = do
+  append :: a -> MLinkedList a s -> ST s ()
+  append e (MLinkedList lR hR _ _) = do
     cur <- readSTRef hR
     prv <- prevN cur
     nR  <- newSTRef cur
@@ -148,8 +148,8 @@ instance MList (MLinkedList a) a ST s where
     modifySTURef lR succ
 
   -- Overwritten default method
-  mIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
-  mIndexOf mll e = do
+  indexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
+  indexOf mll e = do
     let mIndexOf' i node
           | isHead node                         = return Nothing
           | nodeElem node `unsafeSTEq` return e = return $ Just i
@@ -159,20 +159,20 @@ instance MList (MLinkedList a) a ST s where
     nextN hd >>= mIndexOf' 0
 
   -- Overwritten default method
-  mLastIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
-  mLastIndexOf mll e = do
+  lastIndexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)
+  lastIndexOf mll e = do
     l <- size mll
-    let mLastIndexOf' i node
+    let lastIndexOf' i node
           | isHead node                         = return Nothing
           | nodeElem node `unsafeSTEq` return e = return $ Just i
           | otherwise                           = prevN node >>= 
-                                                  mLastIndexOf' (i - 1)
+                                                  lastIndexOf' (i - 1)
     hd <- getHead mll
-    prevN hd >>= mLastIndexOf' (l - 1)
+    prevN hd >>= lastIndexOf' (l - 1)
 
   -- Overwritten default method
-  mPush :: a -> MLinkedList a s -> ST s ()
-  mPush e (MLinkedList lR hR iR _) = do
+  push :: a -> MLinkedList a s -> ST s ()
+  push e (MLinkedList lR hR iR _) = do
     cur <- readSTRef hR
     nxt <- nextN cur
     pR  <- newSTRef cur
@@ -192,16 +192,16 @@ instance MList (MLinkedList a) a ST s where
 
 instance MDeque (MLinkedList a) a ST s where
   mDequeueFront :: MLinkedList a s -> ST s (Maybe a)
-  mDequeueFront = mPopFront
+  mDequeueFront = popFront
 
   mDequeueEnd :: MLinkedList a s -> ST s (Maybe a)
-  mDequeueEnd = mPop
+  mDequeueEnd = pop
 
   mEnqueueFront :: a -> MLinkedList a s -> ST s ()
-  mEnqueueFront = mPush
+  mEnqueueFront = push
 
   mEnqueueEnd :: a -> MLinkedList a s -> ST s ()
-  mEnqueueEnd = mAppend
+  mEnqueueEnd = append
 
 
 --------------------------------------------------------------------------------
@@ -218,7 +218,7 @@ instance MDS (MLinkedList a) ST s where
     writeSTRef cR hd
 
   copy :: MLinkedList a s -> ST s (MLinkedList a s)
-  copy = new <=< mToList
+  copy = new <=< toList
 
   identifier :: MLinkedList a s -> ST s String
   identifier = const $ return idMLinkedList 

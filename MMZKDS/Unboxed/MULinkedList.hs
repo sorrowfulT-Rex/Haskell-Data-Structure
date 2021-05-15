@@ -8,14 +8,13 @@ module MMZKDS.Unboxed.MULinkedList (MULinkedList) where
 
 import           Control.Monad (forM, forM_, liftM2, when, (<=<))
 import           Control.Monad.ST (ST)
-import           Data.Foldable as F (toList)
-import           Data.List (elemIndex, sortOn)
+import           Data.List as L (elemIndex, sortOn)
 import           Data.Maybe (fromJust, isJust)
 import           Data.STRef
   (STRef, modifySTRef', newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.List as L (MList(..))
+import           MMZKDS.Class.MList (MList(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.Base (MULinkedList(..), MUNode(..))
 import           MMZKDS.Unboxed.STURef
@@ -29,8 +28,8 @@ import           MMZKDS.Utilities (idMULinkedList, outOfBoundError)
 --------------------------------------------------------------------------------
 
 instance STU a s => MList (MULinkedList a) a ST s where
-  mDelete :: Int -> MULinkedList a s -> ST s (Maybe a)
-  mDelete index mll@(MULinkedList lR _ iR cR) = do
+  delete :: Int -> MULinkedList a s -> ST s (Maybe a)
+  delete index mll@(MULinkedList lR _ iR cR) = do
     l <- readSTURef lR
     if index < 0 || index >= l
       then return Nothing
@@ -66,30 +65,30 @@ instance STU a s => MList (MULinkedList a) a ST s where
         writeSTURef lR $ l - 1
         del pre cur nxt
 
-  mGet :: MULinkedList a s -> Int -> ST s a
-  mGet mll@(MULinkedList _ _ _ cR) index = do
+  get :: MULinkedList a s -> Int -> ST s a
+  get mll@(MULinkedList _ _ _ cR) index = do
     accessUNode index mll
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
       else uNodeElem cur
 
-  mIndicesOf :: Eq a => MULinkedList a s -> a -> ST s [Int]
-  mIndicesOf mll e = do
-    let mIndicesOf' i node = do
+  indicesOf :: Eq a => MULinkedList a s -> a -> ST s [Int]
+  indicesOf mll e = do
+    let indicesOf' i node = do
         if      isHead node
         then    return []
         else if uNodeElem node `unsafeSTEq` return e
         then do
           nxt <- nextUN node
-          rst <- mIndicesOf' (i + 1) nxt
+          rst <- indicesOf' (i + 1) nxt
           return $ i : rst
-        else    nextUN node >>= mIndicesOf' (i + 1)
+        else    nextUN node >>= indicesOf' (i + 1)
     hd <- getHead mll
-    nextUN hd >>= mIndicesOf' 0
+    nextUN hd >>= indicesOf' 0
 
-  mInsert :: Int -> a -> MULinkedList a s -> ST s ()
-  mInsert index e mll@(MULinkedList lR _ iR cR) = do
+  insert :: Int -> a -> MULinkedList a s -> ST s ()
+  insert index e mll@(MULinkedList lR _ iR cR) = do
     l <- readSTURef lR
     if index < 0 || index > l
       then outOfBoundError index
@@ -106,21 +105,21 @@ instance STU a s => MList (MULinkedList a) a ST s where
         writeSTRef cR newNode
         writeSTURef lR $ l + 1
 
-  mSet :: MULinkedList a s -> Int -> a -> ST s ()
-  mSet mll@(MULinkedList _ _ _ cR) index e = do
+  set :: MULinkedList a s -> Int -> a -> ST s ()
+  set mll@(MULinkedList _ _ _ cR) index e = do
     accessUNode index mll
     cur <- readSTRef cR
     if isHead cur
       then outOfBoundError index
       else let MUNode _ eR _ = cur in writeSTURef eR e
 
-  mSortOn :: Ord b => (a -> b) -> MULinkedList a s -> ST s ()
-  mSortOn f mll@(MULinkedList _ hR iR cR) = do
+  sortOn :: Ord b => (a -> b) -> MULinkedList a s -> ST s ()
+  sortOn f mll@(MULinkedList _ hR iR cR) = do
     i    <- readSTURef iR
-    list <- mToList mll
-    let list' = sortOn (f . snd) $ zip [0..] list
+    list <- toList mll
+    let list' = L.sortOn (f . snd) $ zip [0..] list
     let ui'   = elemIndex i (fst <$> list')
-    mll' <- mNewList $ snd <$> list'
+    mll' <- newList $ snd <$> list'
     hd   <- getHead mll'
     writeSTRef hR $! hd
     writeSTRef cR $! hd
@@ -129,15 +128,15 @@ instance STU a s => MList (MULinkedList a) a ST s where
       Nothing -> return ()
       Just i' -> accessUNode i' mll
 
-  mSubList :: Int -> Int -> MULinkedList a s -> ST s (MULinkedList a s)
-  mSubList inf sup mll@(MULinkedList _ _ _ cR) = do
+  subList :: Int -> Int -> MULinkedList a s -> ST s (MULinkedList a s)
+  subList inf sup mll@(MULinkedList _ _ _ cR) = do
     ls <- size mll
     forM [(max inf 0)..(min sup ls - 1)]
-      ((>> (readSTRef cR >>= uNodeElem)) . flip accessUNode mll) >>= mNewList
+      ((>> (readSTRef cR >>= uNodeElem)) . flip accessUNode mll) >>= newList
 
   -- Overwritten default method
-  mAppend :: a -> MULinkedList a s -> ST s ()
-  mAppend e (MULinkedList lR hR _ _) = do
+  append :: a -> MULinkedList a s -> ST s ()
+  append e (MULinkedList lR hR _ _) = do
     cur <- readSTRef hR
     prv <- prevUN cur
     nR  <- newSTRef cur
@@ -149,31 +148,31 @@ instance STU a s => MList (MULinkedList a) a ST s where
     modifySTURef lR succ
 
   -- Overwritten default method
-  mIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
-  mIndexOf mll e = do
-    let mIndexOf' i node
+  indexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
+  indexOf mll e = do
+    let indexOf' i node
           | isHead node                          = return Nothing
           | uNodeElem node `unsafeSTEq` return e = return $ Just i
           | otherwise                            = nextUN node >>= 
-                                                   mIndexOf' (i + 1)
+                                                   indexOf' (i + 1)
     hd <- getHead mll
-    nextUN hd >>= mIndexOf' 0
+    nextUN hd >>= indexOf' 0
 
   -- Overwritten default method
-  mLastIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
-  mLastIndexOf mll e = do
+  lastIndexOf :: Eq a => MULinkedList a s -> a -> ST s (Maybe Int)
+  lastIndexOf mll e = do
     l <- size mll
-    let mLastIndexOf' i node
+    let lastIndexOf' i node
           | isHead node                          = return Nothing
           | uNodeElem node `unsafeSTEq` return e = return $ Just i
           | otherwise                            = prevUN node >>= 
-                                                   mLastIndexOf' (i - 1)
+                                                   lastIndexOf' (i - 1)
     hd <- getHead mll
-    prevUN hd >>= mLastIndexOf' (l - 1)
+    prevUN hd >>= lastIndexOf' (l - 1)
 
   -- Overwritten default method
-  mPush :: a -> MULinkedList a s -> ST s ()
-  mPush e (MULinkedList lR hR iR _) = do
+  push :: a -> MULinkedList a s -> ST s ()
+  push e (MULinkedList lR hR iR _) = do
     cur <- readSTRef hR
     nxt <- nextUN cur
     pR  <- newSTRef cur
@@ -193,16 +192,16 @@ instance STU a s => MList (MULinkedList a) a ST s where
 
 instance STU a s => MDeque (MULinkedList a) a ST s where
   mDequeueFront :: MULinkedList a s -> ST s (Maybe a)
-  mDequeueFront = mPopFront
+  mDequeueFront = popFront
 
   mDequeueEnd :: MULinkedList a s -> ST s (Maybe a)
-  mDequeueEnd = mPop
+  mDequeueEnd = pop
 
   mEnqueueFront :: a -> MULinkedList a s -> ST s ()
-  mEnqueueFront = mPush
+  mEnqueueFront = push
 
   mEnqueueEnd :: a -> MULinkedList a s -> ST s ()
-  mEnqueueEnd = mAppend
+  mEnqueueEnd = append
 
 
 --------------------------------------------------------------------------------
@@ -219,7 +218,7 @@ instance STU a s => MDS (MULinkedList a) ST s where
     writeSTRef cR hd
 
   copy :: MULinkedList a s -> ST s (MULinkedList a s)
-  copy = new <=< mToList
+  copy = new <=< toList
 
   identifier :: MULinkedList a s -> ST s String
   identifier = const $ return idMULinkedList 

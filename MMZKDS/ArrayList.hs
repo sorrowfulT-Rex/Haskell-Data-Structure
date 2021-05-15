@@ -14,8 +14,8 @@ import           Data.Maybe (isJust)
 import           MMZKDS.Base (ArrayList(..))
 import           MMZKDS.Class.ArrayBased (ArrayBased(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
+import           MMZKDS.Class.List as L (List(..))
 import           MMZKDS.Queue (Deque(..))
-import           MMZKDS.List as L (List(..))
 import           MMZKDS.Utilities
   ( arrayLengthOverflowError, expandedSize, idArrayList, initialSize
   , outOfBoundError

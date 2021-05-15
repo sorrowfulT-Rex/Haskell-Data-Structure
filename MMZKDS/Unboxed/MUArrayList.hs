@@ -22,13 +22,14 @@ import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import qualified MMZKDS.Class.ArrayBased as AB (ArrayBased(..)) 
-import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
+import qualified MMZKDS.Class.List as L (List(newList, toList))
 import           MMZKDS.Class.MArrayBased (MArrayBased(..))
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MList (MList(..))
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
-import           MMZKDS.List (List(newList, toList), MList(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
@@ -100,26 +101,26 @@ unsafeUArrayListThaw (UArrayList l arr) = do
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
-  mGet :: MUArrayList a s -> Int -> ST s a
-  mGet mal@(MUArrayList lR arrR) index = do
+  get :: MUArrayList a s -> Int -> ST s a
+  get mal@(MUArrayList lR arrR) index = do
     l <- size mal
     if index >= l || index < 0
       then return $ outOfBoundError index
       else readSTRef arrR >>= flip readArray index
 
-  mIndicesOf :: Eq a => MUArrayList a s -> a -> ST s [Int]
-  mIndicesOf mal e = size mal >>= mIndicesOf' 0
+  indicesOf :: Eq a => MUArrayList a s -> a -> ST s [Int]
+  indicesOf mal e = size mal >>= mIndicesOf' 0
     where
       mIndicesOf' i l
         | i >= l = return []
       mIndicesOf' i l = do
-        v <- mal `mGet` i
+        v <- mal `get` i
         if v == e
           then fmap (i :) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
-  mDelete :: Int -> MUArrayList a s -> ST s (Maybe a)
-  mDelete index mal@(MUArrayList lR arrR) = do
+  delete :: Int -> MUArrayList a s -> ST s (Maybe a)
+  delete index mal@(MUArrayList lR arrR) = do
     ls <- size mal
     ps <- physicalSize mal
     if index < 0 || index >= ls
@@ -131,8 +132,8 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
         unsafeRemoveST index index (ls - 2) arrST
         return $ Just v
 
-  mInsert :: Int -> a -> MUArrayList a s -> ST s ()
-  mInsert index e mal@(MUArrayList lR arrR) = do
+  insert :: Int -> a -> MUArrayList a s -> ST s ()
+  insert index e mal@(MUArrayList lR arrR) = do
     ls <- size mal
     ps <- physicalSize mal
     if      index < 0 || index > ls
@@ -140,14 +141,14 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
     else if ls == ps
     then do
       resize (expandedSize ls) mal
-      mInsert index e mal
+      insert index e mal
     else do
       arrST <- readSTRef arrR
       writeSTURef lR (ls + 1)
       unsafeAddST index e (ls - 1) arrST
 
-  mSet :: MUArrayList a s -> Int -> a -> ST s ()
-  mSet mal@(MUArrayList _ arrR) index e = do
+  set :: MUArrayList a s -> Int -> a -> ST s ()
+  set mal@(MUArrayList _ arrR) index e = do
     ls <- size mal
     if index < 0 || index >= ls
       then return $ outOfBoundError index
@@ -155,53 +156,53 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
         arrST <- readSTRef arrR
         writeArray arrST index e
 
-  {-# INLINE mSortOn #-}
-  mSortOn :: Ord b => (a -> b) -> MUArrayList a s -> ST s ()
-  mSortOn f mal@(MUArrayList _ arrR) = do
+  {-# INLINE sortOn #-}
+  sortOn :: Ord b => (a -> b) -> MUArrayList a s -> ST s ()
+  sortOn f mal@(MUArrayList _ arrR) = do
     arrST <- readSTRef arrR
     l     <- size mal
     unsafeQuickSort f 0 l arrST
 
-  mSubList :: Int -> Int -> MUArrayList a s -> ST s (MUArrayList a s)
-  mSubList inf sup mal = do
+  subList :: Int -> Int -> MUArrayList a s -> ST s (MUArrayList a s)
+  subList inf sup mal = do
     ls <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
     let len' = sup' - inf'
     let ps   = initialSize len'
     if sup' <= inf
-      then mNewList []
+      then newList []
       else do
         resST <- newArray_ (0, ps - 1)
         forM_ [0..(len' - 1)]
-          $ \i -> mal `mGet` (i + inf') >>= writeArray resST i
+          $ \i -> mal `get` (i + inf') >>= writeArray resST i
         lR <- newSTURef len'
         resR <- newSTRef resST
         return $ MUArrayList lR resR
 
   -- Overwritten default method
-  mIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
-  mIndexOf mal e = do
+  indexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
+  indexOf mal e = do
      l <- size mal
      mIndexOf' 0 l
     where
       mIndexOf' i l
         | i == l    = return Nothing
         | otherwise = do
-          v <- mal `mGet` i
+          v <- mal `get` i
           if v == e
             then return $ Just i
             else mIndexOf' (i + 1) l
 
   -- Overwritten default method
-  mLastIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
-  mLastIndexOf mal e = do
+  lastIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)
+  lastIndexOf mal e = do
      l <- size mal
      mLastIndexOf' (l - 1) l
     where
       mLastIndexOf' (-1) _ = return Nothing
       mLastIndexOf' i l    = do
-        v <- mal `mGet` i
+        v <- mal `get` i
         if v == e
           then return $ Just i
           else mLastIndexOf' (i - 1) l
@@ -214,7 +215,7 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
 instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
   deepClear :: MUArrayList a s -> ST s ()
   deepClear (MUArrayList lR arrR) = do
-    MUArrayList rlR resR <- mNewList []
+    MUArrayList rlR resR <- newList []
     rl                   <- readSTURef rlR
     resST                <- readSTRef resR
     writeSTURef lR rl
@@ -261,16 +262,16 @@ instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
 
 instance (IArray UArray a, STU a s) => MDeque (MUArrayList a) a ST s where
   mDequeueFront :: MUArrayList a s -> ST s (Maybe a)
-  mDequeueFront = mPopFront
+  mDequeueFront = popFront
 
   mDequeueEnd :: MUArrayList a s -> ST s (Maybe a)
-  mDequeueEnd = mPop
+  mDequeueEnd = pop
 
   mEnqueueFront :: a -> MUArrayList a s -> ST s ()
-  mEnqueueFront = mPush
+  mEnqueueFront = push
 
   mEnqueueEnd :: a -> MUArrayList a s -> ST s ()
-  mEnqueueEnd = mAppend
+  mEnqueueEnd = append
 
 
 --------------------------------------------------------------------------------
@@ -304,7 +305,7 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   finish :: MUArrayList a s -> ST s [a]
   finish mal = do
     al <- uArrayListFreeze mal
-    return $ toList al
+    return $ L.toList al
 
   new :: [a] -> ST s (MUArrayList a s)
-  new = uArrayListThaw . newList
+  new = uArrayListThaw . L.newList
