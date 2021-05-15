@@ -10,7 +10,8 @@ Next to come: Map; Red-Black Tree.
 <!-- # Contents   
 ## 1. [MMZKDS/Class](#mmzkds/class)  
 * ### a. [MMZKDS/Class/DS.hs](mmzkds/class/dshs)
-* ### b. [MMZKDS/Class/MDS.hs](mmzkds/class/mdshs) -->
+* ### b. [MMZKDS/Class/MDS.hs](mmzkds/class/mdshs)
+* ### c. [MMZKDS/Class/ArrayBased.hs] -->
 
 
 # [MMZKDS/Class](MMZKDS/Class/)

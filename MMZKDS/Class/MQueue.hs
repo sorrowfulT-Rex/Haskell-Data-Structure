@@ -29,7 +29,7 @@ class (Monad (m s), MDS q m s, MDSCons [e] q m s)
 
   -- | Adds an element to the rear.
   -- 
-  enqueue :: e -> q s -> m s ()
+  enqueue :: q s -> e -> m s ()
 
   -- | Retrieves the element at the front, but not removing it.
   -- 
@@ -58,11 +58,11 @@ class (Monad (m s), MDS q m s, MDSCons [e] q m s)
 
   -- | Adds an element to the front.
   -- 
-  enqueueFront :: e -> q s -> m s ()
+  enqueueFront :: q s -> e -> m s ()
 
   -- | Adds an element to the rear.
   -- 
-  enqueueEnd :: e -> q s -> m s ()
+  enqueueEnd :: q s -> e -> m s ()
 
   -- | Default method.
   -- Retrieves the element at the front, but not removing it.
@@ -70,7 +70,7 @@ class (Monad (m s), MDS q m s, MDSCons [e] q m s)
   peekFront :: q s -> m s (Maybe e)
   peekFront q = do
     me <- dequeueFront q
-    forM_ me (`enqueueFront` q)
+    forM_ me (q `enqueueFront`)
     return me
 
   -- | Default method.
@@ -79,7 +79,7 @@ class (Monad (m s), MDS q m s, MDSCons [e] q m s)
   peekEnd :: q s -> m s (Maybe e)
   peekEnd q = do
     me <- dequeueEnd q
-    forM_ me (`enqueueEnd` q)
+    forM_ me (q `enqueueEnd`)
     return me
 
 

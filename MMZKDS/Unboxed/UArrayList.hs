@@ -29,8 +29,8 @@ instance (Show a, IArray UArray a) => Show (UArrayList a) where
 --------------------------------------------------------------------------------
 
 instance IArray UArray a => List (UArrayList a) a where
-  delete :: Int -> UArrayList a -> (Maybe a, UArrayList a)
-  delete index al@(UArrayList l arr)
+  delete :: UArrayList a -> Int -> (Maybe a, UArrayList a)
+  delete al@(UArrayList l arr) index
     | index >= l || index < 0 = (Nothing, al)
     | otherwise               = (Just (arr ! index), UArrayList (l - 1)
         $ accum worker arr $ join zip [0..(l - 2)])
@@ -55,10 +55,10 @@ instance IArray UArray a => List (UArrayList a) a where
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
 
-  insert :: Int -> a -> UArrayList a -> UArrayList a
-  insert index e al@(UArrayList l arr)
+  insert :: UArrayList a -> Int -> a -> UArrayList a
+  insert al@(UArrayList l arr) index e 
     | index > l || index < 0 = outOfBoundError index
-    | l == pl                = insert index e (resize l' al)
+    | l == pl                = insert (resize l' al) index e 
     | otherwise
       = UArrayList (l + 1)
         $ accum worker arr $ join zip [0..l]
@@ -81,8 +81,8 @@ instance IArray UArray a => List (UArrayList a) a where
         | i == index = e
         | otherwise  = arr ! i
 
-  subList :: Int -> Int -> UArrayList a -> UArrayList a
-  subList inf sup al@(UArrayList _ arr)
+  subList :: UArrayList a -> Int -> Int -> UArrayList a
+  subList al@(UArrayList _ arr) inf sup 
     | sup' <= inf' = deepClear al
     | otherwise    = UArrayList len' $ 
                      accum (const ((al `get`) . (inf' +))) arr $ 
@@ -104,9 +104,9 @@ instance IArray UArray a => List (UArrayList a) a where
         | otherwise = (arr ! i) : toList' (i + 1)
 
   -- Overwritten default method
-  deleteRange :: Int -> Int -> UArrayList a -> ([a], UArrayList a)
-  deleteRange inf sup al@(UArrayList _ arr)
-    = (L.toList $ subList inf sup al, acc)
+  deleteRange ::  UArrayList a -> Int -> Int -> ([a], UArrayList a)
+  deleteRange al@(UArrayList _ arr) inf sup
+    = (L.toList $ subList al inf sup, acc)
     where
       inf' = max 0 inf
       sup' = min len sup
@@ -165,10 +165,10 @@ instance IArray UArray a => Deque (UArrayList a) a where
   dequeueEnd :: UArrayList a -> (Maybe a, UArrayList a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> UArrayList a -> UArrayList a
+  enqueueFront :: UArrayList a -> a -> UArrayList a
   enqueueFront = push
 
-  enqueueEnd :: a -> UArrayList a -> UArrayList a
+  enqueueEnd :: UArrayList a -> a -> UArrayList a
   enqueueEnd = append
 
 

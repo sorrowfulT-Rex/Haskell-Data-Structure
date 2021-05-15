@@ -30,8 +30,8 @@ instance Show a => Show (ArrayList a) where
 --------------------------------------------------------------------------------
 
 instance List (ArrayList a) a where
-  delete :: Int -> ArrayList a -> (Maybe a, ArrayList a)
-  delete index al@(ArrayList l arr)
+  delete :: ArrayList a -> Int -> (Maybe a, ArrayList a)
+  delete al@(ArrayList l arr) index
     | index >= l || index < 0 = (Nothing, al)
     | otherwise               = (Just (arr ! index), ArrayList (l - 1)
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
@@ -56,10 +56,10 @@ instance List (ArrayList a) a where
         | al `get` i == e = i : indicesOf' (i + 1)
         | otherwise       = indicesOf' (i + 1)
 
-  insert :: Int -> a -> ArrayList a -> ArrayList a
-  insert index e al@(ArrayList l arr)
+  insert :: ArrayList a -> Int -> a ->  ArrayList a
+  insert al@(ArrayList l arr) index e
     | index > l || index < 0 = outOfBoundError index
-    | l == pl                = insert index e (resize l' al)
+    | l == pl                = insert (resize l' al) index e
     | otherwise
       = ArrayList (l + 1)
         $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
@@ -82,8 +82,8 @@ instance List (ArrayList a) a where
         | i == index = e
         | otherwise  = arr ! i
 
-  subList :: Int -> Int -> ArrayList a -> ArrayList a
-  subList inf sup al
+  subList :: ArrayList a -> Int -> Int -> ArrayList a
+  subList al inf sup
     | sup' <= inf' = deepClear al
     | otherwise    = ArrayList len' $ 
                      accumArray worker undefined (0, ps - 1) $ 
@@ -101,9 +101,9 @@ instance List (ArrayList a) a where
     = take l $ F.toList arr
 
   -- Overwritten default method
-  deleteRange :: Int -> Int -> ArrayList a -> ([a], ArrayList a)
-  deleteRange inf sup al@(ArrayList _ arr)
-    = (L.toList $ subList inf sup al, acc)
+  deleteRange :: ArrayList a -> Int -> Int -> ([a], ArrayList a)
+  deleteRange al@(ArrayList _ arr) inf sup
+    = (L.toList $ subList al  inf sup, acc)
     where
       inf' = max 0 inf
       sup' = min len sup
@@ -162,10 +162,10 @@ instance Deque (ArrayList a) a where
   dequeueEnd :: ArrayList a -> (Maybe a, ArrayList a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> ArrayList a -> ArrayList a
+  enqueueFront :: ArrayList a -> a -> ArrayList a
   enqueueFront = push
 
-  enqueueEnd :: a -> ArrayList a -> ArrayList a
+  enqueueEnd :: ArrayList a -> a ->  ArrayList a
   enqueueEnd = append
 
 

@@ -28,7 +28,7 @@ class (DS q, DSCons [e] q) => Queue q e | q -> e where
 
   -- | Adds an element to the rear.
   -- 
-  enqueue :: e -> q -> q
+  enqueue :: q -> e -> q
 
   -- | Default method.
   -- Retrieves the element at the front, but not removing it.
@@ -62,11 +62,11 @@ class (DS q, DSCons [e] q) => Deque q e | q -> e where
 
   -- | Adds an element to the front.
   -- 
-  enqueueFront :: e -> q -> q
+  enqueueFront :: q -> e -> q
 
   -- | Adds an element to the rear.
   -- 
-  enqueueEnd :: e -> q -> q
+  enqueueEnd :: q -> e -> q
 
   -- | Default method.
   -- Retrieves the element at the front, but not removing it.

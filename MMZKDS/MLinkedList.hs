@@ -28,8 +28,8 @@ import           MMZKDS.Utilities (idMLinkedList, outOfBoundError)
 --------------------------------------------------------------------------------
 
 instance MList (MLinkedList a) a ST s where
-  delete :: Int -> MLinkedList a s -> ST s (Maybe a)
-  delete index mll@(MLinkedList lR _ iR cR) = do
+  delete :: MLinkedList a s -> Int -> ST s (Maybe a)
+  delete mll@(MLinkedList lR _ iR cR) index = do
     l <- readSTURef lR
     if index < 0 || index >= l
       then return Nothing
@@ -87,8 +87,8 @@ instance MList (MLinkedList a) a ST s where
     hd <- getHead mll
     nextN hd >>= mIndicesOf' 0
 
-  insert :: Int -> a -> MLinkedList a s -> ST s ()
-  insert index e mll@(MLinkedList lR _ iR cR) = do
+  insert :: MLinkedList a s -> Int -> a -> ST s ()
+  insert mll@(MLinkedList lR _ iR cR) index e = do
     l <- readSTURef lR
     if index < 0 || index > l
       then outOfBoundError index
@@ -129,15 +129,15 @@ instance MList (MLinkedList a) a ST s where
       Nothing -> return ()
       Just i' -> accessNode i' mll
 
-  subList :: Int -> Int -> MLinkedList a s -> ST s (MLinkedList a s)
-  subList inf sup mll@(MLinkedList _ _ _ cR) = do
+  subList :: MLinkedList a s -> Int -> Int -> ST s (MLinkedList a s)
+  subList mll@(MLinkedList _ _ _ cR) inf sup = do
     ls <- size mll
     forM [(max inf 0)..(min sup ls - 1)]
       ((>> (readSTRef cR >>= nodeElem)) . flip accessNode mll) >>= newList
 
   -- Overwritten default method
-  append :: a -> MLinkedList a s -> ST s ()
-  append e (MLinkedList lR hR _ _) = do
+  append :: MLinkedList a s -> a -> ST s ()
+  append (MLinkedList lR hR _ _) e = do
     cur <- readSTRef hR
     prv <- prevN cur
     nR  <- newSTRef cur
@@ -149,14 +149,14 @@ instance MList (MLinkedList a) a ST s where
     modifySTURef lR succ
 
   -- Overwritten default method
-  deleteRange :: Int -> Int -> MLinkedList a s -> ST s [a]
-  deleteRange inf sup mll@(MLinkedList lR hR iR cR) = do
+  deleteRange :: MLinkedList a s -> Int -> Int -> ST s [a]
+  deleteRange mll@(MLinkedList lR hR iR cR) inf sup = do
     ls    <- size mll
     index <- readSTURef iR
     cur   <- readSTRef cR
     let inf' = max 0 inf
     let sup' = min ls sup
-    res   <- subList inf sup mll >>= toList
+    res   <- subList mll inf sup >>= toList
     sR    <- if inf' == 0 
           then return hR 
           else accessNode (inf' - 1) mll >> return cR
@@ -199,8 +199,8 @@ instance MList (MLinkedList a) a ST s where
     prevN hd >>= lastIndexOf' (l - 1)
 
   -- Overwritten default method
-  push :: a -> MLinkedList a s -> ST s ()
-  push e (MLinkedList lR hR iR _) = do
+  push :: MLinkedList a s -> a -> ST s ()
+  push (MLinkedList lR hR iR _) e = do
     cur <- readSTRef hR
     nxt <- nextN cur
     pR  <- newSTRef cur
@@ -225,10 +225,10 @@ instance MDeque (MLinkedList a) a ST s where
   dequeueEnd :: MLinkedList a s -> ST s (Maybe a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> MLinkedList a s -> ST s ()
+  enqueueFront :: MLinkedList a s -> a -> ST s ()
   enqueueFront = push
 
-  enqueueEnd :: a -> MLinkedList a s -> ST s ()
+  enqueueEnd :: MLinkedList a s -> a -> ST s ()
   enqueueEnd = append
 
 

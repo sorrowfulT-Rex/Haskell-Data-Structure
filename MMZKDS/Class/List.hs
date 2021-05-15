@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.Class.List (List(..)) where
@@ -9,7 +10,7 @@ import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (foldl', sort, sortOn)
 import           Data.Maybe (fromJust, isJust, listToMaybe)
 
-import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
+import           MMZKDS.Class.DS (DS(..), DSCons(..))
 
 
 --------------------------------------------------------------------------------
@@ -24,33 +25,29 @@ import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
 -- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires @delete@, @get@, @indicesOf@, @insert@,
 -- @set@, and @subList@.
--- Default methods include @append@, @contains@, @deleteRange@, @indexOf@, 
--- @isNull@, @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@,
--- @removeAll@, @removeLast@, @sort@, @sortOn@, @toList@, @update@ 
--- and @update'@.
+-- Default methods include @append@, @concat@, @concat'@, @contains@,
+-- @deleteRange@, @indexOf@, @insertAll@, @insertAll'@, @lastIndexOf@,
+-- @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@, @removeLast@,
+-- @sort@, @sortOn@, @toList@, @update@ and @update'@.
 -- For functional operations, one can "stream" the list structure with @toList@,
 -- apply the functions, then "collect" it back with "@newList@".
--- For methods that involves indices or elements, if the method changes the size
--- of the list (e.g. @add@ or @pop@), the list is the last argument; if the
--- method does not change the size (e.g. @get@ or @set@), the list is the first
--- argument.
 --
 class (DS l, DSCons [e] l) => List l e | l -> e where
   -- | Adds an element into the list structure.
-  -- Takes an @Int@ as index, an element and a list, returns a list that inserts
+  -- Takes a list, an @Int@ as index and an element, returns a list that inserts
   -- the given element before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  insert :: Int -> e -> l -> l
+  insert :: l -> Int -> e -> l
 
   -- | Removes an element from the list structure.
-  -- Takes an @Int@ as index and a list, returns a tuple containing the removed 
+  -- Takes a list and an @Int@ as index, returns a tuple containing the removed 
   -- element and a list that removes the given element at the index.
   -- If the index is out of bound, returns a typle of @Nothing@ and the original
   -- list.
   --
-  delete :: Int -> l -> (Maybe e, l)
+  delete :: l -> Int -> (Maybe e, l)
 
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
@@ -73,13 +70,13 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- | Returns a sub-list of the list structure from the first argument 
   -- (inclusive) to the second argument (exclusive).
   --
-  subList :: Int -> Int -> l -> l
+  subList :: l -> Int -> Int -> l
 
   -- | Default method.
   -- Insert an element to the end of the list structure.
   --
-  append :: e -> l -> l
-  append = flip (join (flip . insert . DS.size))
+  append :: l -> e -> l
+  append l = insert l (size l)
 
   -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
@@ -93,11 +90,11 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- argument (exclusive), also returning the deleted elements as a @[]@.
   -- This is like the opposite of @subList@.
   -- 
-  deleteRange :: Int -> Int -> l -> ([e], l)
-  deleteRange inf sup l 
+  deleteRange :: l -> Int -> Int -> ([e], l)
+  deleteRange l inf sup 
     = foldr go ([], l) [(max 0 inf)..(min (size l - 1) (sup - 1))]
     where
-      go i (es, l) = let (me, l') = delete i l
+      go i (es, l) = let (me, l') = delete l i
                      in  (fromJust me : es, l')
 
   -- | Default method.
@@ -108,6 +105,24 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   --
   indexOf :: Eq e => l -> e -> Maybe Int
   indexOf = (listToMaybe .) . indicesOf
+
+  -- | Default method.
+  -- Adds all elements in a list to the structure.
+  -- Takes an @Int@ as index, a list of new elements and the original list, 
+  -- returns a list that inserts the given elements before the index.
+  -- If the index is either larger than the length of the list or less than 0,
+  -- the function returns an error.
+  --
+  insertAll :: forall l1. DSCons [e] l1 => l -> Int -> l1 -> l
+  insertAll l index es
+    = L.foldl' (`insert` index) l ((finish :: l1 -> [e]) es)
+
+  -- | Default method.
+  -- Same as @insertAll@, but specifies the list of new elements to be the same
+  -- type of the original list. May have a more efficient implementation.
+  -- 
+  insertAll' :: l -> Int -> l -> l
+  insertAll' = insertAll
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the
@@ -122,7 +137,7 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- Returns a new list structure with from @[]@.
   --
   newList :: [e] -> l
-  newList = DS.new
+  newList = new
 
   -- | Default method.
   -- Removes the last element from the list structure.
@@ -131,7 +146,7 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   --
   pop :: l -> (Maybe e, l)
-  pop = join (delete . (+ (-1)) . DS.size)
+  pop l = delete l (size l - 1)
 
   -- | Default method.
   -- Removes the fisrt element from the list structure.
@@ -140,18 +155,18 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   --
   popFront :: l -> (Maybe e, l)
-  popFront = delete 0
+  popFront = flip delete 0
 
   -- | Default method.
   -- Insert an element to the front of the list structure.
   --
-  push :: e -> l -> l
-  push = insert 0
+  push :: l -> e -> l
+  push = flip insert 0
 
   -- | Default method.
   -- Return the list representation of the list structure.
   toList :: l -> [e]
-  toList = DS.finish
+  toList = finish
 
   -- | Default method.
   -- Removes the first occurrence of an element from the list structure, and
@@ -159,9 +174,9 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the element does not appear in the list, returns a tuple of @Nothing@
   -- and the original list.
   --
-  remove :: Eq e => e -> l -> (Maybe e, l)
-  remove e l
-    = maybe (Nothing, l) (`delete` l) (indexOf l e)
+  remove :: Eq e => l -> e -> (Maybe e, l)
+  remove l e
+    = maybe (Nothing, l) (l `delete`) (indexOf l e)
 
   -- | Default method.
   -- Removes the all occurrences of an element from the list structure, and
@@ -169,13 +184,13 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the element does not appear in the list, returns a tuple of @Nothing@
   -- and the original list.
   --
-  removeAll :: Eq e => e -> l -> ([e], l)
-  removeAll e l
+  removeAll :: Eq e => l -> e -> ([e], l)
+  removeAll l e
     = let (a, b, _) = foldl' worker ([], l, 0) indices in (a, b)
     where
       indices = l `indicesOf` e
       worker (es, l, offset) i
-        = let (Just e', l') = delete (i - offset) l in (e' : es, l', offset + 1)
+        = let (Just e', l') = delete l (i - offset) in (e' : es, l', offset + 1)
 
   -- | Default method.
   -- Removes the last occurrence of an element from the list structure, and
@@ -183,9 +198,9 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the element does not appear in the list, returns a tuple of @Nothing@
   -- and the original list.
   --
-  removeLast :: Eq e => e -> l -> (Maybe e, l)
-  removeLast e l
-    = maybe (Nothing, l) (`delete` l) (lastIndexOf l e)
+  removeLast :: Eq e => l -> e -> (Maybe e, l)
+  removeLast l e
+    = maybe (Nothing, l) (l `delete`) (lastIndexOf l e)
 
   -- | Default method.
   -- Sort the list structure in the default ordering of its elements.
@@ -195,6 +210,7 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
 
   -- | Default method.
   -- Sort the list structure by a ordering function.
+  -- Note that in this method the sort function is the first argument.
   --
   sortOn :: Ord o => (e -> o) -> l -> l
   sortOn = (. toList) . (newList .) . L.sortOn
@@ -223,5 +239,5 @@ instance {-# OVERLAPPABLE #-} (Eq a, List (l a) a) => Eq (l a) where
   l == l'
     = ls == ls' && all (liftM2 (==) (l `get`) (l' `get`)) [0..(ls - 1)]
     where
-      ls  = DS.size l
-      ls' = DS.size l'
+      ls  = size l
+      ls' = size l'

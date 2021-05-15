@@ -22,8 +22,8 @@ instance Show a => Show (FDQ a) where
 --------------------------------------------------------------------------------
 
 instance List (FDQ a) a where
-  delete :: Int -> FDQ a -> (Maybe a, FDQ a)
-  delete index q@(FDQ fl frt el end)
+  delete :: FDQ a -> Int ->  (Maybe a, FDQ a)
+  delete q@(FDQ fl frt el end) index
     | index < 0    = (Nothing, q)
     | index >= len = (Nothing, q)
     | index < fl   = let (f, e : f') = splitAt index frt
@@ -46,8 +46,8 @@ instance List (FDQ a) a where
     = fmap fst (filter ((== e) . snd) (zip [0..] frt)) ++ 
       fmap fst (filter ((== e) . snd) (zip [fl..] $ reverse end))
 
-  insert :: Int -> a -> FDQ a -> FDQ a
-  insert index e q@(FDQ fl frt el end)
+  insert :: FDQ a -> Int -> a ->  FDQ a
+  insert q@(FDQ fl frt el end) index e
     | index > len = outOfBoundError index
     | index < 0   = outOfBoundError index
     | index <= fl = let (f, f') = splitAt index frt
@@ -68,13 +68,13 @@ instance List (FDQ a) a where
     where
       len = fl + el
 
-  subList :: Int -> Int -> FDQ a -> FDQ a
-  subList inf sup q
+  subList :: FDQ a -> Int -> Int -> FDQ a
+  subList q inf sup
     = new $ take (sup - inf) $ drop inf $ toList q
 
   -- Overwritten default methods
-  deleteRange :: Int -> Int -> FDQ a -> ([a], FDQ a)
-  deleteRange inf sup q@(FDQ fl frt el end)
+  deleteRange :: FDQ a -> Int -> Int -> ([a], FDQ a)
+  deleteRange q@(FDQ fl frt el end) inf sup
     | inf' >= fl = let (e1, er) = splitAt (size q - sup') end
                        (e2, e3) = splitAt diff er
                    in  ( reverse e2
@@ -112,10 +112,10 @@ instance Deque (FDQ a) a where
   dequeueEnd :: FDQ a -> (Maybe a, FDQ a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> FDQ a -> FDQ a
+  enqueueFront :: FDQ a -> a -> FDQ a
   enqueueFront = push
 
-  enqueueEnd :: a -> FDQ a -> FDQ a
+  enqueueEnd :: FDQ a -> a -> FDQ a
   enqueueEnd = append
 
   -- Overwritten default methods

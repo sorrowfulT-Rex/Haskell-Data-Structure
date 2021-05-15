@@ -105,8 +105,8 @@ instance MList (MArrayList a) a ST s where
           then fmap (i :) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
-  insert :: Int -> a -> MArrayList a s -> ST s ()
-  insert index e mal@(MArrayList lR arrR) = do
+  insert :: MArrayList a s -> Int -> a -> ST s ()
+  insert mal@(MArrayList lR arrR) index e = do
     ls <- size mal
     ps <- physicalSize mal
     if      index < 0 || index > ls
@@ -114,14 +114,14 @@ instance MList (MArrayList a) a ST s where
     else if ls == ps
     then do
       resize (expandedSize ls) mal
-      insert index e mal
+      insert mal index e
     else do
       arrST <- readSTRef arrR
       writeSTURef lR $! ls + 1
       unsafeAddST index e (ls - 1) arrST
 
-  delete :: Int -> MArrayList a s -> ST s (Maybe a)
-  delete index mal@(MArrayList lR arrR) = do
+  delete :: MArrayList a s -> Int -> ST s (Maybe a)
+  delete mal@(MArrayList lR arrR) index = do
     ls <- size mal
     ps <- physicalSize mal
     if index < 0 || index >= ls
@@ -149,8 +149,8 @@ instance MList (MArrayList a) a ST s where
     l     <- size mal
     unsafeQuickSort f 0 l arrST
 
-  subList :: Int -> Int -> MArrayList a s -> ST s (MArrayList a s)
-  subList inf sup mal = do
+  subList :: MArrayList a s -> Int -> Int -> ST s (MArrayList a s)
+  subList mal inf sup = do
     ls <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
@@ -168,14 +168,14 @@ instance MList (MArrayList a) a ST s where
         return $ MArrayList lR resR
 
   -- Overwritten default method
-  deleteRange :: Int -> Int -> MArrayList a s -> ST s [a]
-  deleteRange inf sup mal@(MArrayList lR arrR) = do
+  deleteRange :: MArrayList a s -> Int -> Int -> ST s [a]
+  deleteRange mal@(MArrayList lR arrR) inf sup = do
     ls    <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
     let diff = sup' - inf'
     arrST <- readSTRef arrR
-    es    <- subList inf sup mal >>= toList
+    es    <- subList mal inf sup >>= toList
     writeSTURef lR $! ls - diff
     unsafeRemoveST inf' (sup' - 1) (ls - diff - 1) arrST
     return es
@@ -267,10 +267,10 @@ instance MDeque (MArrayList a) a ST s where
   dequeueEnd :: MArrayList a s -> ST s (Maybe a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> MArrayList a s -> ST s ()
+  enqueueFront :: MArrayList a s -> a -> ST s ()
   enqueueFront = push
 
-  enqueueEnd :: a -> MArrayList a s -> ST s ()
+  enqueueEnd :: MArrayList a s -> a -> ST s ()
   enqueueEnd = append
 
 

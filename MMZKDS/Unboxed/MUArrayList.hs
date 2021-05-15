@@ -119,8 +119,8 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
           then fmap (i :) (mIndicesOf' (i + 1) l)
           else mIndicesOf' (i + 1) l
 
-  delete :: Int -> MUArrayList a s -> ST s (Maybe a)
-  delete index mal@(MUArrayList lR arrR) = do
+  delete :: MUArrayList a s -> Int -> ST s (Maybe a)
+  delete mal@(MUArrayList lR arrR) index = do
     ls <- size mal
     ps <- physicalSize mal
     if index < 0 || index >= ls
@@ -132,8 +132,8 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
         unsafeRemoveST index index (ls - 2) arrST
         return $ Just v
 
-  insert :: Int -> a -> MUArrayList a s -> ST s ()
-  insert index e mal@(MUArrayList lR arrR) = do
+  insert :: MUArrayList a s -> Int -> a -> ST s ()
+  insert mal@(MUArrayList lR arrR) index e = do
     ls <- size mal
     ps <- physicalSize mal
     if      index < 0 || index > ls
@@ -141,7 +141,7 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
     else if ls == ps
     then do
       resize (expandedSize ls) mal
-      insert index e mal
+      insert mal index e
     else do
       arrST <- readSTRef arrR
       writeSTURef lR (ls + 1)
@@ -163,8 +163,8 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
     l     <- size mal
     unsafeQuickSort f 0 l arrST
 
-  subList :: Int -> Int -> MUArrayList a s -> ST s (MUArrayList a s)
-  subList inf sup mal = do
+  subList :: MUArrayList a s -> Int -> Int -> ST s (MUArrayList a s)
+  subList mal inf sup = do
     ls <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
@@ -182,14 +182,14 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
         return $ MUArrayList lR resR
 
   -- Overwritten default method
-  deleteRange :: Int -> Int -> MUArrayList a s -> ST s [a]
-  deleteRange inf sup mal@(MUArrayList lR arrR) = do
+  deleteRange :: MUArrayList a s -> Int -> Int -> ST s [a]
+  deleteRange mal@(MUArrayList lR arrR) inf sup = do
     ls    <- size mal
     let inf' = max inf 0
     let sup' = min sup ls
     let diff = sup' - inf'
     arrST <- readSTRef arrR
-    es    <- subList inf sup mal >>= toList
+    es    <- subList mal inf sup >>= toList
     writeSTURef lR $! ls - diff
     unsafeRemoveST inf' (sup' - 1) (ls - diff - 1) arrST
     return es
@@ -281,10 +281,10 @@ instance (IArray UArray a, STU a s) => MDeque (MUArrayList a) a ST s where
   dequeueEnd :: MUArrayList a s -> ST s (Maybe a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> MUArrayList a s -> ST s ()
+  enqueueFront :: MUArrayList a s -> a -> ST s ()
   enqueueFront = push
 
-  enqueueEnd :: a -> MUArrayList a s -> ST s ()
+  enqueueEnd :: MUArrayList a s -> a -> ST s ()
   enqueueEnd = append
 
 

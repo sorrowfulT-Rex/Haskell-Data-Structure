@@ -28,8 +28,8 @@ import           MMZKDS.Utilities (idMULinkedList, outOfBoundError)
 --------------------------------------------------------------------------------
 
 instance STU a s => MList (MULinkedList a) a ST s where
-  delete :: Int -> MULinkedList a s -> ST s (Maybe a)
-  delete index mll@(MULinkedList lR _ iR cR) = do
+  delete :: MULinkedList a s -> Int -> ST s (Maybe a)
+  delete mll@(MULinkedList lR _ iR cR) index = do
     l <- readSTURef lR
     if index < 0 || index >= l
       then return Nothing
@@ -87,8 +87,8 @@ instance STU a s => MList (MULinkedList a) a ST s where
     hd <- getHead mll
     nextUN hd >>= indicesOf' 0
 
-  insert :: Int -> a -> MULinkedList a s -> ST s ()
-  insert index e mll@(MULinkedList lR _ iR cR) = do
+  insert :: MULinkedList a s -> Int -> a -> ST s ()
+  insert mll@(MULinkedList lR _ iR cR) index e = do
     l <- readSTURef lR
     if index < 0 || index > l
       then outOfBoundError index
@@ -128,15 +128,15 @@ instance STU a s => MList (MULinkedList a) a ST s where
       Nothing -> return ()
       Just i' -> accessUNode i' mll
 
-  subList :: Int -> Int -> MULinkedList a s -> ST s (MULinkedList a s)
-  subList inf sup mll@(MULinkedList _ _ _ cR) = do
+  subList :: MULinkedList a s -> Int -> Int -> ST s (MULinkedList a s)
+  subList mll@(MULinkedList _ _ _ cR) inf sup = do
     ls <- size mll
     forM [(max inf 0)..(min sup ls - 1)]
       ((>> (readSTRef cR >>= uNodeElem)) . flip accessUNode mll) >>= newList
 
   -- Overwritten default method
-  append :: a -> MULinkedList a s -> ST s ()
-  append e (MULinkedList lR hR _ _) = do
+  append :: MULinkedList a s -> a -> ST s ()
+  append (MULinkedList lR hR _ _) e = do
     cur <- readSTRef hR
     prv <- prevUN cur
     nR  <- newSTRef cur
@@ -148,14 +148,14 @@ instance STU a s => MList (MULinkedList a) a ST s where
     modifySTURef lR succ
 
   -- Overwritten default method
-  deleteRange :: Int -> Int -> MULinkedList a s -> ST s [a]
-  deleteRange inf sup mll@(MULinkedList lR hR iR cR) = do
+  deleteRange :: MULinkedList a s -> Int -> Int -> ST s [a]
+  deleteRange mll@(MULinkedList lR hR iR cR) inf sup = do
     ls    <- size mll
     index <- readSTURef iR
     cur   <- readSTRef cR
     let inf' = max 0 inf
     let sup' = min ls sup
-    res   <- subList inf sup mll >>= toList
+    res   <- subList mll inf sup >>= toList
     sR    <- if inf' == 0 
           then return hR 
           else accessUNode (inf' - 1) mll >> return cR
@@ -198,8 +198,8 @@ instance STU a s => MList (MULinkedList a) a ST s where
     prevUN hd >>= lastIndexOf' (l - 1)
 
   -- Overwritten default method
-  push :: a -> MULinkedList a s -> ST s ()
-  push e (MULinkedList lR hR iR _) = do
+  push :: MULinkedList a s -> a -> ST s ()
+  push (MULinkedList lR hR iR _) e = do
     cur <- readSTRef hR
     nxt <- nextUN cur
     pR  <- newSTRef cur
@@ -224,10 +224,10 @@ instance STU a s => MDeque (MULinkedList a) a ST s where
   dequeueEnd :: MULinkedList a s -> ST s (Maybe a)
   dequeueEnd = pop
 
-  enqueueFront :: a -> MULinkedList a s -> ST s ()
+  enqueueFront :: MULinkedList a s -> a -> ST s ()
   enqueueFront = push
 
-  enqueueEnd :: a -> MULinkedList a s -> ST s ()
+  enqueueEnd :: MULinkedList a s -> a -> ST s ()
   enqueueEnd = append
 
 
