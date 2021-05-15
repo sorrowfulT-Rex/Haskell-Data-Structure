@@ -9,7 +9,7 @@ import          Data.Maybe (isJust, listToMaybe)
 import          MMZKDS.Base (FDQ(..))
 import          MMZKDS.Class.DS (DS(..), DSCons(..))
 import          MMZKDS.Class.List (List(..))
-import          MMZKDS.Queue (Deque(..))
+import          MMZKDS.Class.Queue (Deque(..))
 import          MMZKDS.Utilities (idFDQ, outOfBoundError)
 
 instance Show a => Show (FDQ a) where

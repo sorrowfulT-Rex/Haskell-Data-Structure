@@ -12,8 +12,8 @@ import           Data.Foldable as F (toList)
 
 import           MMZKDS.Class.ArrayBased (ArrayBased(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
-import           MMZKDS.Queue (Deque(..))
 import           MMZKDS.Class.List as L (List(..))
+import           MMZKDS.Class.Queue (Deque(..))
 import           MMZKDS.Unboxed.Base (UArrayList(..))
 import           MMZKDS.Utilities
   ( arrayLengthOverflowError, expandedSize, idUArrayList, initialSize

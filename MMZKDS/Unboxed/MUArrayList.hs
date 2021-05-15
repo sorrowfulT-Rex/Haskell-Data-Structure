@@ -26,11 +26,11 @@ import qualified MMZKDS.Class.List as L (List(newList, toList))
 import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Class.MList (MList(..))
+import           MMZKDS.Class.MQueue (MDeque(..))
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
-import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
 import           MMZKDS.Utilities
@@ -275,17 +275,17 @@ instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, STU a s) => MDeque (MUArrayList a) a ST s where
-  mDequeueFront :: MUArrayList a s -> ST s (Maybe a)
-  mDequeueFront = popFront
+  dequeueFront :: MUArrayList a s -> ST s (Maybe a)
+  dequeueFront = popFront
 
-  mDequeueEnd :: MUArrayList a s -> ST s (Maybe a)
-  mDequeueEnd = pop
+  dequeueEnd :: MUArrayList a s -> ST s (Maybe a)
+  dequeueEnd = pop
 
-  mEnqueueFront :: a -> MUArrayList a s -> ST s ()
-  mEnqueueFront = push
+  enqueueFront :: a -> MUArrayList a s -> ST s ()
+  enqueueFront = push
 
-  mEnqueueEnd :: a -> MUArrayList a s -> ST s ()
-  mEnqueueEnd = append
+  enqueueEnd :: a -> MUArrayList a s -> ST s ()
+  enqueueEnd = append
 
 
 --------------------------------------------------------------------------------

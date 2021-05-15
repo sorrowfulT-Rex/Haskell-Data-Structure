@@ -15,7 +15,7 @@ import           Data.STRef
 
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Class.MList (MList(..))
-import           MMZKDS.Queue (MDeque(..))
+import           MMZKDS.Class.MQueue (MDeque(..))
 import           MMZKDS.Unboxed.Base (MULinkedList(..), MUNode(..))
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
@@ -218,17 +218,17 @@ instance STU a s => MList (MULinkedList a) a ST s where
 --------------------------------------------------------------------------------
 
 instance STU a s => MDeque (MULinkedList a) a ST s where
-  mDequeueFront :: MULinkedList a s -> ST s (Maybe a)
-  mDequeueFront = popFront
+  dequeueFront :: MULinkedList a s -> ST s (Maybe a)
+  dequeueFront = popFront
 
-  mDequeueEnd :: MULinkedList a s -> ST s (Maybe a)
-  mDequeueEnd = pop
+  dequeueEnd :: MULinkedList a s -> ST s (Maybe a)
+  dequeueEnd = pop
 
-  mEnqueueFront :: a -> MULinkedList a s -> ST s ()
-  mEnqueueFront = push
+  enqueueFront :: a -> MULinkedList a s -> ST s ()
+  enqueueFront = push
 
-  mEnqueueEnd :: a -> MULinkedList a s -> ST s ()
-  mEnqueueEnd = append
+  enqueueEnd :: a -> MULinkedList a s -> ST s ()
+  enqueueEnd = append
 
 
 --------------------------------------------------------------------------------

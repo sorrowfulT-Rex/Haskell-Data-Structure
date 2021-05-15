@@ -36,7 +36,7 @@ The mutable counterpart of `ArrayBased`.
 See the [Haddocks](MMZKDS/Class/MArrayBased.hs) for full documentation.  
 
 # [MMZKDS/Class/List.hs](MMZKDS/Class/List.hs)
-This file provides a type classe, `List`, for immutable and mutable list structures, including methods of random access, addition, deletion, finding indices *etc.*   
+This file provides a type class, `List`, for immutable and mutable list structures, including methods of random access, addition, deletion, finding indices *etc.*   
 The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
 Instances of `List` is automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
 See the [Haddocks](MMZKDS/Class/List.hs) for full documentation.  
@@ -45,12 +45,14 @@ See the [Haddocks](MMZKDS/Class/List.hs) for full documentation.
 The mutable counterpart of `List`.  
 See the [Haddocks](MMZKDS/Class/MList.hs) for full documentation.  
 
-# [MMZKDS/Queue.hs](MMZKDS/Queue.hs)
-This file provides type classes for both immutable and mutable queue and deque structures.  
-There are two classes for queue, namely `Queue` and `MQueue`, for immutable and mutable queues, respectively.  
-The other two classes are for deque, namely `Deque` and `MDeque`.  
-The queue adds elements to the rear and removes elements from the front.  
-See the [Haddocks](MMZKDS/Queue.hs) for full documentation.  
+# [MMZKDS/Class/Queue.hs](MMZKDS/Class/Queue.hs)
+This file provides type classes, `Queue` and `Deque`, for immutable queue and deque structures.  
+The queue adds elements to the rear and removes elements from the front, while the dequeue adds and removes elements from both ends.    
+See the [Haddocks](MMZKDS/Class/Queue.hs) for full documentation.  
+
+# [MMZKDS/Class/MQueue.hs](MMZKDS/Class/MQueue.hs)
+The mutable counterparts of `Queue` and `Deque`.  
+See the [Haddocks](MMZKDS/Class/MQueue.hs) for full documentation.  
 
 # [MMZKDS/PriorityQueue.hs](MMZKDS/PriorityQueue.hs)
 This file provides type classes for both immutable and mutable priority queues.  

@@ -16,7 +16,7 @@ import           Data.STRef
 import           MMZKDS.Base (MLinkedList(..), MNode(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Class.MList (MList(..))
-import           MMZKDS.Queue (MDeque(..))
+import           MMZKDS.Class.MQueue (MDeque(..))
 import           MMZKDS.Unboxed.STURef
   (STURef, modifySTURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe (unsafeSTEq)
@@ -219,17 +219,17 @@ instance MList (MLinkedList a) a ST s where
 --------------------------------------------------------------------------------
 
 instance MDeque (MLinkedList a) a ST s where
-  mDequeueFront :: MLinkedList a s -> ST s (Maybe a)
-  mDequeueFront = popFront
+  dequeueFront :: MLinkedList a s -> ST s (Maybe a)
+  dequeueFront = popFront
 
-  mDequeueEnd :: MLinkedList a s -> ST s (Maybe a)
-  mDequeueEnd = pop
+  dequeueEnd :: MLinkedList a s -> ST s (Maybe a)
+  dequeueEnd = pop
 
-  mEnqueueFront :: a -> MLinkedList a s -> ST s ()
-  mEnqueueFront = push
+  enqueueFront :: a -> MLinkedList a s -> ST s ()
+  enqueueFront = push
 
-  mEnqueueEnd :: a -> MLinkedList a s -> ST s ()
-  mEnqueueEnd = append
+  enqueueEnd :: a -> MLinkedList a s -> ST s ()
+  enqueueEnd = append
 
 
 --------------------------------------------------------------------------------

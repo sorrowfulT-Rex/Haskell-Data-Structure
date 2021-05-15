@@ -24,7 +24,7 @@ import qualified MMZKDS.Class.List as L (List(newList, toList))
 import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Class.MList (MList(..))
-import           MMZKDS.Queue (MDeque(..))
+import           MMZKDS.Class.MQueue (MDeque(..))
 import           MMZKDS.Unboxed.STURef 
   (STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe
@@ -261,17 +261,17 @@ instance MArrayBased (MArrayList a) a ST s where
 --------------------------------------------------------------------------------
 
 instance MDeque (MArrayList a) a ST s where
-  mDequeueFront :: MArrayList a s -> ST s (Maybe a)
-  mDequeueFront = popFront
+  dequeueFront :: MArrayList a s -> ST s (Maybe a)
+  dequeueFront = popFront
 
-  mDequeueEnd :: MArrayList a s -> ST s (Maybe a)
-  mDequeueEnd = pop
+  dequeueEnd :: MArrayList a s -> ST s (Maybe a)
+  dequeueEnd = pop
 
-  mEnqueueFront :: a -> MArrayList a s -> ST s ()
-  mEnqueueFront = push
+  enqueueFront :: a -> MArrayList a s -> ST s ()
+  enqueueFront = push
 
-  mEnqueueEnd :: a -> MArrayList a s -> ST s ()
-  mEnqueueEnd = append
+  enqueueEnd :: a -> MArrayList a s -> ST s ()
+  enqueueEnd = append
 
 
 --------------------------------------------------------------------------------

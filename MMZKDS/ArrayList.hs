@@ -15,7 +15,7 @@ import           MMZKDS.Base (ArrayList(..))
 import           MMZKDS.Class.ArrayBased (ArrayBased(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
 import           MMZKDS.Class.List as L (List(..))
-import           MMZKDS.Queue (Deque(..))
+import           MMZKDS.Class.Queue (Deque(..))
 import           MMZKDS.Utilities
   ( arrayLengthOverflowError, expandedSize, idArrayList, initialSize
   , outOfBoundError
