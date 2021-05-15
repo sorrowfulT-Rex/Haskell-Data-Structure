@@ -14,9 +14,9 @@ import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 -- MList Type Class
 --------------------------------------------------------------------------------
 
--- | 'MList' is a type class for mutable sequential data structures based on the
--- @ST@-monad, with methods including random access, addition, deletion, finding 
--- index and so on.
+-- | 'MList' is a type class for mutable sequential data structures based on
+-- the @ST@-monad, with methods including random access, addition, deletion,  
+-- finding index and so on.
 -- It is based on the Java List Interface.  
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- The list structure should have consecutive index from 0 to its size - 1.
@@ -37,8 +37,8 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   insert :: l s -> Int -> e -> m s ()
 
   -- | Removes an element into the list structure.
-  -- Takes an @Int@ as index and a list, returns the removed element and deletes
-  -- the element from the list.
+  -- Takes an @Int@ as index and a list, returns the removed element and
+  -- deletes the element from the list.
   -- If the index is out of bound, returns @Nothing@ and the orignal list is 
   -- unmodified.
   --
@@ -124,7 +124,8 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   -- | Default method.
   -- Removes the last element from the list structure.
   -- Returns the removed element and deletes the element from the list.
-  -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
+  -- If the list is empty, returns @Nothing@ and the original list is 
+  -- unmodified.
   --
   pop :: l s -> m s (Maybe e)
   pop ml = do
@@ -134,7 +135,8 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   -- | Default method.
   -- Removes the first element from the list structure.
   -- Returns the removed element and deletes the element from the list.
-  -- If the list is empty, returns @Nothing@ and the orignal list is unmodified.
+  -- If the list is empty, returns @Nothing@ and the original list is 
+  -- unmodified.
   --
   popFront :: l s -> m s (Maybe e)
   popFront = flip delete 0

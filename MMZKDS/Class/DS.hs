@@ -51,6 +51,12 @@ class DSCons a d where
   --
   new :: a -> d
 
+instance DS [a] where
+  clear      = const []
+  size       = length
+  isNull     = null
+  identifier = const "[]"
+
 instance DSCons [a] [a] where
   finish = id
   new    = id

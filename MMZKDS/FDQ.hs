@@ -1,6 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module MMZKDS.FDQ (FDQ, balanceDeque) where
 
@@ -90,6 +92,21 @@ instance List (FDQ a) a where
       inf' = max 0 inf
       sup' = min (size q) sup
       diff = sup' - inf'
+
+  -- Overwritten default methods
+  insertAll :: forall l. (DS l, DSCons [a] l) => FDQ a -> Int -> l -> FDQ a
+  insertAll q@(FDQ fl frt el end) index es
+    | index > len = outOfBoundError index
+    | index < 0   = outOfBoundError index
+    | index < fl  = let (f1, f2) = splitAt index frt
+                    in  balanceDeque $ FDQ (fl + len') (f1 ++ xs ++ f2) el end
+    | otherwise   = let (e1, e2) = splitAt (len - index) end
+                    in  balanceDeque $ 
+                        FDQ fl frt (el + len') (e1 ++ reverse xs ++ e2)
+    where
+      len  = size q
+      len' = size es
+      xs   = (finish :: l -> [a]) es
 
   -- Overwritten default methods
   lastIndexOf :: Eq a => FDQ a -> a -> Maybe Int

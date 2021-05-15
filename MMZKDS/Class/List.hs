@@ -9,6 +9,7 @@ module MMZKDS.Class.List (List(..)) where
 import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (foldl', sort, sortOn)
 import           Data.Maybe (fromJust, isJust, listToMaybe)
+import           Prelude hiding (concat)
 
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
 
@@ -29,13 +30,13 @@ import           MMZKDS.Class.DS (DS(..), DSCons(..))
 -- @deleteRange@, @indexOf@, @insertAll@, @insertAll'@, @lastIndexOf@,
 -- @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@, @removeLast@,
 -- @sort@, @sortOn@, @toList@, @update@ and @update'@.
--- For functional operations, one can "stream" the list structure with @toList@,
--- apply the functions, then "collect" it back with "@newList@".
+-- For functional operations, one can "stream" the list structure with
+-- @toList@, apply the functions, then "collect" it back with "@newList@".
 --
 class (DS l, DSCons [e] l) => List l e | l -> e where
   -- | Adds an element into the list structure.
-  -- Takes a list, an @Int@ as index and an element, returns a list that inserts
-  -- the given element before the index.
+  -- Takes a list, an @Int@ as index and an element, returns a list that
+  -- inserts the given element before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
@@ -79,6 +80,20 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   append l = insert l (size l)
 
   -- | Default method.
+  -- Concatenate two lists.
+  -- 
+  concat :: forall l1. (DS l1, DSCons [e] l1) => l -> l1 -> l
+  concat l = insertAll l (size l)
+
+  -- | Default method.
+  -- COncatenate two lists with the same type.
+  -- May have more efficient implementation than @concat@, which allows the
+  -- second data structure to be arbitrary.
+  -- 
+  concat' :: l -> l -> l
+  concat' = concat
+
+  -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
   -- element is in the list.
   --
@@ -113,9 +128,10 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
   --
-  insertAll :: forall l1. DSCons [e] l1 => l -> Int -> l1 -> l
+  insertAll :: forall l1. (DS l1, DSCons [e] l1) => l -> Int -> l1 -> l
   insertAll l index es
-    = L.foldl' (`insert` index) l ((finish :: l1 -> [e]) es)
+    = L.foldl' (\l (offset, e) -> insert l (index + offset) e) l $ 
+      zip [0..] $ (finish :: l1 -> [e]) es
 
   -- | Default method.
   -- Same as @insertAll@, but specifies the list of new elements to be the same
@@ -190,7 +206,8 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
     where
       indices = l `indicesOf` e
       worker (es, l, offset) i
-        = let (Just e', l') = delete l (i - offset) in (e' : es, l', offset + 1)
+        = let (Just e', l') = delete l (i - offset) 
+          in  (e' : es, l', offset + 1)
 
   -- | Default method.
   -- Removes the last occurrence of an element from the list structure, and
