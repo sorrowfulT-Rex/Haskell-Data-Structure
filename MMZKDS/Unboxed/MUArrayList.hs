@@ -21,13 +21,14 @@ import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
+import qualified MMZKDS.Class.ArrayBased as AB (ArrayBased(..)) 
+import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
 import           MMZKDS.List (List(newList, toList), MList(..))
-import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unsafe
   (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
@@ -120,7 +121,7 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
   mDelete :: Int -> MUArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MUArrayList lR arrR) = do
     ls <- size mal
-    ps <- mPhysicalSize mal
+    ps <- physicalSize mal
     if index < 0 || index >= ls
       then return Nothing
       else do
@@ -133,12 +134,12 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
   mInsert :: Int -> a -> MUArrayList a s -> ST s ()
   mInsert index e mal@(MUArrayList lR arrR) = do
     ls <- size mal
-    ps <- mPhysicalSize mal
+    ps <- physicalSize mal
     if      index < 0 || index > ls
     then    return $ outOfBoundError index
     else if ls == ps
     then do
-      mResize (expandedSize ls) mal
+      resize (expandedSize ls) mal
       mInsert index e mal
     else do
       arrST <- readSTRef arrR
@@ -211,27 +212,27 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
 --------------------------------------------------------------------------------
 
 instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
-  mDeepClear :: MUArrayList a s -> ST s ()
-  mDeepClear (MUArrayList lR arrR) = do
+  deepClear :: MUArrayList a s -> ST s ()
+  deepClear (MUArrayList lR arrR) = do
     MUArrayList rlR resR <- mNewList []
     rl                   <- readSTURef rlR
     resST                <- readSTRef resR
     writeSTURef lR rl
     writeSTRef arrR resST
 
-  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MUArrayList a s)
-  mNewWithSize = (uArrayListThaw .) . newWithSize
+  newWithSize  :: Foldable f => Int -> f a -> ST s (MUArrayList a s)
+  newWithSize = (uArrayListThaw .) . AB.newWithSize
 
-  mPhysicalSize :: MUArrayList a s -> ST s Int
-  mPhysicalSize (MUArrayList _ arrR) = do
+  physicalSize :: MUArrayList a s -> ST s Int
+  physicalSize (MUArrayList _ arrR) = do
     arrST    <- readSTRef arrR
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
-  mResize :: Int -> MUArrayList a s -> ST s ()
-  mResize s _
+  resize :: Int -> MUArrayList a s -> ST s ()
+  resize s _
     | s < 0 = return arrayLengthOverflowError
-  mResize s (MUArrayList lR arrR) = do
+  resize s (MUArrayList lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readSTURef lR
     (_, sup) <- getBounds arrST
@@ -245,7 +246,7 @@ instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
   trueCopy :: MUArrayList a s -> ST s (MUArrayList a s)
   trueCopy mal@(MUArrayList _ arrR) = do
     ls    <- size mal
-    ps    <- mPhysicalSize mal
+    ps    <- physicalSize mal
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
     unsafeCopyArray arrST resST (0, ls - 1)

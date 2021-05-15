@@ -17,7 +17,7 @@ import           Data.Foldable (toList)
 import           Data.Maybe (fromJust, isNothing)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.ArrayBased (MArrayBased(..))
+import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Base (MHeapPQ(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.PriorityQueue (MPriorityQueue(..))
@@ -39,9 +39,9 @@ instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
   mAdd :: a -> MHeapPQ a s -> ST s ()
   mAdd e mh@(MHeapPQ lR arrR) = do
     ls <- size mh
-    ps <- mPhysicalSize mh
+    ps <- physicalSize mh
     if ls == ps
-      then mResize (expandedSize ls) mh >> mAdd e mh
+      then resize (expandedSize ls) mh >> mAdd e mh
       else do
         arrST <- readSTRef arrR
         writeSTURef lR $! ls + 1
@@ -84,13 +84,13 @@ instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
 --------------------------------------------------------------------------------
 
 instance Ord a => MArrayBased (MHeapPQ a) a ST s where
-  mDeepClear :: MHeapPQ a s -> ST s ()
-  mDeepClear mh =
+  deepClear :: MHeapPQ a s -> ST s ()
+  deepClear mh =
     (newArray_ (0, initialSize 0 - 1) :: ST s (STArray s Int a)) >>=
       writeSTRef (mHeapA mh) >> writeSTURef (mHeapS mh) 0
 
-  mNewWithSize :: Foldable f => Int -> f a -> ST s (MHeapPQ a s)
-  mNewWithSize s fd = do
+  newWithSize :: Foldable f => Int -> f a -> ST s (MHeapPQ a s)
+  newWithSize s fd = do
     let l = length fd
     arrST <- (newListArray :: (Int, Int) -> [a] -> ST s (STArray s Int a))
       (0, max s (initialSize l) - 1) $ toList fd
@@ -107,15 +107,15 @@ instance Ord a => MArrayBased (MHeapPQ a) a ST s where
     toMinHeap $ Just 0
     return $ MHeapPQ lR aR
 
-  mPhysicalSize :: MHeapPQ a s -> ST s Int
-  mPhysicalSize mh = do
+  physicalSize :: MHeapPQ a s -> ST s Int
+  physicalSize mh = do
     (_, sup) <- readSTRef (mHeapA mh) >>= getBounds
     return (sup + 1)
 
-  mResize :: Int -> MHeapPQ a s -> ST s ()
-  mResize s _
+  resize :: Int -> MHeapPQ a s -> ST s ()
+  resize s _
     | s < 0 = arrayLengthOverflowError
-  mResize s (MHeapPQ lR arrR) = do
+  resize s (MHeapPQ lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readSTURef lR
     (_, sup) <- getBounds arrST
@@ -168,7 +168,7 @@ instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
       flip fmap (readSTRef (mHeapA mh) >>= freeze') . (. toList) . take
 
   new :: [a] -> ST s (MHeapPQ a s)
-  new = mNewWithSize 0
+  new xs = newWithSize (initialSize $ length xs) xs
 
 
 --------------------------------------------------------------------------------

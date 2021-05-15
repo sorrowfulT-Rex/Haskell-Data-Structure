@@ -14,8 +14,8 @@ import           Data.Maybe (fromJust, isJust)
 import           Data.STRef
   (STRef, modifySTRef', newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.List as L (MList(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.List as L (MList(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.Base (MULinkedList(..), MUNode(..))
 import           MMZKDS.Unboxed.STURef

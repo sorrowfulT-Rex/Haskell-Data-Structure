@@ -10,7 +10,7 @@ import           Control.Monad (join)
 import           Data.Array.Unboxed (IArray, UArray, accum, array, bounds, (!))
 import           Data.Foldable as F (toList)
 
-import           MMZKDS.ArrayBased (ArrayBased(..))
+import           MMZKDS.Class.ArrayBased (ArrayBased(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
 import           MMZKDS.Queue (Deque(..))
 import           MMZKDS.List as L (List(..))

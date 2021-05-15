@@ -5,21 +5,35 @@ My aim is to make a wide range of data structures that ideally would satisfy not
 
 Now working on: List concatenation; Unordered List.  
 Next to come: Map; Red-Black Tree.  
+<br />
 
-# [MMZKDS/DS.hs](MMZKDS/DS.hs)
+<!-- # Contents   
+## 1. [MMZKDS/Class](#mmzkds/class)  
+* ### a. [MMZKDS/Class/DS.hs](mmzkds/class/dshs)
+* ### b. [MMZKDS/Class/MDS.hs](mmzkds/class/mdshs) -->
+
+
+# [MMZKDS/Class](MMZKDS/Class/)
+Contains the type classes for the data structures.  
+I will move all type classes to here eventually, but now it is home to only `DS` and `MDS`.  
+
+# [MMZKDS/Class/DS.hs](MMZKDS/Class/DS.hs)
 This file provides type classes for immutable data structures.  
 It contains class `DS` providing methods for clearing data and size checking, and class `DSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
-See the [Haddocks](MMZKDS/DS.hs) for full documentation (TODO).  
+See the [Haddocks](MMZKDS/Class/DS.hs) for full documentation (TODO).  
 
-# [MMZKDS/MDS.hs](MMZKDS/MDS.hs)
+# [MMZKDS/Class/MDS.hs](MMZKDS/Class/MDS.hs)
 MDS is short for Mutable Data Structure. This file provides type classes for mutable structures.  
 It contains class `MDS` providing ways of copying and clearing, and class `MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
-See the [Haddocks](MMZKDS/MDS.hs) for full documentation.  
+See the [Haddocks](MMZKDS/Class/MDS.hs) for full documentation.  
 
-# [MMZKDS/ArrayBased.hs](MMZKDS/ArrayBased.hs)
-This file provides type classes for immutable and mutable data structures in which their implementations are based on arrays.  
-The classes `ArrayBased` and `MArrayBased` provide methods for re-allocating arrays in the need of larger or smaller length.  
-See the [Haddocks](MMZKDS/ArrayBased.hs) for full documentation.  
+# [MMZKDS/Class/ArrayBased.hs](MMZKDS/Class/ArrayBased.hs)
+This file provides a type class, `ArrayBased` for immutable data structures in which their implementations are based on arrays. It has methods for re-allocating arrays in the need of larger or smaller length.  
+See the [Haddocks](MMZKDS/Class/ArrayBased.hs) for full documentation.  
+
+# [MMZKDS/Class/MArrayBased.hs](MMZKDS/Class/MArrayBased.hs)
+The mutable counterpart of `ArrayBased`.  
+See the [Haddocks](MMZKDS/Class/MArrayBased.hs) for full documentation.  
 
 # [MMZKDS/List.hs](MMZKDS/List.hs)
 This file provides type classes for both immutable and mutable list structures, including methods of random access, addition, deletion, finding indices *etc.*   

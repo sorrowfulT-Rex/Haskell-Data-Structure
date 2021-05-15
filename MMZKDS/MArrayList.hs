@@ -17,11 +17,12 @@ import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
 import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
-import           MMZKDS.ArrayBased (ArrayBased(..), MArrayBased(..))
 import           MMZKDS.ArrayList ()
 import           MMZKDS.Base (ArrayList(..), MArrayList(..))
-import           MMZKDS.List as L (List(newList, toList), MList(..))
+import qualified MMZKDS.Class.ArrayBased as AB (ArrayBased(..))
+import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
+import           MMZKDS.List as L (List(newList, toList), MList(..))
 import           MMZKDS.Queue (MDeque(..))
 import           MMZKDS.Unboxed.STURef 
   (STURef, newSTURef, readSTURef, writeSTURef)
@@ -106,12 +107,12 @@ instance MList (MArrayList a) a ST s where
   mInsert :: Int -> a -> MArrayList a s -> ST s ()
   mInsert index e mal@(MArrayList lR arrR) = do
     ls <- size mal
-    ps <- mPhysicalSize mal
+    ps <- physicalSize mal
     if      index < 0 || index > ls
     then    outOfBoundError index
     else if ls == ps
     then do
-      mResize (expandedSize ls) mal
+      resize (expandedSize ls) mal
       mInsert index e mal
     else do
       arrST <- readSTRef arrR
@@ -121,7 +122,7 @@ instance MList (MArrayList a) a ST s where
   mDelete :: Int -> MArrayList a s -> ST s (Maybe a)
   mDelete index mal@(MArrayList lR arrR) = do
     ls <- size mal
-    ps <- mPhysicalSize mal
+    ps <- physicalSize mal
     if index < 0 || index >= ls
       then return Nothing
       else do
@@ -197,27 +198,27 @@ instance MList (MArrayList a) a ST s where
 --------------------------------------------------------------------------------
 
 instance MArrayBased (MArrayList a) a ST s where
-  mDeepClear :: MArrayList a s -> ST s ()
-  mDeepClear (MArrayList lR arrR) = do
+  deepClear :: MArrayList a s -> ST s ()
+  deepClear (MArrayList lR arrR) = do
     MArrayList rlR resR <- mNewList []
     rl                  <- readSTURef rlR
     resST               <- readSTRef resR
     writeSTURef lR rl
     writeSTRef arrR resST
 
-  mNewWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
-  mNewWithSize = (arrayListThaw .) . newWithSize
+  newWithSize  :: Foldable f => Int -> f a -> ST s (MArrayList a s)
+  newWithSize = (arrayListThaw .) . AB.newWithSize
 
-  mPhysicalSize :: MArrayList a s -> ST s Int
-  mPhysicalSize (MArrayList _ arrR) = do
+  physicalSize :: MArrayList a s -> ST s Int
+  physicalSize (MArrayList _ arrR) = do
     arrST    <- readSTRef arrR
     (_, sup) <- getBounds arrST
     return $ sup + 1
 
-  mResize :: Int -> MArrayList a s -> ST s ()
-  mResize s _
+  resize :: Int -> MArrayList a s -> ST s ()
+  resize s _
     | s < 0 = arrayLengthOverflowError
-  mResize s (MArrayList lR arrR) = do
+  resize s (MArrayList lR arrR) = do
     arrST    <- readSTRef arrR
     l        <- readSTURef lR
     (_, sup) <- getBounds arrST
@@ -231,7 +232,7 @@ instance MArrayBased (MArrayList a) a ST s where
   trueCopy :: MArrayList a s -> ST s (MArrayList a s)
   trueCopy mal@(MArrayList _ arrR) = do
     ls    <- size mal
-    ps    <- mPhysicalSize mal
+    ps    <- physicalSize mal
     arrST <- readSTRef arrR
     resST <- newArray_ (0, ps - 1)
     unsafeCopyArray arrST resST (0, ls - 1)
