@@ -36,6 +36,7 @@ import           MMZKDS.Utilities
 --------------------------------------------------------------------------------
 
 instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
+  {-# INLINE mAdd #-}
   mAdd :: a -> MHeapPQ a s -> ST s ()
   mAdd e mh@(MHeapPQ lR arrR) = do
     ls <- size mh
@@ -54,6 +55,7 @@ instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
               writeArray arrST i vp >> writeArray arrST pI vi >> bubbleUp pI
         bubbleUp ls
 
+  {-# INLINE mPop #-}
   mPop :: MHeapPQ a s -> ST s (Maybe a)
   mPop mh@(MHeapPQ lR arrR) = do
     l <- size mh
@@ -89,6 +91,7 @@ instance Ord a => MArrayBased (MHeapPQ a) a ST s where
     (newArray_ (0, initialSize 0 - 1) :: ST s (STArray s Int a)) >>=
       writeSTRef (mHeapA mh) >> writeSTURef (mHeapS mh) 0
 
+  {-# INLINE newWithSize #-}
   newWithSize :: Foldable f => Int -> f a -> ST s (MHeapPQ a s)
   newWithSize s fd = do
     let l = length fd
@@ -175,10 +178,11 @@ instance Ord a => MDSCons [a] (MHeapPQ a) ST s where
 -- Heap-Specific Function
 --------------------------------------------------------------------------------
 
--- | Unsafe function: Does not the validity of childrens.
+-- | Unsafe function: Does not check the validity of childrens.
 -- Turns the heap into a min-heap starting from the given index.
 -- Pre: The indices of childrens are valid. 
 --  
+{-# INLINE fixHead #-}
 fixHead :: Ord a
         => STArray s Int a -- ^ The @STArray@
         -> Int -- ^ The logic length
