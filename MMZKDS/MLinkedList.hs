@@ -94,6 +94,7 @@ instance MList (MLinkedList a) a ST s where
       then outOfBoundError index
       else do
         accessNode index mll
+        i <- readSTURef iR
         cur <- readSTRef cR
         prv <- prevN cur
         nR  <- newSTRef cur
@@ -146,6 +147,33 @@ instance MList (MLinkedList a) a ST s where
     writeSTRef (prevNRef cur) newNode
     writeSTRef (nextNRef prv) newNode
     modifySTURef lR succ
+
+  -- Overwritten default method
+  deleteRange :: Int -> Int -> MLinkedList a s -> ST s [a]
+  deleteRange inf sup mll@(MLinkedList lR hR iR cR) = do
+    ls    <- size mll
+    index <- readSTURef iR
+    cur   <- readSTRef cR
+    let inf' = max 0 inf
+    let sup' = min ls sup
+    res   <- subList inf sup mll >>= toList
+    sR    <- if inf' == 0 
+          then return hR 
+          else accessNode (inf' - 1) mll >> return cR
+    start <- readSTRef sR
+    eR    <- if sup' == ls
+          then return hR 
+          else accessNode sup' mll >> return cR
+    end   <- readSTRef eR
+    writeSTRef (nextNRef start) end
+    writeSTRef (prevNRef end) start
+    writeSTURef lR (ls - (sup' - inf'))
+    if      index >= inf' && index < sup'
+    then    writeSTURef iR (-1) >> readSTRef hR >>= writeSTRef cR
+    else if index < inf' 
+    then     writeSTURef iR index >> writeSTRef cR cur
+    else    writeSTURef iR (index - (sup' - inf')) >> writeSTRef cR cur
+    return res
 
   -- Overwritten default method
   indexOf :: Eq a => MLinkedList a s -> a -> ST s (Maybe Int)

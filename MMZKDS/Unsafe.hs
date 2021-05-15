@@ -91,7 +91,7 @@ unsafeCopyArray :: MArray r a m
                 -> m ()
 unsafeCopyArray arrST resST (inf, sup) = 
   forM_ (zip [0..] [inf..sup]) $ 
-    \(i, i') -> readArray arrST i >>= writeArray resST i'
+    \(i, i') -> readArray arrST i' >>= writeArray resST i
 
 -- | Unsafe: Does not check if the array satisfies the pre-condition.
 -- Takes a ordering function, an index lower bound, an index upper bound, and 
@@ -153,7 +153,7 @@ unsafeRemoveST :: (MArray r a m)
                -> Int 
                -> r Int a -> m ()
 unsafeRemoveST start end lastIndexOf arrST
-  = forM_ [end..lastIndexOf] $ \i -> do
+  = forM_ [start..lastIndexOf] $ \i -> do
     v <- readArray arrST (i + gap)
     writeArray arrST i v
   where

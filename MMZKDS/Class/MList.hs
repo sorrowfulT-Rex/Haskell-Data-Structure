@@ -22,9 +22,9 @@ import           MMZKDS.Class.MDS as MDS (MDS(..), MDSCons(..))
 -- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires @delete@, @get@, @insert@, @indicesOf@,
 -- @set@, @size@, @sortOn@ and @subList@.
--- Default methods include @append@, @contains@, @indexof@, @isNull@, 
--- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@,
--- @removeLast@, @sort@, @toList@, @update@ and @update'@.
+-- Default methods include @append@, @contains@, @deleteRange@, @indexof@,
+-- @isNull@, @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, 
+-- @removeAll@, @removeLast@, @sort@, @toList@, @update@ and @update'@.
 -- For methods that involves indices or elements, if the method changes the size
 -- of the list (e.g. @add@ or @pop@), the list is the last argument; if the
 -- method does not change the size (e.g. @get@ or @set@), the list is the 
@@ -87,6 +87,18 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   --
   contains :: Eq e => l s -> e -> m s Bool
   contains = (fmap isJust .) . indexOf
+
+  -- | Default method.
+  -- Delete all elements between the first argument (inclusive and the second
+  -- argument (exclusive), returning the deleted elements.
+  -- This is like the opposite of @subList@, but operates on (modifies) the
+  -- original list.
+  -- 
+  deleteRange :: Int -> Int -> l s -> m s [e]
+  deleteRange inf sup ml = do
+    let inf' = max 0 inf
+    len <- size ml
+    forM [inf'..(min len sup - 1)] $ const $ fromJust <$> delete inf' ml
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the

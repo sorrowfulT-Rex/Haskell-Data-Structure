@@ -7,7 +7,7 @@ module MMZKDS.Class.List (List(..)) where
 
 import           Control.Monad (ap, join, liftM2)
 import           Data.List as L (foldl', sort, sortOn)
-import           Data.Maybe (isJust, listToMaybe)
+import           Data.Maybe (fromJust, isJust, listToMaybe)
 
 import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
 
@@ -24,12 +24,12 @@ import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
 -- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires @delete@, @get@, @indicesOf@, @insert@,
 -- @set@, and @subList@.
--- Default methods include @append@, @contains@, @indexOf@, @isNull@, 
--- @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@,
--- @removeLast@, @sort@, @sortOn@, @toList@, @update@ and @update'@.
--- For functional operations, one can either create a 'Monad' instance, or
--- "stream" the list structure with @toList@, apply the functions, then 
--- "collect" it back with "@newList@".
+-- Default methods include @append@, @contains@, @deleteRange@, @indexOf@, 
+-- @isNull@, @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@,
+-- @removeAll@, @removeLast@, @sort@, @sortOn@, @toList@, @update@ 
+-- and @update'@.
+-- For functional operations, one can "stream" the list structure with @toList@,
+-- apply the functions, then "collect" it back with "@newList@".
 -- For methods that involves indices or elements, if the method changes the size
 -- of the list (e.g. @add@ or @pop@), the list is the last argument; if the
 -- method does not change the size (e.g. @get@ or @set@), the list is the first
@@ -87,6 +87,18 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   --
   contains :: Eq e => l -> e -> Bool
   contains = (isJust .) . indexOf
+
+  -- | Default method.
+  -- Delete all elements between the first argument (inclusive and the second
+  -- argument (exclusive), also returning the deleted elements as a @[]@.
+  -- This is like the opposite of @subList@.
+  -- 
+  deleteRange :: Int -> Int -> l -> ([e], l)
+  deleteRange inf sup l 
+    = foldr go ([], l) [(max 0 inf)..(min (size l - 1) (sup - 1))]
+    where
+      go i (es, l) = let (me, l') = delete i l
+                     in  (fromJust me : es, l')
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the

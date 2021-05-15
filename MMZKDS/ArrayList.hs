@@ -7,7 +7,7 @@
 module MMZKDS.ArrayList (ArrayList) where
 
 import           Control.Monad (join)
-import           Data.Array (Array, accumArray, array, bounds, (!))
+import           Data.Array (Array, accum, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 import           Data.Maybe (isJust)
 
@@ -85,8 +85,9 @@ instance List (ArrayList a) a where
   subList :: Int -> Int -> ArrayList a -> ArrayList a
   subList inf sup al
     | sup' <= inf' = deepClear al
-    | otherwise    = ArrayList len'
-        $ accumArray worker undefined (0, ps - 1) $ join zip [0..(len' - 1)]
+    | otherwise    = ArrayList len' $ 
+                     accumArray worker undefined (0, ps - 1) $ 
+                     join zip [0..(len' - 1)]
       where
         inf' = max inf 0
         sup' = min sup (size al)
@@ -95,8 +96,24 @@ instance List (ArrayList a) a where
         worker _ i
           = al `get` (i + inf')
 
+  toList :: ArrayList a -> [a]
   toList (ArrayList l arr)
     = take l $ F.toList arr
+
+  -- Overwritten default method
+  deleteRange :: Int -> Int -> ArrayList a -> ([a], ArrayList a)
+  deleteRange inf sup al@(ArrayList _ arr)
+    = (L.toList $ subList inf sup al, acc)
+    where
+      inf' = max 0 inf
+      sup' = min len sup
+      len  = size al
+      diff = sup' - inf'
+      len' = len - diff
+      acc  = ArrayList len' $ accum go arr $ join zip [0..(len' - 1)]
+      go e i
+        | i < inf'  = e
+        | otherwise = arr ! (i + diff)
 
   -- Overwritten default method
   lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int

@@ -73,6 +73,25 @@ instance List (FDQ a) a where
     = new $ take (sup - inf) $ drop inf $ toList q
 
   -- Overwritten default methods
+  deleteRange :: Int -> Int -> FDQ a -> ([a], FDQ a)
+  deleteRange inf sup q@(FDQ fl frt el end)
+    | inf' >= fl = let (e1, er) = splitAt (size q - sup') end
+                       (e2, e3) = splitAt diff er
+                   in  ( reverse e2
+                       , balanceDeque $ FDQ fl frt (el - diff) $ e1 ++ e3 )
+    | sup' < fl  = let (f1, fr) = splitAt inf' frt
+                       (f2, f3) = splitAt diff fr
+                   in  (f2, balanceDeque $ FDQ (fl - diff) (f1 ++ f3) el end)
+    | otherwise  = let (f1, m1) = splitAt inf' frt
+                       (e1, m2) = splitAt (size q - sup') end
+                   in ( m1 ++ reverse m2
+                      , balanceDeque $ FDQ inf' f1 (size q - sup') e1 )
+    where
+      inf' = max 0 inf
+      sup' = min (size q) sup
+      diff = sup' - inf'
+
+  -- Overwritten default methods
   lastIndexOf :: Eq a => FDQ a -> a -> Maybe Int
   lastIndexOf q@(FDQ fl frt _ end) e
     = listToMaybe $ 

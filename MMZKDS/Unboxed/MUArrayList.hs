@@ -174,11 +174,25 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
       then newList []
       else do
         resST <- newArray_ (0, ps - 1)
-        forM_ [0..(len' - 1)]
-          $ \i -> mal `get` (i + inf') >>= writeArray resST i
-        lR <- newSTURef len'
-        resR <- newSTRef resST
+        let MUArrayList _ arrR = mal
+        arrST <- readSTRef arrR
+        unsafeCopyArray arrST resST (inf', sup')
+        lR    <- newSTURef len'
+        resR  <- newSTRef resST
         return $ MUArrayList lR resR
+
+  -- Overwritten default method
+  deleteRange :: Int -> Int -> MUArrayList a s -> ST s [a]
+  deleteRange inf sup mal@(MUArrayList lR arrR) = do
+    ls    <- size mal
+    let inf' = max inf 0
+    let sup' = min sup ls
+    let diff = sup' - inf'
+    arrST <- readSTRef arrR
+    es    <- subList inf sup mal >>= toList
+    writeSTURef lR $! ls - diff
+    unsafeRemoveST inf' (sup' - 1) (ls - diff - 1) arrST
+    return es
 
   -- Overwritten default method
   indexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)

@@ -84,8 +84,9 @@ instance IArray UArray a => List (UArrayList a) a where
   subList :: Int -> Int -> UArrayList a -> UArrayList a
   subList inf sup al@(UArrayList _ arr)
     | sup' <= inf' = deepClear al
-    | otherwise    = UArrayList len'
-        $ accum (const ((al `get`) . (inf' +))) arr $ join zip [0..(len' - 1)]
+    | otherwise    = UArrayList len' $ 
+                     accum (const ((al `get`) . (inf' +))) arr $ 
+                     join zip [0..(len' - 1)]
       where
         inf' = max inf 0
         sup' = min sup (size al)
@@ -101,6 +102,21 @@ instance IArray UArray a => List (UArrayList a) a where
       toList' i
         | i == sup  = []
         | otherwise = (arr ! i) : toList' (i + 1)
+
+  -- Overwritten default method
+  deleteRange :: Int -> Int -> UArrayList a -> ([a], UArrayList a)
+  deleteRange inf sup al@(UArrayList _ arr)
+    = (L.toList $ subList inf sup al, acc)
+    where
+      inf' = max 0 inf
+      sup' = min len sup
+      len  = size al
+      diff = sup' - inf'
+      len' = len - diff
+      acc  = UArrayList len' $ accum go arr $ join zip [0..(len' - 1)]
+      go e i
+        | i < inf'  = e
+        | otherwise = arr ! (i + diff)
 
   -- Overwritten default method
   lastIndexOf :: Eq a => UArrayList a -> a -> Maybe Int
