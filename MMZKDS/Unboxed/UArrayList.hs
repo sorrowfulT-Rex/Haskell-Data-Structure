@@ -9,6 +9,7 @@ module MMZKDS.Unboxed.UArrayList (UArrayList) where
 import           Control.Monad (join)
 import           Data.Array.Unboxed (IArray, UArray, accum, array, bounds, (!))
 import           Data.Foldable as F (toList)
+import           Unsafe.Coerce (unsafeCoerce)
 
 import           MMZKDS.Class.ArrayBased (ArrayBased(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
@@ -32,8 +33,9 @@ instance IArray UArray a => List (UArrayList a) a where
   delete :: UArrayList a -> Int -> (Maybe a, UArrayList a)
   delete al@(UArrayList l arr) index
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = (Just (arr ! index), UArrayList (l - 1)
-        $ accum worker arr $ join zip [0..(l - 2)])
+    | otherwise               = ( Just (arr ! index)
+                                , UArrayList (l - 1) $ 
+                                  accum worker arr $ join zip [0..(l - 2)] )
     where
       pl = physicalSize al
       worker _ i
@@ -59,9 +61,8 @@ instance IArray UArray a => List (UArrayList a) a where
   insert al@(UArrayList l arr) index e 
     | index > l || index < 0 = outOfBoundError index
     | l == pl                = insert (resize l' al) index e 
-    | otherwise
-      = UArrayList (l + 1)
-        $ accum worker arr $ join zip [0..l]
+    | otherwise              = UArrayList (l + 1) $ 
+                               accum worker arr $ join zip [0..l]
     where
       pl = physicalSize al
       l' = expandedSize l
@@ -73,8 +74,8 @@ instance IArray UArray a => List (UArrayList a) a where
   set :: UArrayList a -> Int -> a -> UArrayList a
   set al@(UArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = UArrayList l
-        $ accum worker arr $ join zip [0..(l - 1)]
+    | otherwise               = UArrayList l $ 
+                                accum worker arr $ join zip [0..(l - 1)]
     where
       pl = physicalSize al
       worker _ i
@@ -117,6 +118,29 @@ instance IArray UArray a => List (UArrayList a) a where
       go e i
         | i < inf'  = e
         | otherwise = arr ! (i + diff)
+
+  -- Overwritten default method
+  insertAll :: (DSCons [a] l, DS l) => UArrayList a -> Int -> l -> UArrayList a
+  insertAll al index es
+    | identifier al == idUArrayList = insertAll' al index $ unsafeCoerce es
+    | otherwise                     = insertAll' al index (newList $ finish es)
+
+  -- Overwritten default method
+  insertAll' :: UArrayList a -> Int -> UArrayList a -> UArrayList a
+  insertAll' al@(UArrayList l arr) index al'
+    | index < 0 || index > l = outOfBoundError index
+    | l'' >= pl              = insertAll' (resize pl' al) index al'
+    | otherwise              = UArrayList l'' $ 
+                               accum go arr $ join zip [0..(l'' - 1)]
+    where
+      l'  = size al'
+      l'' = l + l'
+      pl  = physicalSize al
+      pl' = expandedSize l + l'
+      go e i
+        | i < index      = e
+        | i < index + l' = al' `get` (i - index)
+        | otherwise      = al `get` (i - l')
 
   -- Overwritten default method
   lastIndexOf :: Eq a => UArrayList a -> a -> Maybe Int

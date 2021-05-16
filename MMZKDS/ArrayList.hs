@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.ArrayList (ArrayList) where
@@ -9,7 +10,7 @@ module MMZKDS.ArrayList (ArrayList) where
 import           Control.Monad (join)
 import           Data.Array (Array, accum, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
-import           Data.Maybe (isJust)
+import           Unsafe.Coerce (unsafeCoerce)
 
 import           MMZKDS.Base (ArrayList(..))
 import           MMZKDS.Class.ArrayBased (ArrayBased(..))
@@ -33,8 +34,10 @@ instance List (ArrayList a) a where
   delete :: ArrayList a -> Int -> (Maybe a, ArrayList a)
   delete al@(ArrayList l arr) index
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = (Just (arr ! index), ArrayList (l - 1)
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 2)])
+    | otherwise               = ( Just (arr ! index)
+                                , ArrayList (l - 1) $ 
+                                  accumArray worker undefined (0, pl - 1) $ 
+                                  join zip [0..(l - 2)] )
     where
       pl = physicalSize al
       worker _ i
@@ -60,9 +63,9 @@ instance List (ArrayList a) a where
   insert al@(ArrayList l arr) index e
     | index > l || index < 0 = outOfBoundError index
     | l == pl                = insert (resize l' al) index e
-    | otherwise
-      = ArrayList (l + 1)
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..l]
+    | otherwise              = ArrayList (l + 1) $ 
+                               accumArray worker undefined (0, pl - 1) $ 
+                               join zip [0..l]
     where
       pl = physicalSize al
       l' = expandedSize l
@@ -74,8 +77,9 @@ instance List (ArrayList a) a where
   set :: ArrayList a -> Int -> a -> ArrayList a
   set al@(ArrayList l arr) index e
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = ArrayList l
-        $ accumArray worker undefined (0, pl - 1) $ join zip [0..(l - 1)]
+    | otherwise               = ArrayList l $ 
+                                accumArray worker undefined (0, pl - 1) $ 
+                                join zip [0..(l - 1)]
     where
       pl = physicalSize al
       worker _ i
@@ -114,6 +118,29 @@ instance List (ArrayList a) a where
       go e i
         | i < inf'  = e
         | otherwise = arr ! (i + diff)
+
+  -- Overwritten default method
+  insertAll :: (DSCons [a] l, DS l) => ArrayList a -> Int -> l -> ArrayList a
+  insertAll al index es
+    | identifier es == idArrayList = insertAll' al index $ unsafeCoerce es
+    | otherwise                    = insertAll' al index (newList $ finish es)
+
+  -- Overwritten default method
+  insertAll' :: ArrayList a -> Int -> ArrayList a -> ArrayList a
+  insertAll' al@(ArrayList l arr) index al'
+    | index < 0 || index > l = outOfBoundError index
+    | l'' >= pl              = insertAll' (resize pl' al) index al'
+    | otherwise              = ArrayList l'' $ 
+                               accum go arr $ join zip [0..(l'' - 1)]
+    where
+      l'  = size al'
+      l'' = l + l'
+      pl  = physicalSize al
+      pl' = expandedSize l + l'
+      go e i
+        | i < index      = e
+        | i < index + l' = al' `get` (i - index)
+        | otherwise      = al `get` (i - l')
 
   -- Overwritten default method
   lastIndexOf :: Eq a => ArrayList a -> a -> Maybe Int
@@ -211,7 +238,7 @@ instance Foldable ArrayList where
         | otherwise = f (arr ! i) (go (i + 1) v)
 
   elem :: Eq a => a -> ArrayList a -> Bool
-  elem = (isJust .) . flip indexOf
+  elem = flip contains
 
   null :: ArrayList a -> Bool
   null = isNull
