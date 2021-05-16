@@ -125,9 +125,8 @@ instance IArray UArray a => List (UArrayList a) a where
   insertAll al@(UArrayList l arr) index es
     | identifier es == idUArrayList = insertAll' al index $ unsafeCoerce es
     | otherwise                     = insertAll' al index $ 
-                                      newWithSize l' ((finish :: l -> [a]) es)
-    where
-      l'  = size es
+                                      newWithSize (size es) $ 
+                                      (finish :: l -> [a]) es
 
   -- Overwritten default method
   insertAll' :: UArrayList a -> Int -> UArrayList a -> UArrayList a

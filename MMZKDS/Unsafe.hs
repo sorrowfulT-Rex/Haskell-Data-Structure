@@ -75,6 +75,15 @@ unsafeAddST index e lastIndex arrST = do
     writeArray arrST (i + 1) v
   writeArray arrST index e
 
+-- | Unsafe: Does not conduct bound check for array.
+-- Takes an @Int@ as the starting index, an @Int@ as the length of the next
+-- argument, a list of elements, an @Int@ as the last index to be written to, 
+-- and an @Int@-indexed @STArray@, pushes all elements between the starting
+-- index (inclusive) and the last index (exclusive) so that a vacancy at the 
+-- starting index is opened, where it puts the new elements starting here.
+-- Pre: The index bounds are valid and the length argument is consistent with
+-- the actual list.
+--
 unsafeAddAllST :: (MArray r a m)
                => Int
                -> Int
