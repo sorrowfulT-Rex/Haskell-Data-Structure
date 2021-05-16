@@ -77,16 +77,16 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- Insert an element to the end of the list structure.
   --
   append :: l -> e -> l
-  append l = insert l (size l)
+  append = join $ (. size) . insert
 
   -- | Default method.
   -- Concatenate two lists.
   -- 
   concat :: forall l1. (DS l1, DSCons [e] l1) => l -> l1 -> l
-  concat l = insertAll l (size l)
+  concat = join $ (. size) . insertAll
 
   -- | Default method.
-  -- COncatenate two lists with the same type.
+  -- Concatenate two lists with the same type.
   -- May have more efficient implementation than @concat@, which allows the
   -- second data structure to be arbitrary.
   -- 
@@ -123,7 +123,7 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
 
   -- | Default method.
   -- Adds all elements in a list to the structure.
-  -- Takes an @Int@ as index, a list of new elements and the original list, 
+  -- Takes the original list, an @Int@ as index and a list of new elements, 
   -- returns a list that inserts the given elements before the index.
   -- If the index is either larger than the length of the list or less than 0,
   -- the function returns an error.
@@ -162,7 +162,7 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   -- If the list is empty, returns a typle of @Nothing@ and the original list.
   --
   pop :: l -> (Maybe e, l)
-  pop l = delete l (size l - 1)
+  pop = join $ (. pred . size) . delete
 
   -- | Default method.
   -- Removes the fisrt element from the list structure.

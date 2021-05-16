@@ -121,9 +121,18 @@ instance List (ArrayList a) a where
 
   -- Overwritten default method
   insertAll :: (DSCons [a] l, DS l) => ArrayList a -> Int -> l -> ArrayList a
-  insertAll al index es
+  insertAll al@(ArrayList l arr) index es
     | identifier es == idArrayList = insertAll' al index $ unsafeCoerce es
     | otherwise                    = insertAll' al index (newList $ finish es)
+    -- | index < 0 || index > l       = outOfBoundError index
+    -- | l'' >= pl                    = go (resize pl' al) index es
+    -- | otherwise                    = go al index es
+    where
+      l'  = size es
+      l'' = l + l'
+      pl  = physicalSize al
+      pl' = expandedSize l''
+      go = undefined
 
   -- Overwritten default method
   insertAll' :: ArrayList a -> Int -> ArrayList a -> ArrayList a
@@ -136,7 +145,7 @@ instance List (ArrayList a) a where
       l'  = size al'
       l'' = l + l'
       pl  = physicalSize al
-      pl' = expandedSize l + l'
+      pl' = expandedSize l''
       go e i
         | i < index      = e
         | i < index + l' = al' `get` (i - index)

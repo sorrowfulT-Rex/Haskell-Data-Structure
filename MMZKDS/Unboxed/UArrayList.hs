@@ -136,7 +136,7 @@ instance IArray UArray a => List (UArrayList a) a where
       l'  = size al'
       l'' = l + l'
       pl  = physicalSize al
-      pl' = expandedSize l + l'
+      pl' = expandedSize l''
       go e i
         | i < index      = e
         | i < index + l' = al' `get` (i - index)

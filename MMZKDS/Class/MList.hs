@@ -1,11 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module MMZKDS.Class.MList (MList(..)) where
 
-import           Control.Monad (forM, liftM2)
+import           Control.Monad (forM, forM_, liftM2)
 import           Data.Maybe (fromJust, isJust, listToMaybe)
+import           Prelude hiding (concat)
 
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 
@@ -22,10 +24,11 @@ import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 -- The list structure should have consecutive index from 0 to its size - 1.
 -- Minimal implementation requires @delete@, @get@, @insert@, @indicesOf@,
 -- @set@, @size@, @sortOn@ and @subList@.
--- Default methods include @append@, @contains@, @deleteRange@, @indexof@,
--- @isNull@, @lastIndexOf@, @newList@, @pop@, @popFront@, @push@, @remove@, 
--- @removeAll@, @removeLast@, @sort@, @toList@, @update@ and @update'@.
---
+-- Default methods include @append@, @concat@, @concat'@, @contains@,
+-- @deleteRange@, @indexof@, @insertAll@, @insertAll'@, @lastIndexOf@,
+-- @newList@, @pop@, @popFront@, @push@, @remove@,  @removeAll@, @removeLast@,
+-- @sort@, @toList@, @update@ and @update'@.
+-- 
 class (Monad (m s), MDS l m s, MDSCons [e] l m s) 
   => MList l e m s | l -> e where
   -- | Adds an element into the list structure.
@@ -79,6 +82,23 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   append ml e = size ml >>= flip (insert ml) e
 
   -- | Default method.
+  -- Concatenate two lists, modifying the same one.
+  -- 
+  concat :: forall l1. (MDS l1 m s, MDSCons [e] l1 m s) 
+         => l s 
+         -> l1 s 
+         -> m s ()
+  concat ml es = size ml >>= flip (insertAll ml) es
+
+  -- | Default method.
+  -- Concatenate two lists with the same type.
+  -- May have more efficient implementation than @concat@, which allows the
+  -- second data structure to be arbitrary.
+  -- 
+  concat' :: l s -> l s -> m s ()
+  concat' = concat
+
+  -- | Default method.
   -- Takes a list structure and an element, returns @True@ if and only if the
   -- element is in the list.
   --
@@ -105,6 +125,27 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   --
   indexOf :: Eq e => l s -> e -> m s (Maybe Int)
   indexOf = (fmap listToMaybe .) . indicesOf
+
+  -- | Default method.
+  -- Adds all elements in a list to the structure before the given index.
+  -- If the index is either larger than the length of the list or less than 0,
+  -- the function returns an error.
+  --
+  insertAll :: forall l1. (MDS l1 m s, MDSCons [e] l1 m s) 
+            => l s 
+            -> Int 
+            -> l1 s 
+            -> m s ()
+  insertAll ml index es = do
+    xs <- (finish :: l1 s -> m s [e]) es
+    forM_ (zip xs [0..]) $ \(e, offset) -> insert ml (index + offset) e
+
+  -- | Default method.
+  -- Same as @insertAll@, but specifies the list of new elements to be the same
+  -- type of the original list. May have a more efficient implementation.
+  -- 
+  insertAll' :: l s -> Int -> l s -> m s ()
+  insertAll' = insertAll
 
   -- | Default method.
   -- Takes a list structure and an element, returns either the index of the
