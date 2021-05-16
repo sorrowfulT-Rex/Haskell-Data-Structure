@@ -40,8 +40,8 @@ instance Ord a => Set (AVLSet a) a where
 --------------------------------------------------------------------------------
 
 instance Ord a => PriorityQueue (AVLSet a) a where
-  add :: a -> AVLSet a -> AVLSet a
-  add = S.add
+  add :: AVLSet a -> a -> AVLSet a
+  add = flip S.add
 
   pop :: AVLSet a -> (Maybe a, AVLSet a)
   pop = removeMinBT balanceAVL

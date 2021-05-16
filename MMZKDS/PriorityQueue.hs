@@ -5,7 +5,7 @@
 
 module MMZKDS.PriorityQueue (PriorityQueue(..), MPriorityQueue(..)) where
 
-import           Control.Monad (when)
+import           Control.Monad (forM_, when)
 import           Data.Maybe (fromJust, isJust)
 
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
@@ -31,7 +31,7 @@ import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 --
 class (DS q, DSCons [e] q) => PriorityQueue q e | q -> e where
   -- | Adds an element into the queue.
-  add :: e -> q -> q
+  add :: q -> e -> q
 
   -- | Removes the element at the front of the queue, returning a tuple of the
   -- element and the rest of the queue.
@@ -60,10 +60,10 @@ class (DS q, DSCons [e] q) => PriorityQueue q e | q -> e where
 -- When the queue is non-empty:
 -- @ mPop mq ==== mPop mq >>= flip mAdd mq >> mPop mq @
 --
-class (Monad (m s), MDS q m s, MDSCons [e] q m s) 
+class (Monad (m s), MDS q m s, MDSCons [e] q m s)
   => MPriorityQueue q e m s | q -> e where
   -- | Adds an element into the queue.
-  mAdd :: e -> q s -> m s ()
+  mAdd :: q s -> e -> m s ()
 
   -- | Removes the element at the front of the queue, returning the element.
   mPop :: q s -> m s (Maybe e)
@@ -73,5 +73,5 @@ class (Monad (m s), MDS q m s, MDSCons [e] q m s)
   mPeek :: q s -> m s (Maybe e)
   mPeek q = do
     me <- mPop q
-    when (isJust me) $ mAdd (fromJust me) q
+    forM_ me (mAdd q)
     return me

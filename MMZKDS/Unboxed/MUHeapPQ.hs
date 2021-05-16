@@ -38,12 +38,12 @@ import           MMZKDS.Utilities
 
 instance (Ord a, IArray UArray a, STU a s) 
   => MPriorityQueue (MUHeapPQ a) a ST s where
-  mAdd :: a -> MUHeapPQ a s -> ST s ()
-  mAdd e mh@(MUHeapPQ lR arrR) = do
+  mAdd :: MUHeapPQ a s -> a -> ST s ()
+  mAdd mh@(MUHeapPQ lR arrR) e = do
     ls <- size mh
     ps <- physicalSize mh
     if ls == ps
-      then resize (expandedSize ls) mh >> mAdd e mh
+      then resize (expandedSize ls) mh >> mAdd mh e
       else do
         arrST <- readSTRef arrR
         writeSTURef lR $! ls + 1

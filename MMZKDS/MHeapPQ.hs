@@ -37,12 +37,12 @@ import           MMZKDS.Utilities
 
 instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
   {-# INLINE mAdd #-}
-  mAdd :: a -> MHeapPQ a s -> ST s ()
-  mAdd e mh@(MHeapPQ lR arrR) = do
+  mAdd :: MHeapPQ a s -> a -> ST s ()
+  mAdd mh@(MHeapPQ lR arrR) e = do
     ls <- size mh
     ps <- physicalSize mh
     if ls == ps
-      then resize (expandedSize ls) mh >> mAdd e mh
+      then resize (expandedSize ls) mh >> mAdd mh e
       else do
         arrST <- readSTRef arrR
         writeSTURef lR $! ls + 1

@@ -37,5 +37,3 @@ class (DS a, DSCons [e] a) => ArrayBased a e | a -> e where
   -- the same elements but with at least the length specified by the argument.
   --
   resize :: Int -> a -> a
-
-

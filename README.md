@@ -3,7 +3,7 @@ This repo serves as a practice of writing both functional and mutable strict dat
 
 My aim is to make a wide range of data structures that ideally would satisfy not performance-sensitive purposes. However, since it is a practice code instead of a library, there is no guarantee of correctness and stability. Moreover, efficiency was not an design objective. Therefore, any performance-sensitive task should not be relied on this.  
 
-Now working on: List concatenation; Unordered List.  
+Now working on: Unordered List.  
 Next to come: Map; Red-Black Tree.  
 <br />
 
