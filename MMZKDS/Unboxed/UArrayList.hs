@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module MMZKDS.Unboxed.UArrayList (UArrayList) where
@@ -120,10 +121,13 @@ instance IArray UArray a => List (UArrayList a) a where
         | otherwise = arr ! (i + diff)
 
   -- Overwritten default method
-  insertAll :: (DSCons [a] l, DS l) => UArrayList a -> Int -> l -> UArrayList a
-  insertAll al index es
-    | identifier al == idUArrayList = insertAll' al index $ unsafeCoerce es
-    | otherwise                     = insertAll' al index (newList $ finish es)
+  insertAll :: forall l. (DSCons [a] l, DS l) => UArrayList a -> Int -> l -> UArrayList a
+  insertAll al@(UArrayList l arr) index es
+    | identifier es == idUArrayList = insertAll' al index $ unsafeCoerce es
+    | otherwise                     = insertAll' al index $ 
+                                      newWithSize l' ((finish :: l -> [a]) es)
+    where
+      l'  = size es
 
   -- Overwritten default method
   insertAll' :: UArrayList a -> Int -> UArrayList a -> UArrayList a

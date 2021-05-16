@@ -1,11 +1,21 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables#-}
+
 module MMZKDS.Unboxed.Base 
-  (MUArrayList(..), MUHeapPQ(..), MULinkedList(..), UArrayList(..), MUNode(..)
+  ( MUArrayList(..), MUHeapPQ(..), MULinkedList(..), UArrayList(..), MUNode(..)
+  , uArrayListFreeze, uArrayListThaw, unsafeUArrayListFreeze
+  , unsafeUArrayListThaw
   ) where
 
-import           Data.STRef (STRef)
+import           Control.Monad.ST (ST)
+import           Data.Array.ST
+  (STUArray, MArray, freeze, thaw)    
+import           Data.Array.Unboxed (IArray, UArray)
+import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
+import           Data.STRef (STRef, newSTRef, readSTRef)
 import           Data.Array.Base (STUArray, UArray)
 
-import           MMZKDS.Unboxed.STURef (STURef)
+import           MMZKDS.Unboxed.STURef (STU, STURef, newSTURef, readSTURef)
 
 -- | @MUArrayList@ is a data structure implementing the 'MList' class with an
 -- internal @STUArray@.
@@ -55,3 +65,61 @@ data MUNode e s
 -- 'MUArrayList' for frequent state updates.
 --
 data UArrayList e = UArrayList {-# UNPACK #-} !Int (UArray Int e)
+
+
+
+--------------------------------------------------------------------------------
+-- Freeze & Thaw
+--------------------------------------------------------------------------------
+
+-- | Makes an immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
+--
+uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+                 => MUArrayList a s
+                 -> ST s (UArrayList a)
+uArrayListFreeze (MUArrayList lR arrR) = do
+  l     <- readSTURef lR
+  arrST <- readSTRef arrR
+  arr   <- freeze arrST
+  return $ UArrayList l arr
+
+-- | Makes a mutable @MUArrayList@ from an immutable @ArrayList@ by copying. 
+--
+uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+               => UArrayList a
+               -> ST s (MUArrayList a s)
+uArrayListThaw (UArrayList l arr) = do
+  arrST <- thaw arr :: ST s (STUArray s Int a)
+  lR    <- newSTURef l
+  arrR  <- newSTRef arrST
+  return $ MUArrayList lR arrR
+
+-- | Unsafe Function.
+-- Makes an immutable @UArrayList@ from a mutable @MUArrayList@, perhaps without
+-- copying.
+-- The original mutable list should not be used ever since.
+--
+unsafeUArrayListFreeze :: 
+  forall a s. (IArray UArray a, STU a s)
+  => MUArrayList a s
+  -> ST s (UArrayList a)
+unsafeUArrayListFreeze (MUArrayList lR arrR) = do
+  l     <- readSTURef lR
+  arrST <- readSTRef arrR
+  arr   <- unsafeFreeze arrST
+  return $ UArrayList l arr
+
+-- | Unsafe Function.
+-- Makes a mutable @MUArrayList@ from an immutable @UArrayList@, perhaps without
+-- copying.
+-- The original immutable list should not be used ever since.
+--
+unsafeUArrayListThaw :: 
+  forall a s. (IArray UArray a, STU a s)
+  => UArrayList a
+  -> ST s (MUArrayList a s)
+unsafeUArrayListThaw (UArrayList l arr) = do
+  arrST <- unsafeThaw arr
+  lR    <- newSTURef l
+  arrR  <- newSTRef arrST
+  return $ MUArrayList lR arrR

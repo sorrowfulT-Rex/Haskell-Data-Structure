@@ -1,14 +1,20 @@
-module MMZKDS.Base 
-  (ArrayList(..), AVLSet(..), FDQ(..), MArrayList(..), MAVLSet(..), 
-   MAVLTree(..), MHeapPQ(..), MLinkedList(..), MNode(..), RBColour(..), 
-   RBTSet(..)
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables#-}
+
+module MMZKDS.Base
+  ( ArrayList(..), AVLSet(..), FDQ(..), MArrayList(..), MAVLSet(..)
+  , MAVLTree(..), MHeapPQ(..), MLinkedList(..), MNode(..), RBColour(..)
+  , RBTSet(..), arrayListFreeze, arrayListThaw, unsafeArrayListFreeze
+  , unsafeArrayListThaw
   ) where
 
+import           Control.Monad.ST (ST)
+import Data.Array.ST (STArray, freeze, thaw)
 import           Data.Array (Array)
-import           Data.Array.ST (STArray)
-import           Data.STRef (STRef)
+import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
+import           Data.STRef (STRef, newSTRef, readSTRef)
 
-import           MMZKDS.Unboxed.STURef (STURef)
+import           MMZKDS.Unboxed.STURef (STU, STURef, newSTURef, readSTURef)
 
 -- | @ArrayList@ is a data structure implementing the 'List' class with an
 -- internal array.
@@ -24,7 +30,7 @@ data ArrayList e = ArrayList {-# UNPACK #-} !Int (Array Int e)
 -- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
 -- union and intersection, and O(n * log n) construction from list.
 -- 
-data AVLSet e 
+data AVLSet e
   = AVLEmpty
   | AVLLeaf e
   | AVLNode {-# UNPACK #-} !Int {-# UNPACK #-} !Int (AVLSet e) e (AVLSet e)
@@ -54,10 +60,10 @@ newtype MAVLSet e s = MAVLSet (STRef s (MAVLTree e s))
 data MAVLTree e s
   = MAVLEmpty
   | MAVLLeaf (STRef s e)
-  | MAVLNode (STURef s Int) 
-             (STURef s Int) 
-             (STRef s (MAVLTree e s)) 
-             (STRef s e) 
+  | MAVLNode (STURef s Int)
+             (STURef s Int)
+             (STRef s (MAVLTree e s))
+             (STRef s e)
              (STRef s (MAVLTree e s))
 
 -- | 'MHeapPQ' is a min-heap implementing the 'MPriorityQueue' class.
@@ -103,8 +109,50 @@ data RBColour = Red | Black
 -- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
 -- union and intersection, and O(n * log n) construction from list.
 -- 
-data RBTSet e 
+data RBTSet e
   = RBEmpty
   | RBLeaf RBColour e
   | RBNode RBColour {-# UNPACK #-} !Int (RBTSet e) e (RBTSet e)
     deriving (Eq, Show)
+
+-- | Makes an immutable @ArrayList@ from a mutable @MArrayList@ by copying. 
+--
+arrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
+arrayListFreeze (MArrayList lR arrR) = do
+  l     <- readSTURef lR
+  arrST <- readSTRef arrR
+  arr   <- freeze arrST
+  return $ ArrayList l arr
+
+-- | Makes a mutable @MArrayList@ from an immutable @ArrayList@ by copying. 
+--
+arrayListThaw :: ArrayList a -> ST s (MArrayList a s)
+arrayListThaw (ArrayList l arr) = do
+  arrST <- thaw arr
+  lR    <- newSTURef l
+  arrR  <- newSTRef arrST
+  return $ MArrayList lR arrR
+
+-- | Unsafe Function.
+-- Makes an immutable @ArrayList@ from a mutable @MArrayList@, perhaps without
+-- copying.
+-- The original mutable list should not be used ever since.
+--
+unsafeArrayListFreeze :: MArrayList a s -> ST s (ArrayList a)
+unsafeArrayListFreeze (MArrayList lR arrR) = do
+  l     <- readSTURef lR
+  arrST <- readSTRef arrR
+  arr   <- unsafeFreeze arrST
+  return $ ArrayList l arr
+
+-- | Unsafe Function.
+-- Makes a mutable @MArrayList@ from an immutable @ArrayList@, perhaps without
+-- copying.
+-- The original immutable list should not be used ever since.
+--
+unsafeArrayListThaw :: ArrayList a -> ST s (MArrayList a s)
+unsafeArrayListThaw (ArrayList l arr) = do
+  arrST <- unsafeThaw arr
+  lR    <- newSTURef l
+  arrR  <- newSTRef arrST
+  return $ MArrayList lR arrR

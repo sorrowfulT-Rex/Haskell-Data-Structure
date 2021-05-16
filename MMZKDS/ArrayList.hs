@@ -8,15 +8,20 @@
 module MMZKDS.ArrayList (ArrayList) where
 
 import           Control.Monad (join)
+import           Control.Monad.ST (ST, runST)
 import           Data.Array (Array, accum, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
+import           Data.STRef (readSTRef)
 import           Unsafe.Coerce (unsafeCoerce)
 
-import           MMZKDS.Base (ArrayList(..))
+import           MMZKDS.Base 
+  (ArrayList(..), MArrayList(..), arrayListThaw, unsafeArrayListFreeze)
 import           MMZKDS.Class.ArrayBased (ArrayBased(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
 import           MMZKDS.Class.List as L (List(..))
 import           MMZKDS.Class.Queue (Deque(..))
+import           MMZKDS.Unboxed.STURef (writeSTURef)
+import           MMZKDS.Unsafe (unsafeAddAllST)
 import           MMZKDS.Utilities
   ( arrayLengthOverflowError, expandedSize, idArrayList, initialSize
   , outOfBoundError
@@ -123,16 +128,19 @@ instance List (ArrayList a) a where
   insertAll :: (DSCons [a] l, DS l) => ArrayList a -> Int -> l -> ArrayList a
   insertAll al@(ArrayList l arr) index es
     | identifier es == idArrayList = insertAll' al index $ unsafeCoerce es
-    | otherwise                    = insertAll' al index (newList $ finish es)
-    -- | index < 0 || index > l       = outOfBoundError index
-    -- | l'' >= pl                    = go (resize pl' al) index es
-    -- | otherwise                    = go al index es
+    | index < 0 || index > l       = outOfBoundError index
+    | l'' >= pl                    = insertAll (resize pl' al) index es
+    | otherwise                    = runST $ do
+      mal@(MArrayList lR arrR) <- arrayListThaw al
+      writeSTURef lR l''
+      arrST <- readSTRef arrR
+      unsafeAddAllST index (size es) xs (l - 1) arrST
+      unsafeArrayListFreeze mal
     where
-      l'  = size es
-      l'' = l + l'
+      xs  = finish es
+      l'' = l + size es
       pl  = physicalSize al
       pl' = expandedSize l''
-      go = undefined
 
   -- Overwritten default method
   insertAll' :: ArrayList a -> Int -> ArrayList a -> ArrayList a

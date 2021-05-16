@@ -5,21 +5,15 @@
 {-# LANGUAGE ScopedTypeVariables#-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module MMZKDS.Unboxed.MUArrayList 
-  (MUArrayList, uArrayListFreeze, uArrayListThaw, unsafeUArrayListFreeze,
-   unsafeUArrayListThaw
-  ) where
+module MMZKDS.Unboxed.MUArrayList (MUArrayList) where
 
 import           Control.Monad (forM_, liftM2, when)
 import           Control.Monad.ST (ST)
 import           Data.Array.ST
-  ( STUArray, MArray, freeze, getBounds, newArray_, readArray, thaw
-  , writeArray
-  )
+  (STUArray, MArray, getBounds, newArray_, readArray, writeArray)
 import           Data.Array.Unboxed (IArray, UArray)
-import           Data.Array.Unsafe (unsafeFreeze, unsafeThaw)
-import           Data.Maybe (fromJust, isJust)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
+import           Unsafe.Coerce (unsafeCoerce)
 
 import qualified MMZKDS.Class.ArrayBased as AB (ArrayBased(..)) 
 import qualified MMZKDS.Class.List as L (List(newList, toList))
@@ -27,73 +21,18 @@ import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Class.MList (MList(..))
 import           MMZKDS.Class.MQueue (MDeque(..))
+import           MMZKDS.Unboxed.Base
+  (MUArrayList(..), uArrayListFreeze, uArrayListThaw)
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, newSTURef, readSTURef, writeSTURef)
-import           MMZKDS.Unboxed.Base (UArrayList(..), MUArrayList(..))
 import           MMZKDS.Unboxed.UArrayList ()
 import           MMZKDS.Unsafe
-  (unsafeAddST, unsafeCopyArray, unsafeQuickSort, unsafeRemoveST)
+  ( unsafeAddST, unsafeAddAllST, unsafeCopyArray, unsafeQuickSort
+  , unsafeRemoveST )
 import           MMZKDS.Utilities
   ( arrayLengthOverflowError, expandedSize, idMUArrayList, initialSize
   , outOfBoundError
   )
-
-
---------------------------------------------------------------------------------
--- Freeze & Thaw
---------------------------------------------------------------------------------
-
--- | Makes an immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
---
-uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-                 => MUArrayList a s
-                 -> ST s (UArrayList a)
-uArrayListFreeze (MUArrayList lR arrR) = do
-  l     <- readSTURef lR
-  arrST <- readSTRef arrR
-  arr   <- freeze arrST
-  return $ UArrayList l arr
-
--- | Makes a mutable @MUArrayList@ from an immutable @ArrayList@ by copying. 
---
-uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-               => UArrayList a
-               -> ST s (MUArrayList a s)
-uArrayListThaw (UArrayList l arr) = do
-  arrST <- thaw arr :: ST s (STUArray s Int a)
-  lR    <- newSTURef l
-  arrR  <- newSTRef arrST
-  return $ MUArrayList lR arrR
-
--- | Unsafe Function.
--- Makes an immutable @UArrayList@ from a mutable @MUArrayList@, perhaps without
--- copying.
--- The original mutable list should not be used ever since.
---
-unsafeUArrayListFreeze :: 
-  forall a s. (IArray UArray a, STU a s)
-  => MUArrayList a s
-  -> ST s (UArrayList a)
-unsafeUArrayListFreeze (MUArrayList lR arrR) = do
-  l     <- readSTURef lR
-  arrST <- readSTRef arrR
-  arr   <- unsafeFreeze arrST
-  return $ UArrayList l arr
-
--- | Unsafe Function.
--- Makes a mutable @MUArrayList@ from an immutable @UArrayList@, perhaps without
--- copying.
--- The original immutable list should not be used ever since.
---
-unsafeUArrayListThaw :: 
-  forall a s. (IArray UArray a, STU a s)
-  => UArrayList a
-  -> ST s (MUArrayList a s)
-unsafeUArrayListThaw (UArrayList l arr) = do
-  arrST <- unsafeThaw arr
-  lR    <- newSTURef l
-  arrR  <- newSTRef arrST
-  return $ MUArrayList lR arrR
 
 
 --------------------------------------------------------------------------------
@@ -207,6 +146,49 @@ instance (IArray UArray a, STU a s) => MList (MUArrayList a) a ST s where
           if v == e
             then return $ Just i
             else mIndexOf' (i + 1) l
+
+  -- Overwritten default method
+  insertAll :: forall l. (MDSCons [a] l ST s, MDS l ST s)
+            => MUArrayList a s
+            -> Int
+            -> l s
+            -> ST s ()
+  insertAll mal@(MUArrayList lR arrR) index es = do
+    name <- identifier mal
+    if name == idMUArrayList
+      then insertAll' mal index (unsafeCoerce es)
+      else do
+        ls  <- size mal
+        ls' <- size es
+        ps  <- physicalSize mal
+        xs  <- finish es
+        let ls'' = ls + ls'
+        let end  = index + ls' - 1
+        if      index < 0 || index > ls
+        then    outOfBoundError index
+        else if ls'' >= ps
+        then    resize (expandedSize ls'') mal >> insertAll mal index es
+        else do
+          writeSTURef lR ls''
+          arrST <- readSTRef arrR
+          unsafeAddAllST index ls' xs (ls - 1) arrST
+
+  -- Overwritten default method
+  insertAll' :: MUArrayList a s -> Int -> MUArrayList a s -> ST s ()
+  insertAll' mal@(MUArrayList lR arrR) index mal' = do
+    ls  <- size mal
+    ls' <- size mal'
+    ps  <- physicalSize mal
+    let ls'' = ls + ls'
+    let end  = index + ls' - 1
+    if      index < 0 || index > ls
+    then    outOfBoundError index
+    else if ls'' >= ps
+    then    resize (expandedSize ls'') mal >> insertAll' mal index mal'
+    else do
+      writeSTURef lR ls''
+      forM_ [ls - 1, ls - 2..index] $ \i -> mal `get` i >>= set mal (i + ls')
+      forM_ [index..end] $ \i -> mal' `get` (i - index) >>= set mal i
 
   -- Overwritten default method
   lastIndexOf :: Eq a => MUArrayList a s -> a -> ST s (Maybe Int)

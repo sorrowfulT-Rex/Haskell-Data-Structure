@@ -69,11 +69,23 @@ unsafeAddST :: (MArray r a m)
             -> Int 
             -> r Int a 
             -> m ()
-unsafeAddST index e lastIndexOf arrST = do
-  forM_ [lastIndexOf, (lastIndexOf - 1)..index] $ \i -> do
+unsafeAddST index e lastIndex arrST = do
+  forM_ [lastIndex, (lastIndex - 1)..index] $ \i -> do
     v <- readArray arrST i
     writeArray arrST (i + 1) v
   writeArray arrST index e
+
+unsafeAddAllST :: (MArray r a m)
+               => Int
+               -> Int
+               -> [a]
+               -> Int
+               -> r Int a
+               -> m ()
+unsafeAddAllST index len es lastIndex arrST = do
+  forM_ [lastIndex, lastIndex - 1..index] $ 
+    \i -> readArray arrST i >>= writeArray arrST (i + len)
+  forM_ (zip [index..(index + len - 1)] es) $ uncurry (writeArray arrST)
 
 -- | Unsafe: Does not conduct bound check for array.
 -- Takes an @Int@-indexed @STArray@ as the starting array, another
