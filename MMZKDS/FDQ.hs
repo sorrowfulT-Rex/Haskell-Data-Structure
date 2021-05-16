@@ -177,23 +177,6 @@ instance DSCons [a] (FDQ a) where
 
 
 --------------------------------------------------------------------------------
--- Deque-Specific Function
---------------------------------------------------------------------------------
-
--- | Balance the functional deque to achieve amortised O(1) operations.
--- 
-balanceDeque :: FDQ a -> FDQ a
-balanceDeque q@(FDQ fl frt el end)
-  | 2 * fl < el = FDQ (fl + len) (frt ++ reverse endR) (el - len) endF
-  | 2 * el < fl = FDQ (fl - len) frtF (el + len) (end ++ reverse frtR)
-  | otherwise   = q
-  where
-    len          = abs (el - fl) `div` 2
-    (frtF, frtR) = splitAt (fl - len) frt
-    (endF, endR) = splitAt (el - len) end
-
-
---------------------------------------------------------------------------------
 -- Foldable Instance
 --------------------------------------------------------------------------------
 
@@ -209,3 +192,20 @@ instance Foldable FDQ where
 
   length :: FDQ a -> Int
   length = size
+
+
+--------------------------------------------------------------------------------
+-- Deque-Specific Function
+--------------------------------------------------------------------------------
+
+-- | Balance the functional deque to achieve amortised O(1) operations.
+-- 
+balanceDeque :: FDQ a -> FDQ a
+balanceDeque q@(FDQ fl frt el end)
+  | 2 * fl < el = FDQ (fl + len) (frt ++ reverse endR) (el - len) endF
+  | 2 * el < fl = FDQ (fl - len) frtF (el + len) (end ++ reverse frtR)
+  | otherwise   = q
+  where
+    len          = abs (el - fl) `div` 2
+    (frtF, frtR) = splitAt (fl - len) frt
+    (endF, endR) = splitAt (el - len) end

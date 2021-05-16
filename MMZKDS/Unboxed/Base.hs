@@ -3,8 +3,7 @@
 
 module MMZKDS.Unboxed.Base 
   ( MUArrayList(..), MUHeapPQ(..), MULinkedList(..), UArrayList(..), MUNode(..)
-  , uArrayListFreeze, uArrayListThaw, unsafeUArrayListFreeze
-  , unsafeUArrayListThaw
+  , arrayListFreeze, arrayListThaw, unsafeArrayListFreeze, unsafeArrayListThaw
   ) where
 
 import           Control.Monad.ST (ST)
@@ -74,10 +73,10 @@ data UArrayList e = UArrayList {-# UNPACK #-} !Int (UArray Int e)
 
 -- | Makes an immutable @UArrayList@ from a mutable @MUArrayList@ by copying. 
 --
-uArrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-                 => MUArrayList a s
-                 -> ST s (UArrayList a)
-uArrayListFreeze (MUArrayList lR arrR) = do
+arrayListFreeze :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+                => MUArrayList a s
+                -> ST s (UArrayList a)
+arrayListFreeze (MUArrayList lR arrR) = do
   l     <- readSTURef lR
   arrST <- readSTRef arrR
   arr   <- freeze arrST
@@ -85,10 +84,10 @@ uArrayListFreeze (MUArrayList lR arrR) = do
 
 -- | Makes a mutable @MUArrayList@ from an immutable @ArrayList@ by copying. 
 --
-uArrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
-               => UArrayList a
-               -> ST s (MUArrayList a s)
-uArrayListThaw (UArrayList l arr) = do
+arrayListThaw :: forall a s. (IArray UArray a, MArray (STUArray s) a (ST s))
+              => UArrayList a
+              -> ST s (MUArrayList a s)
+arrayListThaw (UArrayList l arr) = do
   arrST <- thaw arr :: ST s (STUArray s Int a)
   lR    <- newSTURef l
   arrR  <- newSTRef arrST
@@ -99,11 +98,10 @@ uArrayListThaw (UArrayList l arr) = do
 -- copying.
 -- The original mutable list should not be used ever since.
 --
-unsafeUArrayListFreeze :: 
-  forall a s. (IArray UArray a, STU a s)
-  => MUArrayList a s
-  -> ST s (UArrayList a)
-unsafeUArrayListFreeze (MUArrayList lR arrR) = do
+unsafeArrayListFreeze :: forall a s. (IArray UArray a, STU a s)
+                      => MUArrayList a s
+                      -> ST s (UArrayList a)
+unsafeArrayListFreeze (MUArrayList lR arrR) = do
   l     <- readSTURef lR
   arrST <- readSTRef arrR
   arr   <- unsafeFreeze arrST
@@ -114,11 +112,10 @@ unsafeUArrayListFreeze (MUArrayList lR arrR) = do
 -- copying.
 -- The original immutable list should not be used ever since.
 --
-unsafeUArrayListThaw :: 
-  forall a s. (IArray UArray a, STU a s)
-  => UArrayList a
-  -> ST s (MUArrayList a s)
-unsafeUArrayListThaw (UArrayList l arr) = do
+unsafeArrayListThaw :: forall a s. (IArray UArray a, STU a s)
+                    => UArrayList a
+                    -> ST s (MUArrayList a s)
+unsafeArrayListThaw (UArrayList l arr) = do
   arrST <- unsafeThaw arr
   lR    <- newSTURef l
   arrR  <- newSTRef arrST

@@ -2,10 +2,9 @@
 {-# LANGUAGE ScopedTypeVariables#-}
 
 module MMZKDS.Base
-  ( ArrayList(..), AVLSet(..), FDQ(..), MArrayList(..), MAVLSet(..)
-  , MAVLTree(..), MHeapPQ(..), MLinkedList(..), MNode(..), RBColour(..)
-  , RBTSet(..), arrayListFreeze, arrayListThaw, unsafeArrayListFreeze
-  , unsafeArrayListThaw
+  ( ArrayList(..), AVLSet(..), FDQ(..), MArrayList(..), MHeapPQ(..)
+  , MLinkedList(..), MNode(..), RBColour(..), RBTSet(..), arrayListFreeze
+  , arrayListThaw, unsafeArrayListFreeze, unsafeArrayListThaw
   ) where
 
 import           Control.Monad.ST (ST)
@@ -37,7 +36,7 @@ data AVLSet e
     deriving (Eq, Show)
 
 -- | 'FDQ' is a purely functional efficient deque structure with amortised
--- O(1) frtertion/deletion from both ends.
+-- O(1) insertion/deletion from both ends.
 -- 
 data FDQ e = FDQ {-# UNPACK #-} !Int [e] {-# UNPACK #-} !Int [e]
 
@@ -47,24 +46,6 @@ data FDQ e = FDQ {-# UNPACK #-} !Int [e] {-# UNPACK #-} !Int [e]
 -- inserting/deleting, O(n) searching, and O(n * log n) sorting.
 --
 data MArrayList e s = MArrayList (STURef s Int) (STRef s (STArray s Int e))
-
--- | A mmutable set structure implemented with an internal (mutable) AVL-Tree
--- using @ST@.
--- It is expected that the type of its elements is an instance of 'Ord'.
--- It has O(log n) adding, O(log n) deleting, O(log n) searching, O(n * log n) 
--- union and intersection, and O(n * log n) construction from list.
--- 
-newtype MAVLSet e s = MAVLSet (STRef s (MAVLTree e s))
-
--- | The internal mutable AVL-Tree used by @MAVLSet@
-data MAVLTree e s
-  = MAVLEmpty
-  | MAVLLeaf (STRef s e)
-  | MAVLNode (STURef s Int)
-             (STURef s Int)
-             (STRef s (MAVLTree e s))
-             (STRef s e)
-             (STRef s (MAVLTree e s))
 
 -- | 'MHeapPQ' is a min-heap implementing the 'MPriorityQueue' class.
 -- The heap is implemented with an internal @STArray@.

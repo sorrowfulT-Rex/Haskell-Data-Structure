@@ -22,7 +22,7 @@ import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 import           MMZKDS.Class.MList (MList(..))
 import           MMZKDS.Class.MQueue (MDeque(..))
 import           MMZKDS.Unboxed.Base
-  (MUArrayList(..), uArrayListFreeze, uArrayListThaw)
+  (MUArrayList(..), arrayListFreeze, arrayListThaw)
 import           MMZKDS.Unboxed.STURef
   (STU, STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unboxed.UArrayList ()
@@ -218,7 +218,7 @@ instance (IArray UArray a, STU a s) => MArrayBased (MUArrayList a) a ST s where
     writeSTRef arrR resST
 
   newWithSize  :: Foldable f => Int -> f a -> ST s (MUArrayList a s)
-  newWithSize = (uArrayListThaw .) . AB.newWithSize
+  newWithSize = (arrayListThaw .) . AB.newWithSize
 
   physicalSize :: MUArrayList a s -> ST s Int
   physicalSize (MUArrayList _ arrR) = do
@@ -300,8 +300,8 @@ instance (IArray UArray a, MArray (STUArray s) a (ST s))
   => MDSCons [a] (MUArrayList a) ST s where
   finish :: MUArrayList a s -> ST s [a]
   finish mal = do
-    al <- uArrayListFreeze mal
+    al <- arrayListFreeze mal
     return $ L.toList al
 
   new :: [a] -> ST s (MUArrayList a s)
-  new = uArrayListThaw . L.newList
+  new = arrayListThaw . L.newList
