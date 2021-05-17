@@ -17,6 +17,9 @@ Next to come: Map; Red-Black Tree.
 * ### f. [MMZKDS/Class/MList.hs](#mmzkdsclassmlisths)
 * ### g. [MMZKDS/Class/Queue.hs](#mmzkdsclassqueuehs)
 * ### h. [MMZKDS/Class/MQueue.hs](#mmzkdsclassmqueuehs)
+* ### i. [MMZKDS/Class/Set.hs](#mmzkdsclassseths)
+* ### j. [MMZKDS/Class/MSet.hs](#mmzkdsclassmseths)
+* ### k. [MMZKDS/Class/UnionFind.hs](#mmzkdsclassunionfindhs)
 ## 2. Instances
 
 
@@ -71,60 +74,66 @@ The mutable counterparts of `Queue` and `Deque`.
 See the [Haddocks](MMZKDS/Class/MQueue.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/PriorityQueue.hs](MMZKDS/Class/PriorityQueue.hs)
+## [MMZKDS/Class/PriorityQueue.hs](MMZKDS/Class/PriorityQueue.hs)
 This file provides a type class, `PriorityQueue`, for immutable priority queues.  
 The priority queue always pops the least element.  
 See the [Haddocks](MMZKDS/Class/PriorityQueue.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/PriorityQueue.hs](MMZKDS/Class/MPriorityQueue.hs)
+## [MMZKDS/Class/PriorityQueue.hs](MMZKDS/Class/MPriorityQueue.hs)
 The mutable counterpart of `PriorityQueue`.  
 See the [Haddocks](MMZKDS/Class/MPriorityQueue.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Set.hs](MMZKDS/Set.hs)
-This file provides type classes for both immutable and mutable sets with unique elements, including methods of addition, deletion, union, intersection *etc.*  
-There are two classes, namely `Set` and `MSet`, for immutable and mutable sets, respectively.  
-It is expected that the elements are instances of `Eq`.  
-See the [Haddocks](MMZKDS/Set.hs) for full documentation.  
+## [MMZKDS/Class/Set.hs](MMZKDS/Class/Set.hs)
+This file provides a type class, `Set`, for immutable sets with unique elements based on ordering, including methods of addition, deletion, union, intersection *etc.*  
+It is expected that the elements are instances of `Ord`.  
+See the [Haddocks](MMZKDS/Class/Set.hs) for full documentation.  
 <br />
 
-# [MMZKDS/UnionFind.hs](MMZKDS/UnionFind.hs)
+## [MMZKDS/Class/MSet.hs](MMZKDS/Class/MSet.hs)
+The mutable counterpart of `Set`.  
+See the [Haddocks](MMZKDS/Class/MSet.hs) for full documentation.  
+<br />
+
+## [MMZKDS/Class/UnionFind.hs](MMZKDS/Class/UnionFind.hs)
 This file provides type classes for both immutable and mutable union-finds, offering find representative and union equivalence classes operations.    
 There are two classes, namely `UnionFind` and `MUnionFind`, for immutable and mutable structures, respectively.  
-See the [Haddocks](MMZKDS/UnionFind.hs) for full documentation.  
+See the [Haddocks](MMZKDS/Class/UnionFind.hs) for full documentation.  
 <br />
 
-# [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
+# Instances
+
+## [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
 Most operations that requires mutation on the `ArrayList` requires generating a new `ArrayList`, which is very costly (always O(n)). Therefore it is recommended to use the mutable version [`MArrayList`](MMZKDS/MArrayList.hs) for frequent state updates.
 See the [Haddocks](MMZKDS/ArrayList.hs) for full documentation.  
 <br />
 
-# [MMZKDS/AVLSet.hs](MMZKDS/AVLSet.hs)  
+## [MMZKDS/AVLSet.hs](MMZKDS/AVLSet.hs)  
 `AVLSet` is a purely functional set structure with O(n * log n) operations. It is based on an internal AVL Tree.  
 It is expected that the type of its elements is an instance of 'Ord'.  
 See the [Haddocks](MMZKDS/AVLSet.hs) for full documentation.  
 <br />
 
-# [MMZKDS/FDQ.hs](MMZKDS/FDQ.hs)  
+## [MMZKDS/FDQ.hs](MMZKDS/FDQ.hs)  
 `FDQ` is a purely functional deque structure with amortised O(1) operations. It is based on two internal lists storing the front and rear of the deque.  
 Although it also implements the `List` type class, it is the most efficient when used as a deque.  
 See the [Haddocks](MMZKDS/FDQ.hs) for full documentation.  
 <br />
 
-# [MMZKDS/MArrayList.hs](MMZKDS/MArrayList.hs)
+## [MMZKDS/MArrayList.hs](MMZKDS/MArrayList.hs)
 `MArrayList` is a mutable data structure implementing the `MList` class with an internal mutable array.  
 See the [Haddocks](MMZKDS/MArrayList.hs) for full documentation.  
 <br />
 
-# [MMZKDS/MLinkedList.hs](MMZKDS/MLinkedList.hs)
+## [MMZKDS/MLinkedList.hs](MMZKDS/MLinkedList.hs)
 `MLinkedList` is a doubly-linked circular list implementing the `MList` class.  
 It remembers the last element (node) been visited, and enjoys fast access to the elements in its vicinity.  
 See the [Haddocks](MMZKDS/MLinkedList.hs) for full documentation.  
 <br />
 
-# [MMZKDS/MHeapPQ.hs](MMZKDS/MHeapPQ.hs)
+## [MMZKDS/MHeapPQ.hs](MMZKDS/MHeapPQ.hs)
 `MHeapPQ` is a mutable priority queue implementing the `MPriorityQueue` class through a min-heap, which is implemented with an internal `STArray`.  
 It pops its minimum element, thus the type of its elements must be an instance of 'Ord'.  
 See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.  
@@ -134,6 +143,6 @@ See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.
 Contains the unboxed version of (some of) the data structures.  
 <br />
 
-# [MMZKDS/UnBoxed/STURef.hs](MMZKDS/Unboxed/STURef.hs)
+## [MMZKDS/UnBoxed/STURef.hs](MMZKDS/Unboxed/STURef.hs)
 The strict unboxed equivalence for `STRef`.  
 See the [Haddocks](MMZKDS/Unboxed/STURef.hs) for full documentation.  

@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module MMZKDS.UnionFind where
+module MMZKDS.Class.UnionFind where
 
 import           Control.Monad (liftM2)
 import           Data.Maybe (fromJust, fromMaybe)

@@ -13,7 +13,7 @@ import           Data.Maybe (isJust)
 import           MMZKDS.Base (AVLSet(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
 import           MMZKDS.Class.PriorityQueue (PriorityQueue(..))
-import           MMZKDS.Set as S (Set(..))
+import           MMZKDS.Class.Set as S (Set(..))
 import           MMZKDS.Utilities (idAVLSet)
 
 
@@ -22,8 +22,8 @@ import           MMZKDS.Utilities (idAVLSet)
 --------------------------------------------------------------------------------
 
 instance Ord a => Set (AVLSet a) a where
-  add :: a -> AVLSet a -> AVLSet a
-  add = addBT balanceAVL
+  add :: AVLSet a -> a -> AVLSet a
+  add = flip (addBT balanceAVL)
 
   contains :: AVLSet a -> a -> Bool
   contains = containsBT
@@ -31,8 +31,8 @@ instance Ord a => Set (AVLSet a) a where
   findAny :: AVLSet a -> Maybe a
   findAny = rootBT
 
-  remove :: a -> AVLSet a -> (Maybe a, AVLSet a)
-  remove = removeBT balanceAVL
+  remove :: AVLSet a -> a -> (Maybe a, AVLSet a)
+  remove = flip (removeBT balanceAVL)
 
 
 --------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ instance Ord a => Set (AVLSet a) a where
 
 instance Ord a => PriorityQueue (AVLSet a) a where
   add :: AVLSet a -> a -> AVLSet a
-  add = flip S.add
+  add = S.add
 
   pop :: AVLSet a -> (Maybe a, AVLSet a)
   pop = removeMinBT balanceAVL
@@ -68,7 +68,7 @@ instance Ord a => DSCons [a] (AVLSet a) where
   finish = F.toList
 
   new :: [a] -> AVLSet a
-  new = foldl' (flip S.add) AVLEmpty
+  new = foldl' S.add AVLEmpty
 
 
 --------------------------------------------------------------------------------
