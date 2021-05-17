@@ -11,12 +11,12 @@ Next to come: Map; Red-Black Tree.
 ## 1. [MMZKDS/Class](#mmzkdsclass)  
 * ### a. [MMZKDS/Class/DS.hs](#mmzkdsclassdshs)
 * ### b. [MMZKDS/Class/MDS.hs](#mmzkdsclassmdshs)
-* ### c. [MMZKDS/Class/ArrayBased.hs](#mmzkdsarraybasedhs)
-* ### d. [MMZKDS/Class/MArrayBased.hs](#mmzkdsmarraybasedhs)
-* ### e. [MMZKDS/Class/List.hs](#mmzkdslisths)
-* ### f. [MMZKDS/Class/MList.hs](#mmzkdsmlisths)
-* ### g. [MMZKDS/Class/Queue.hs](#mmzkdsqueuehs)
-* ### h. [MMZKDS/Class/MQueue.hs](##mmzkdsmqueuehs)
+* ### c. [MMZKDS/Class/ArrayBased.hs](#mmzkdsclassarraybasedhs)
+* ### d. [MMZKDS/Class/MArrayBased.hs](#mmzkdsclassmarraybasedhs)
+* ### e. [MMZKDS/Class/List.hs](#mmzkdsclasslisths)
+* ### f. [MMZKDS/Class/MList.hs](#mmzkdsclassmlisths)
+* ### g. [MMZKDS/Class/Queue.hs](#mmzkdsclassqueuehs)
+* ### h. [MMZKDS/Class/MQueue.hs](#mmzkdsclassmqueuehs)
 ## 2. Instances
 
 
