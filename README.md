@@ -9,14 +9,14 @@ Next to come: Map; Red-Black Tree.
 
 # Contents   
 ## 1. [MMZKDS/Class](#mmzkdsclass)  
-* ### a. [MMZKDS/Class/DS.hs](mmzkdsclassdshs)
-* ### b. [MMZKDS/Class/MDS.hs](mmzkdsclassmdshs)
-* ### c. [MMZKDS/Class/ArrayBased.hs](mmzkdsarraybasedhs)
-* ### d. [MMZKDS/Class/MArrayBased.hs](mmzkdsmarraybasedhs)
-* ### e. [MMZKDS/Class/List.hs](mmzkdslisths)
-* ### f. [MMZKDS/Class/MList.hs](mmzkdsmlisths)
-* ### g. [MMZKDS/Class/Queue.hs](mmzkdsqueuehs)
-* ### h. [MMZKDS/Class/MQueue.hs](mmzkdsmqueuehs)
+* ### a. [MMZKDS/Class/DS.hs](#mmzkdsclassdshs)
+* ### b. [MMZKDS/Class/MDS.hs](#mmzkdsclassmdshs)
+* ### c. [MMZKDS/Class/ArrayBased.hs](#mmzkdsarraybasedhs)
+* ### d. [MMZKDS/Class/MArrayBased.hs](#mmzkdsmarraybasedhs)
+* ### e. [MMZKDS/Class/List.hs](#mmzkdslisths)
+* ### f. [MMZKDS/Class/MList.hs](#mmzkdsmlisths)
+* ### g. [MMZKDS/Class/Queue.hs](#mmzkdsqueuehs)
+* ### h. [MMZKDS/Class/MQueue.hs](##mmzkdsmqueuehs)
 ## 2. Instances
 
 
