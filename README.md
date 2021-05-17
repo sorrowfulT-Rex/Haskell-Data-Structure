@@ -8,7 +8,7 @@ Next to come: Map; Red-Black Tree.
 <br />
 
 # Contents   
-## 1. [MMZKDS/Class](#mmzkdsclass)  
+## 1. [Class](#mmzkdsclass)  
 * ### a. [MMZKDS/Class/DS.hs](#mmzkdsclassdshs)
 * ### b. [MMZKDS/Class/MDS.hs](#mmzkdsclassmdshs)
 * ### c. [MMZKDS/Class/ArrayBased.hs](#mmzkdsclassarraybasedhs)
@@ -20,8 +20,16 @@ Next to come: Map; Red-Black Tree.
 * ### i. [MMZKDS/Class/Set.hs](#mmzkdsclassseths)
 * ### j. [MMZKDS/Class/MSet.hs](#mmzkdsclassmseths)
 * ### k. [MMZKDS/Class/UnionFind.hs](#mmzkdsclassunionfindhs)
-## 2. Instances
-
+## 2. [Instances](#instances)
+* ### a. [MMZKDS/ArrayList.hs](#mmzkdsarraylisths)
+* ### b. [MMZKDS/AVLSet.hs](#mmzkdsavlseths)
+* ### c. [MMZKDS/FDQ.hs](#mmzkdsfdqhs)
+* ### d. [MMZKDS/MArrayList.hs](#mmzkdsmarraylisths)
+* ### e. [MMZKDS/MLinkedList.hs](#mmzkdsmlinkedlisths)
+* ### f. [MMZKDS/MHeapPQ.hs](#mmzkdsmheappqhs)
+## 3. [Unboxed](#mmzkdsunboxed)
+* ### a. [MMZKDS/Unboxed/STURef.hs](#mmzkdsunboxedsturefhs)
+<br />
 
 # [MMZKDS/Class](MMZKDS/Class/)
 Contains the type classes for the data structures.  
