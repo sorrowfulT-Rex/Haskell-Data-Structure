@@ -7,11 +7,17 @@ Now working on: Unordered List.
 Next to come: Map; Red-Black Tree.  
 <br />
 
-<!-- # Contents   
-## 1. [MMZKDS/Class](#mmzkds/class)  
-* ### a. [MMZKDS/Class/DS.hs](mmzkds/class/dshs)
-* ### b. [MMZKDS/Class/MDS.hs](mmzkds/class/mdshs)
-* ### c. [MMZKDS/Class/ArrayBased.hs] -->
+# Contents   
+## 1. [MMZKDS/Class](#mmzkdsclass)  
+* ### a. [MMZKDS/Class/DS.hs](mmzkdsclassdshs)
+* ### b. [MMZKDS/Class/MDS.hs](mmzkdsclassmdshs)
+* ### c. [MMZKDS/Class/ArrayBased.hs](mmzkdsarraybasedhs)
+* ### d. [MMZKDS/Class/MArrayBased.hs](mmzkdsmarraybasedhs)
+* ### e. [MMZKDS/Class/List.hs](mmzkdslisths)
+* ### f. [MMZKDS/Class/MList.hs](mmzkdsmlisths)
+* ### g. [MMZKDS/Class/Queue.hs](mmzkdsqueuehs)
+* ### h. [MMZKDS/Class/MQueue.hs](mmzkdsmqueuehs)
+## 2. Instances
 
 
 # [MMZKDS/Class](MMZKDS/Class/)
@@ -20,28 +26,28 @@ The files here contain a lot of methods with the same name, thus they are expect
 I will move all type classes to here eventually.  
 <br />
 
-# [MMZKDS/Class/DS.hs](MMZKDS/Class/DS.hs)
+## [MMZKDS/Class/DS.hs](MMZKDS/Class/DS.hs)
 This file provides type classes for immutable data structures.  
 It contains class `DS` providing methods for clearing data and size checking, and class `DSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
 See the [Haddocks](MMZKDS/Class/DS.hs) for full documentation (TODO).  
 <br />
 
-# [MMZKDS/Class/MDS.hs](MMZKDS/Class/MDS.hs)
+## [MMZKDS/Class/MDS.hs](MMZKDS/Class/MDS.hs)
 MDS is short for Mutable Data Structure. This file provides type classes for mutable structures.  
 It contains class `MDS` providing ways of copying and clearing, and class `MDSCons` providing ways of instantiating and transforming the data structure to other immutable types (*e.g.* from or to list).  
 See the [Haddocks](MMZKDS/Class/MDS.hs) for full documentation.  
 
-# [MMZKDS/Class/ArrayBased.hs](MMZKDS/Class/ArrayBased.hs)
+## [MMZKDS/Class/ArrayBased.hs](MMZKDS/Class/ArrayBased.hs)
 This file provides a type class, `ArrayBased` for immutable data structures in which their implementations are based on arrays. It has methods for re-allocating arrays in the need of larger or smaller length.  
 See the [Haddocks](MMZKDS/Class/ArrayBased.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/MArrayBased.hs](MMZKDS/Class/MArrayBased.hs)
+## [MMZKDS/Class/MArrayBased.hs](MMZKDS/Class/MArrayBased.hs)
 The mutable counterpart of `ArrayBased`.  
 See the [Haddocks](MMZKDS/Class/MArrayBased.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/List.hs](MMZKDS/Class/List.hs)
+## [MMZKDS/Class/List.hs](MMZKDS/Class/List.hs)
 This file provides a type class, `List`, for immutable and mutable list structures, including methods of random access, addition, deletion, finding indices *etc.*   
 The methods are based on the [Java List Interface](https://docs.oracle.com/javase/8/docs/api/java/util/List.html).  
 Instances of `List` is automatically instances of `Eq` if the elements are instances of `Eq`, where two such structures are equal if and only if they have the same size and equal elements at each entry.  
@@ -49,18 +55,18 @@ Similarly `List` instances also derive `Ord`.
 See the [Haddocks](MMZKDS/Class/List.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/MList.hs](MMZKDS/Class/MList.hs)
+## [MMZKDS/Class/MList.hs](MMZKDS/Class/MList.hs)
 The mutable counterpart of `List`.  
 See the [Haddocks](MMZKDS/Class/MList.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/Queue.hs](MMZKDS/Class/Queue.hs)
+## [MMZKDS/Class/Queue.hs](MMZKDS/Class/Queue.hs)
 This file provides type classes, `Queue` and `Deque`, for immutable queue and deque structures.  
 The queue adds elements to the rear and removes elements from the front, while the dequeue adds and removes elements from both ends.    
 See the [Haddocks](MMZKDS/Class/Queue.hs) for full documentation.  
 <br />
 
-# [MMZKDS/Class/MQueue.hs](MMZKDS/Class/MQueue.hs)
+## [MMZKDS/Class/MQueue.hs](MMZKDS/Class/MQueue.hs)
 The mutable counterparts of `Queue` and `Deque`.  
 See the [Haddocks](MMZKDS/Class/MQueue.hs) for full documentation.  
 <br />
