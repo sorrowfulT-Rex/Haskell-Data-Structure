@@ -20,7 +20,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.PriorityQueue (MPriorityQueue(..))
+import           MMZKDS.Class.MPriorityQueue (MPriorityQueue(..))
 import           MMZKDS.Unboxed.Base (MUHeapPQ(..))
 import           MMZKDS.Unboxed.STURef 
   (STU, STURef, newSTURef, readSTURef, writeSTURef)
@@ -38,12 +38,13 @@ import           MMZKDS.Utilities
 
 instance (Ord a, IArray UArray a, STU a s) 
   => MPriorityQueue (MUHeapPQ a) a ST s where
-  mAdd :: MUHeapPQ a s -> a -> ST s ()
-  mAdd mh@(MUHeapPQ lR arrR) e = do
+  {-# INLINE add #-}
+  add :: MUHeapPQ a s -> a -> ST s ()
+  add mh@(MUHeapPQ lR arrR) e = do
     ls <- size mh
     ps <- physicalSize mh
     if ls == ps
-      then resize (expandedSize ls) mh >> mAdd mh e
+      then resize (expandedSize ls) mh >> add mh e
       else do
         arrST <- readSTRef arrR
         writeSTURef lR $! ls + 1
@@ -56,8 +57,9 @@ instance (Ord a, IArray UArray a, STU a s)
               writeArray arrST i vp >> writeArray arrST pI vi >> bubbleUp pI
         bubbleUp ls
 
-  mPop :: MUHeapPQ a s -> ST s (Maybe a)
-  mPop mh@(MUHeapPQ lR arrR) = do
+  {-# INLINE pop #-}
+  pop :: MUHeapPQ a s -> ST s (Maybe a)
+  pop mh@(MUHeapPQ lR arrR) = do
     l <- size mh
     if l == 0
       then return Nothing
@@ -75,8 +77,8 @@ instance (Ord a, IArray UArray a, STU a s)
         return $ Just popE
 
   -- Overwritten default method
-  mPeek :: MUHeapPQ a s -> ST s (Maybe a)
-  mPeek mh@(MUHeapPQ _ arrR)
+  peek :: MUHeapPQ a s -> ST s (Maybe a)
+  peek mh@(MUHeapPQ _ arrR)
     = isNull mh >>= 
       bool (fmap Just $ readSTRef arrR >>= flip readArray 0) (return Nothing)
 
@@ -94,7 +96,8 @@ instance (Ord a, IArray UArray a, STU a s)
                   -> ST s (STUArray s Int a)
       ) (0, initialSize 0 - 1) >>=
         writeSTRef (mHeapA mh) >> writeSTURef (mHeapS mh) 0
-
+ 
+    {-# INLINE newWithSize #-}
     newWithSize :: Foldable f => Int -> f a -> ST s (MUHeapPQ a s)
     newWithSize s fd = do
       let l = length fd

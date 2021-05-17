@@ -71,10 +71,15 @@ The mutable counterparts of `Queue` and `Deque`.
 See the [Haddocks](MMZKDS/Class/MQueue.hs) for full documentation.  
 <br />
 
-# [MMZKDS/PriorityQueue.hs](MMZKDS/PriorityQueue.hs)
-This file provides type classes for both immutable and mutable priority queues.  
-There are two classes, namely `PriorityQueue` and `MPriorityQueue`, for immutable and mutable priority queues, respectively.  
-See the [Haddocks](MMZKDS/PriorityQueue.hs) for full documentation.  
+# [MMZKDS/Class/PriorityQueue.hs](MMZKDS/Class/PriorityQueue.hs)
+This file provides a type class, `PriorityQueue`, for immutable priority queues.  
+The priority queue always pops the least element.  
+See the [Haddocks](MMZKDS/Class/PriorityQueue.hs) for full documentation.  
+<br />
+
+# [MMZKDS/Class/PriorityQueue.hs](MMZKDS/Class/MPriorityQueue.hs)
+The mutable counterpart of `PriorityQueue`.  
+See the [Haddocks](MMZKDS/Class/MPriorityQueue.hs) for full documentation.  
 <br />
 
 # [MMZKDS/Set.hs](MMZKDS/Set.hs)

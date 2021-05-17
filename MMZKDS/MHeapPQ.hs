@@ -20,7 +20,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import           MMZKDS.Class.MArrayBased (MArrayBased(..))
 import           MMZKDS.Base (MHeapPQ(..))
 import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
-import           MMZKDS.PriorityQueue (MPriorityQueue(..))
+import           MMZKDS.Class.MPriorityQueue (MPriorityQueue(..))
 import           MMZKDS.Unboxed.STURef 
   (STURef, newSTURef, readSTURef, writeSTURef)
 import           MMZKDS.Unsafe
@@ -36,13 +36,13 @@ import           MMZKDS.Utilities
 --------------------------------------------------------------------------------
 
 instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
-  {-# INLINE mAdd #-}
-  mAdd :: MHeapPQ a s -> a -> ST s ()
-  mAdd mh@(MHeapPQ lR arrR) e = do
+  {-# INLINE add #-}
+  add :: MHeapPQ a s -> a -> ST s ()
+  add mh@(MHeapPQ lR arrR) e = do
     ls <- size mh
     ps <- physicalSize mh
     if ls == ps
-      then resize (expandedSize ls) mh >> mAdd mh e
+      then resize (expandedSize ls) mh >> add mh e
       else do
         arrST <- readSTRef arrR
         writeSTURef lR $! ls + 1
@@ -55,9 +55,9 @@ instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
               writeArray arrST i vp >> writeArray arrST pI vi >> bubbleUp pI
         bubbleUp ls
 
-  {-# INLINE mPop #-}
-  mPop :: MHeapPQ a s -> ST s (Maybe a)
-  mPop mh@(MHeapPQ lR arrR) = do
+  {-# INLINE pop #-}
+  pop :: MHeapPQ a s -> ST s (Maybe a)
+  pop mh@(MHeapPQ lR arrR) = do
     l <- size mh
     if l == 0
       then return Nothing
@@ -75,8 +75,8 @@ instance Ord a => MPriorityQueue (MHeapPQ a) a ST s where
         return $ Just popE
 
   -- Overwritten default method
-  mPeek :: MHeapPQ a s -> ST s (Maybe a)
-  mPeek mh@(MHeapPQ _ arrR)
+  peek :: MHeapPQ a s -> ST s (Maybe a)
+  peek mh@(MHeapPQ _ arrR)
     = isNull mh >>= 
       bool (fmap Just $ readSTRef arrR >>= flip readArray 0) (return Nothing)
 

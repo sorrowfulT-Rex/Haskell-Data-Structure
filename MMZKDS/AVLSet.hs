@@ -12,7 +12,7 @@ import           Data.Maybe (isJust)
 
 import           MMZKDS.Base (AVLSet(..))
 import           MMZKDS.Class.DS (DS(..), DSCons(..))
-import           MMZKDS.PriorityQueue (PriorityQueue(..))
+import           MMZKDS.Class.PriorityQueue (PriorityQueue(..))
 import           MMZKDS.Set as S (Set(..))
 import           MMZKDS.Utilities (idAVLSet)
 
