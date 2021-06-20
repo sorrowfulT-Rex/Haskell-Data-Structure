@@ -21,8 +21,9 @@ import           MMZKDS.Class.MDS as MDS (MDS(..), MDSCons(..))
 -- It is expected that the type implements 'MDS' and 'MDSCons' with @[]@.
 -- Minimal implementation requires @mAdd@, @mContains@, "mFindAny" and
 -- @mRemove@.
--- Default methods include @mDifference@, @mDropAny@, @mIntersection@,
--- @mNewSet@, @mToList @and @mUnion@.
+-- Default methods include @mDifference@, @mDifference'@, @mDropAny@, 
+-- @mIntersection@, @mIntersection'@, @mNewSet@, @mToList, @mUnion@ and 
+-- @mUnion'@.
 --
 class (Monad (m s), MDS c m s, MDSCons [e] c m s) 
   => MSet c e m s | c -> e where

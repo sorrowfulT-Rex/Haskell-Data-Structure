@@ -109,7 +109,7 @@ addBT f e set
   where
     addSize          = bool 0 1
     (isNotIn, tree') = addAVLSet e set
-    addAVLSet e tree   = case tree of
+    addAVLSet e tree = case tree of
       AVLEmpty   -> (True, AVLLeaf e)
       AVLLeaf e' -> addLeaf e'
       _          -> addNode tree

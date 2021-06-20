@@ -110,7 +110,14 @@ There are two classes, namely `UnionFind` and `MUnionFind`, for immutable and mu
 See the [Haddocks](MMZKDS/Class/UnionFind.hs) for full documentation.  
 <br />
 
-# Instances
+## [MMZKDS/Class/UnorderedList.hs](MMZKDS/Class/UnorderedList.hs)
+This file provides a type class, `UnorderedList`, for immutable unordered lists based on ordering (i.e. multisets), including methods of addition, deletion, union, intersection *etc.*  
+It is expected that the elements are instances of `Ord`.  
+See the [Haddocks](MMZKDS/Class/UnorderedList.hs) for full documentation.  
+<br />
+
+# Instances[MMZKDS/]
+<br />
 
 ## [MMZKDS/ArrayList.hs](MMZKDS/ArrayList.hs)
 `ArrayList` is a data structure implementing the `List` class with an internal array.  
@@ -149,6 +156,7 @@ See the [Haddocks](MMZKDS/MHeapPQ.hs) for full documentation.
 
 # [MMZKDS/UnBoxed](MMZKDS/Unboxed/)
 Contains the unboxed version of (some of) the data structures.  
+They essentially has the same structure as their boxed counterparts.  
 <br />
 
 ## [MMZKDS/UnBoxed/STURef.hs](MMZKDS/Unboxed/STURef.hs)
