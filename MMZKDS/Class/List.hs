@@ -29,7 +29,7 @@ import           MMZKDS.Class.DS (DS(..), DSCons(..))
 -- Default methods include @append@, @concat@, @concat'@, @contains@,
 -- @deleteRange@, @indexOf@, @insertAll@, @insertAll'@, @lastIndexOf@,
 -- @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@, @removeLast@,
--- @sort@, @sortOn@, @toList@, @update@ and @update'@.
+-- @sort@, @sortOn@, @toList@, @update@, @update'@ and @(!)@.
 -- For functional operations, one can "stream" the list structure with
 -- @toList@, apply the functions, then "collect" it back with "@newList@".
 --
@@ -52,7 +52,6 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
 
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
-  -- It is usally used as an infix operator.
   --
   get :: l -> Int -> e
 
@@ -246,6 +245,13 @@ class (DS l, DSCons [e] l) => List l e | l -> e where
   --
   update' :: l -> Int -> (e -> e) -> l
   update' = ap (ap . (((.) . ($!)) .) . set) ((flip id .) . get)
+
+  -- | Similar to @get@, but returns an error on out-of-bound error.
+  -- It is usally used as an infix operator.
+  --
+  infix 4 !
+  (!) :: l -> Int -> e
+  (!) = get
 
 
 --------------------------------------------------------------------------------

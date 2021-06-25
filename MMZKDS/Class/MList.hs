@@ -26,8 +26,8 @@ import           MMZKDS.Class.MDS (MDS(..), MDSCons(..))
 -- @set@, @size@, @sortOn@ and @subList@.
 -- Default methods include @append@, @concat@, @concat'@, @contains@,
 -- @deleteRange@, @indexof@, @insertAll@, @insertAll'@, @lastIndexOf@,
--- @newList@, @pop@, @popFront@, @push@, @remove@,  @removeAll@, @removeLast@,
--- @sort@, @toList@, @update@ and @update'@.
+-- @newList@, @pop@, @popFront@, @push@, @remove@, @removeAll@, @removeLast@,
+-- @sort@, @toList@, @update@, @update'@ and @(!)@.
 -- 
 class (Monad (m s), MDS l m s, MDSCons [e] l m s) 
   => MList l e m s | l -> e where
@@ -49,7 +49,6 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
 
   -- | Returns the element of the list structure at the given index.
   -- Returns an error if the index of out of bound.
-  -- It is usally used as an infix operator.
   --
   get :: l s -> Int -> m s e
 
@@ -249,3 +248,10 @@ class (Monad (m s), MDS l m s, MDSCons [e] l m s)
   update' ml index f = do
     v <- get ml index
     set ml index $! f v
+
+  -- | Similar to @get@, but returns an error on out-of-bound error.
+  -- It is usally used as an infix operator.
+  --
+  infix 4 !
+  (!) :: l s -> Int -> m s e
+  (!) = get

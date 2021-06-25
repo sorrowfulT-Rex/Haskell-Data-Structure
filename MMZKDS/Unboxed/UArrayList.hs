@@ -8,7 +8,8 @@
 module MMZKDS.Unboxed.UArrayList (UArrayList) where
 
 import           Control.Monad (join)
-import           Data.Array.Unboxed (IArray, UArray, accum, array, bounds, (!))
+import           Data.Array.Unboxed as A 
+  (IArray, UArray, accum, array, bounds, (!))
 import           Data.Foldable as F (toList)
 import           Unsafe.Coerce (unsafeCoerce)
 
@@ -34,19 +35,19 @@ instance IArray UArray a => List (UArrayList a) a where
   delete :: UArrayList a -> Int -> (Maybe a, UArrayList a)
   delete al@(UArrayList l arr) index
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = ( Just (arr ! index)
+    | otherwise               = ( Just (arr A.! index)
                                 , UArrayList (l - 1) $ 
                                   accum worker arr $ join zip [0..(l - 2)] )
     where
       pl = physicalSize al
       worker _ i
-        | i < index = arr ! i
-        | otherwise = arr ! (i + 1)
+        | i < index = arr A.! i
+        | otherwise = arr A.! (i + 1)
 
   get :: UArrayList a -> Int -> a
   get (UArrayList l arr) index
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = arr ! index
+    | otherwise               = arr A.! index
 
   indicesOf :: Eq a => UArrayList a -> a -> [Int]
   indicesOf al e
@@ -68,8 +69,8 @@ instance IArray UArray a => List (UArrayList a) a where
       pl = physicalSize al
       l' = expandedSize l
       worker _ i
-        | i < index = arr ! i
-        | i > index = arr ! (i - 1)
+        | i < index = arr A.! i
+        | i > index = arr A.! (i - 1)
         | otherwise = e
 
   set :: UArrayList a -> Int -> a -> UArrayList a
@@ -81,7 +82,7 @@ instance IArray UArray a => List (UArrayList a) a where
       pl = physicalSize al
       worker _ i
         | i == index = e
-        | otherwise  = arr ! i
+        | otherwise  = arr A.! i
 
   subList :: UArrayList a -> Int -> Int -> UArrayList a
   subList al@(UArrayList _ arr) inf sup 
@@ -103,7 +104,7 @@ instance IArray UArray a => List (UArrayList a) a where
       sup     = lb + l
       toList' i
         | i == sup  = []
-        | otherwise = (arr ! i) : toList' (i + 1)
+        | otherwise = (arr A.! i) : toList' (i + 1)
 
   -- Overwritten default method
   deleteRange ::  UArrayList a -> Int -> Int -> ([a], UArrayList a)
@@ -118,7 +119,7 @@ instance IArray UArray a => List (UArrayList a) a where
       acc  = UArrayList len' $ accum go arr $ join zip [0..(len' - 1)]
       go e i
         | i < inf'  = e
-        | otherwise = arr ! (i + diff)
+        | otherwise = arr A.! (i + diff)
 
   -- Overwritten default method
   insertAll :: forall l. (DSCons [a] l, DS l) => UArrayList a -> Int -> l -> UArrayList a
@@ -222,7 +223,7 @@ instance IArray UArray a => DSCons [a] (UArrayList a) where
     where
       toList' i
         | i == l    = []
-        | otherwise = (arr ! i) : toList' (i + 1)
+        | otherwise = (arr A.! i) : toList' (i + 1)
 
   new :: [a] -> UArrayList a
   new list

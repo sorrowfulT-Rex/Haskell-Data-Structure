@@ -9,7 +9,7 @@ module MMZKDS.ArrayList (ArrayList) where
 
 import           Control.Monad (join)
 import           Control.Monad.ST (ST, runST)
-import           Data.Array (Array, accum, accumArray, array, bounds, (!))
+import           Data.Array as A (Array, accum, accumArray, array, bounds, (!))
 import           Data.Foldable as F (toList)
 import           Data.STRef (readSTRef)
 import           Unsafe.Coerce (unsafeCoerce)
@@ -39,20 +39,20 @@ instance List (ArrayList a) a where
   delete :: ArrayList a -> Int -> (Maybe a, ArrayList a)
   delete al@(ArrayList l arr) index
     | index >= l || index < 0 = (Nothing, al)
-    | otherwise               = ( Just (arr ! index)
+    | otherwise               = ( Just (arr A.! index)
                                 , ArrayList (l - 1) $ 
                                   accumArray worker undefined (0, pl - 1) $ 
                                   join zip [0..(l - 2)] )
     where
       pl = physicalSize al
       worker _ i
-        | i < index = arr ! i
-        | otherwise = arr ! (i + 1)
+        | i < index = arr A.! i
+        | otherwise = arr A.! (i + 1)
 
   get :: ArrayList a -> Int -> a
   get (ArrayList l arr) index
     | index >= l || index < 0 = outOfBoundError index
-    | otherwise               = arr ! index
+    | otherwise               = arr A.! index
 
   indicesOf :: Eq a => ArrayList a -> a -> [Int]
   indicesOf al e
@@ -75,8 +75,8 @@ instance List (ArrayList a) a where
       pl = physicalSize al
       l' = expandedSize l
       worker _ i
-        | i < index = arr ! i
-        | i > index = arr ! (i - 1)
+        | i < index = arr A.! i
+        | i > index = arr A.! (i - 1)
         | otherwise = e
 
   set :: ArrayList a -> Int -> a -> ArrayList a
@@ -89,7 +89,7 @@ instance List (ArrayList a) a where
       pl = physicalSize al
       worker _ i
         | i == index = e
-        | otherwise  = arr ! i
+        | otherwise  = arr A.! i
 
   subList :: ArrayList a -> Int -> Int -> ArrayList a
   subList al inf sup
@@ -122,7 +122,7 @@ instance List (ArrayList a) a where
       acc  = ArrayList len' $ accum go arr $ join zip [0..(len' - 1)]
       go e i
         | i < inf'  = e
-        | otherwise = arr ! (i + diff)
+        | otherwise = arr A.! (i + diff)
 
   -- Overwritten default method
   insertAll :: (DSCons [a] l, DS l) => ArrayList a -> Int -> l -> ArrayList a
@@ -252,7 +252,7 @@ instance Foldable ArrayList where
     where
       go i v
         | i == l    = v
-        | otherwise = f (arr ! i) (go (i + 1) v)
+        | otherwise = f (arr A.! i) (go (i + 1) v)
 
   elem :: Eq a => a -> ArrayList a -> Bool
   elem = flip contains
