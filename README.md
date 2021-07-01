@@ -116,6 +116,11 @@ It is expected that the elements are instances of `Ord`.
 See the [Haddocks](MMZKDS/Class/UnorderedList.hs) for full documentation.  
 <br />
 
+## [MMZKDS/Class/MUnorderedList.hs](MMZKDS/Class/MUnorderedList.hs)
+The mutable counterpart of `UnorderedList`.  
+See the [Haddocks](MMZKDS/Class/MUnorderedList.hs) for full documentation.  
+<br />
+
 # Instances[MMZKDS/]
 <br />
 

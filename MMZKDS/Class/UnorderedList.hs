@@ -8,6 +8,7 @@ module MMZKDS.Class.UnorderedList (UnorderedList(..)) where
 
 import           Control.Monad (liftM2)
 import           Data.List (foldl')
+import           Data.Maybe (maybe)
 
 import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
 
@@ -18,7 +19,7 @@ import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
 
 -- | 'UnorderedList' is a type class for immutable list structures where the 
 -- elements are not ordered by index, but by its intrinsic order.
--- It is similar to a set that can have duplicates.
+-- It is similar to a list that can have duplicates.
 -- It is expected that the elements are instances of 'Ord'.  
 -- It is expected that the type implements 'DS' and 'DSCons' with @[]@.
 -- Minimal implementation requires @add@, @contains@, @getNthMin@, and @remove@.
@@ -26,53 +27,55 @@ import           MMZKDS.Class.DS as DS (DS(..), DSCons(..))
 -- @findAny@, @getMax@, @getNthMax@, @getMin@, @intersection@, @intersection'@, 
 -- @newUnorderedList@, @toList@, @union@ and @union'@.
 --
-class (DS c, DSCons [e] c) => UnorderedList c e | c -> e where
+class (DS l, DSCons [e] l) => UnorderedList l e | l -> e where
   -- | Adds an element into the list.
-  add :: c -> e -> c
+  add :: l -> e -> l
 
-  -- | Tests if the element is in the set.
+  -- | Tests if the element is in the list.
   -- Returns the range of position of this element in the list. If it does not
   -- exist, returns Nothing.
   --
-  contains :: c -> e -> Maybe (Int, Int)
+  contains :: l -> e -> Maybe (Int, Int)
 
   -- | Gets the n-th minimum element in the list.
-  --
-  getNthMin :: c -> Int -> Maybe e
+  --w
+  getNthMin :: l -> Int -> Maybe e
 
-  -- | Removes the given element from the set.
+  -- | Removes the given element from the list.
   -- Returns a tuple consisting of the removed element (or Nothing, if the
-  -- element is not in the set), and the set without the element.
+  -- element is not in the list), and the list without the element.
   --
-  remove :: c -> e -> (Maybe e, c)
+  remove :: l -> e -> (Maybe e, l)
 
   -- | Default method.
   -- Counts the number of occurrences of an element in the list.
   --
-  count :: c -> e -> Int
+  count :: l -> e -> Int
+  count l e 
+    = maybe 0 (\(x, y) -> y - x + 1) $ contains l e
 
   -- | Default method.
   -- Computes the difference of two sets.
   --
-  difference :: forall c1. DSCons [e] c1 => c -> c1 -> c
-  difference = (. (DS.finish :: c1 -> [e])) . foldl' ((snd .) . remove)
+  difference :: forall l1. DSCons [e] l1 => l -> l1 -> l
+  difference = (. (DS.finish :: l1 -> [e])) . foldl' ((snd .) . remove)
 
   -- | Default method.
-  -- Computes the difference of two sets, where the second set is of the same
+  -- Computes the difference of two sets, where the second list is of the same
   -- type as the first one.
   -- For some instances of "UnorderedList" this may have a more efficient 
   -- implementation.
   --
-  difference' ::  c -> c -> c
+  difference' ::  l -> l -> l
   difference' = difference
 
   -- | Default method.
-  -- Removes an element from the set.
+  -- Removes an element from the list.
   -- Returns a tuple consisting of the removed element (or Nothing, if the
-  -- element is not in the set), and the set without the element.
+  -- element is not in the list), and the list without the element.
   -- Does not guarantee which element is removed.
   -- 
-  dropAny :: c -> (Maybe e, c)
+  dropAny :: l -> (Maybe e, l)
   dropAny s 
     = maybe (Nothing, s) (remove s) (findAny s)
 
@@ -80,59 +83,64 @@ class (DS c, DSCons [e] c) => UnorderedList c e | c -> e where
   -- Returns an element from the list if it is non-empty.
   -- Does not guarantee which element is returned.
   -- 
-  findAny :: c -> Maybe e
+  findAny :: l -> Maybe e
   findAny = flip getNthMin 1
 
   -- | Gets the maximum element in the list.
   --
-  getMax :: c -> Maybe e
+  getMax :: l -> Maybe e
   getMax = flip getNthMax 1
 
-  -- | Gets the maximum element in the list.
+  -- | Gets the nth maximum element in the list.
   --
-  getNthMax :: c -> Int -> Maybe e
-  getNthMax c i = getNthMin c (size c - i + 1)
+  getNthMax :: l -> Int -> Maybe e
+  getNthMax l i = getNthMin l (size l - i + 1)
+
+  -- | Gets the minimum element in the list.
+  --
+  getMin :: l -> Maybe e
+  getMin = flip getNthMin 1
 
   -- | Default method.
   -- Computes the intersection of two sets.
   --
-  intersection :: forall c1. DSCons [e] c1 => c -> c1 -> c
+  intersection :: forall l1. DSCons [e] l1 => l -> l1 -> l
   intersection = liftM2 (.) difference difference
 
   -- | Default method.
-  -- Computes the intersection of two sets, where the second set is of the same
+  -- Computes the intersection of two sets, where the second list is of the same
   -- type as the first one.
   -- For some instances of "UnorderedList" this may have a more efficient 
   -- implementation.
   --
-  intersection' :: c -> c -> c
+  intersection' :: l -> l -> l
   intersection' = intersection
 
   -- | Default method.
-  -- Returns a new set from @[]@.
+  -- Returns a new list from @[]@.
   -- 
-  newUnorderedList :: [e] -> c
+  newUnorderedList :: [e] -> l
   newUnorderedList = DS.new
 
   -- | Default method.
-  -- Return the list representation of the set.
+  -- Return the list representation of the list.
   -- 
-  toList :: c -> [e]
+  toList :: l -> [e]
   toList = DS.finish
 
   -- | Default method.
   -- Computes the union of two sets.
   --
-  union :: forall c1. DSCons [e] c1 => c -> c1 -> c
-  union = (. (DS.finish :: c1 -> [e])) . foldl' add
+  union :: forall l1. DSCons [e] l1 => l -> l1 -> l
+  union = (. (DS.finish :: l1 -> [e])) . foldl' add
 
   -- | Default method.
-  -- Computes the union of two sets, where the second set is of the same
+  -- Computes the union of two sets, where the second list is of the same
   -- type as the first one.
   -- For some instances of "UnorderedList" this may have a more efficient 
   -- implementation.
   --
-  union' :: c -> c -> c
+  union' :: l -> l -> l
   union' = union
 
 
@@ -140,9 +148,9 @@ class (DS c, DSCons [e] c) => UnorderedList c e | c -> e where
 -- UnorderedList -> Monoid
 --------------------------------------------------------------------------------
 
-instance {-# OVERLAPPABLE #-} (UnorderedList c e) => Semigroup c where
+instance {-# OVERLAPPABLE #-} (UnorderedList l e) => Semigroup l where
   (<>) = mappend
 
-instance {-# OVERLAPPABLE #-} (UnorderedList c e) => Monoid c where
+instance {-# OVERLAPPABLE #-} (UnorderedList l e) => Monoid l where
   mempty  = newUnorderedList []
   mappend = union
